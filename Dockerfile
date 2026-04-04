@@ -41,11 +41,12 @@ ENV NEXT_TELEMETRY_DISABLED=1
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/public ./public
-# Remotion's bundler compiles src/remotion/ at runtime — standalone doesn't include it.
-# It also resolves @/ → src/ so we need the config + lib files it imports.
-COPY --from=builder /app/src/remotion ./src/remotion
-COPY --from=builder /app/src/config ./src/config
-COPY --from=builder /app/src/lib/hex-color.ts ./src/lib/hex-color.ts
+
+# Remotion's bundler compiles src/remotion/ at runtime and resolves imports
+# (remotion, @remotion/google-fonts/*, etc.) that standalone doesn't trace.
+# Copy the full node_modules so all packages are available for the bundler.
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=builder /app/src ./src
 COPY --from=builder /app/tsconfig.json ./tsconfig.json
 
 # Download Remotion's Chrome headless shell into the final image at build time.
