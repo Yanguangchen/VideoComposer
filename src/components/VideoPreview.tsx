@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Player } from "@remotion/player";
 import { BeforeAfterTemplate } from "@/remotion/before-after-template";
 import type { BeforeAfterTemplateProps } from "@/remotion/before-after-template";
@@ -12,15 +13,17 @@ import type { CarouselTemplateProps } from "@/remotion/carousel-template";
 import { SingleImageTemplate } from "@/remotion/single-image-template";
 import type { SingleImageTemplateProps } from "@/remotion/single-image-template";
 
-const playerCommon = {
-  compositionWidth: 1080,
-  compositionHeight: 1920,
-  fps: 30,
-  style: { width: "100%", height: "100%" } as const,
-  controls: true,
-  clickToPlay: false,
-  acknowledgeRemotionLicense: true as const,
-};
+function useMobilePlaybackGesture(): boolean {
+  const [narrow, setNarrow] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 768px)");
+    const apply = () => setNarrow(mq.matches);
+    apply();
+    mq.addEventListener("change", apply);
+    return () => mq.removeEventListener("change", apply);
+  }, []);
+  return narrow;
+}
 
 type Props = {
   mode: TemplateModeId;
@@ -35,10 +38,22 @@ export function VideoPreview({
   singleImageProps,
   carouselProps,
 }: Props) {
+  const clickToPlay = useMobilePlaybackGesture();
   const carouselDuration = getEffectiveCarouselDurationInFrames(
     carouselProps.durationInFrames,
     carouselProps.slides.length,
   );
+
+  const playerCommon = {
+    compositionWidth: 1080,
+    compositionHeight: 1920,
+    fps: 30,
+    style: { width: "100%", height: "100%" } as const,
+    controls: true,
+    /** Mobile Safari / Brave often block autoplay; require a tap to start. */
+    clickToPlay,
+    acknowledgeRemotionLicense: true as const,
+  };
 
   return (
     <div className="overflow-hidden rounded-2xl border border-slate-200 bg-black shadow-inner dark:border-slate-700">

@@ -1,14 +1,24 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { GOOGLE_SERVICE_FONTS_STYLESHEET_URL } from "@/config/google-fonts";
 import { ThemeProvider } from "@/components/theme-provider";
 import "./globals.css";
+
+/** Required for correct layout on phones; without it many mobile browsers act like a zoomed-out desktop. */
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f8fafc" },
+    { media: "(prefers-color-scheme: dark)", color: "#020617" },
+  ],
+};
 
 export const metadata: Metadata = {
   title: "Video Composer — Multi-brand Before/After",
   description:
     "Automated Before & After marketing video dashboard for multiple brands.",
   manifest: "/manifest.json",
-  themeColor: "#0f172a",
   icons: {
     icon: [{ url: "/favicon.png", type: "image/png" }],
     apple: [{ url: "/favicon.png", type: "image/png" }],

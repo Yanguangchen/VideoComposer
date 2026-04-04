@@ -29,6 +29,8 @@ export function MediaUploader({
     accept: { "image/*": [".png", ".jpg", ".jpeg", ".webp", ".gif"] },
     maxFiles: 1,
     multiple: false,
+    /** Improves compatibility with mobile browsers that mishandle the File System Access API. */
+    useFsAccessApi: false,
   });
 
   return (
@@ -38,7 +40,7 @@ export function MediaUploader({
       </div>
       <div
         {...getRootProps()}
-        className={`flex min-h-[160px] cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed p-4 transition-colors ${
+        className={`touch-manipulation flex min-h-[160px] min-w-0 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed p-4 transition-colors active:opacity-90 ${
           isDragActive
             ? "border-blue-500 bg-blue-50 dark:border-blue-400 dark:bg-blue-950/40"
             : "border-slate-300 bg-white hover:border-blue-400 dark:border-slate-600 dark:bg-slate-900/40 dark:hover:border-blue-500"
