@@ -12,9 +12,6 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
-# Pre-download Remotion's Chrome headless shell so it's available at runtime
-# without needing a network fetch on the first export.
-RUN node -e "import('@remotion/renderer').then(m=>m.ensureBrowser()).then(()=>console.log('Browser ready')).catch(e=>{console.error(e);process.exit(1)})"
 
 FROM node:20-bookworm-slim AS runner
 WORKDIR /app
@@ -45,9 +42,9 @@ COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/public ./public
 
-# Copy the pre-downloaded Remotion browser from the builder stage.
-# Remotion stores it under ~/.cache/remotion by default.
-COPY --from=builder /root/.cache/remotion /root/.cache/remotion
+# Download Remotion's Chrome headless shell into the final image at build time.
+# The standalone output already includes @remotion/renderer in node_modules.
+RUN node -e "import('@remotion/renderer').then(m=>m.ensureBrowser()).then(()=>console.log('Browser ready')).catch(e=>{console.error(e);process.exit(1)})"
 
 EXPOSE 3000
 # Railway (and others) set PORT at runtime — do not hardcode it here.
