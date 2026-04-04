@@ -6,6 +6,7 @@ import type { BeforeAfterTemplateProps } from "@/remotion/before-after-template"
 import type { CarouselTemplateProps } from "@/remotion/carousel-template";
 import type { RemotionCompositionId } from "@/remotion/composition-ids";
 import type { SingleImageTemplateProps } from "@/remotion/single-image-template";
+import { remotionWebpackOverride } from "@/remotion/webpack-override";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -18,7 +19,7 @@ async function getBundleUrl(): Promise<string> {
   const entry = path.join(process.cwd(), "src/remotion/index.ts");
   cachedBundle = await bundle({
     entryPoint: entry,
-    webpackOverride: (config) => config,
+    webpackOverride: remotionWebpackOverride,
     publicDir: path.join(process.cwd(), "public"),
   });
   return cachedBundle;

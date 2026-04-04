@@ -52,6 +52,7 @@ export type CarouselTemplateProps = {
   bgSrc: string;
   musicSrc: string;
   logoSrc: string;
+  showLogo: boolean;
   headlineColorHex: string;
   captionColorHex: string;
   slides: CarouselSlide[];
@@ -66,6 +67,7 @@ type SlideCardProps = {
   serviceFontResolved: string;
   serviceFontWeight: number;
   logoSrc: string;
+  showLogo: boolean;
   captionColor: string;
 };
 
@@ -74,6 +76,7 @@ const SlideCard: FC<SlideCardProps> = ({
   serviceFontResolved,
   serviceFontWeight,
   logoSrc,
+  showLogo,
   captionColor,
 }) => {
   const frame = useCurrentFrame();
@@ -139,27 +142,29 @@ const SlideCard: FC<SlideCardProps> = ({
             </div>
           ) : null}
 
-          <div
-            style={{
-              position: "absolute",
-              right: -72,
-              bottom: 36,
-              transform: `scale(${pulse})`,
-            }}
-          >
-            <Img
-              src={resolveMediaSrc(logoSrc)}
+          {showLogo && logoSrc ? (
+            <div
               style={{
-                width: 280,
-                height: 280,
-                borderRadius: "50%",
-                objectFit: "cover",
-                border: "8px solid white",
-                boxShadow: "0 24px 56px rgba(0,0,0,0.55)",
-                backgroundColor: "white",
+                position: "absolute",
+                right: -72,
+                bottom: 36,
+                transform: `scale(${pulse})`,
               }}
-            />
-          </div>
+            >
+              <Img
+                src={resolveMediaSrc(logoSrc)}
+                style={{
+                  width: 280,
+                  height: 280,
+                  borderRadius: "50%",
+                  objectFit: "cover",
+                  border: "8px solid white",
+                  boxShadow: "0 24px 56px rgba(0,0,0,0.55)",
+                  backgroundColor: "white",
+                }}
+              />
+            </div>
+          ) : null}
         </div>
       </AbsoluteFill>
     </AbsoluteFill>
@@ -171,6 +176,7 @@ export const CarouselTemplate: FC<CarouselTemplateProps> = ({
   bgSrc,
   musicSrc,
   logoSrc,
+  showLogo,
   headlineColorHex,
   captionColorHex,
   slides,
@@ -268,6 +274,7 @@ export const CarouselTemplate: FC<CarouselTemplateProps> = ({
                 serviceFontResolved={serviceFontResolved}
                 serviceFontWeight={serviceFontWeight}
                 logoSrc={logoSrc}
+                showLogo={showLogo}
                 captionColor={captionColor}
               />
             </Sequence>

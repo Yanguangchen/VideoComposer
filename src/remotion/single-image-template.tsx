@@ -29,6 +29,7 @@ export type SingleImageTemplateProps = {
   bgSrc: string;
   musicSrc: string;
   logoSrc: string;
+  showLogo: boolean;
   headlineColorHex: string;
   captionColorHex: string;
   serviceTitle: string;
@@ -43,6 +44,7 @@ export const SingleImageTemplate: FC<SingleImageTemplateProps> = ({
   bgSrc,
   musicSrc,
   logoSrc,
+  showLogo,
   headlineColorHex,
   captionColorHex,
   serviceTitle,
@@ -155,27 +157,29 @@ export const SingleImageTemplate: FC<SingleImageTemplateProps> = ({
             }}
           />
 
-          <div
-            style={{
-              position: "absolute",
-              right: -72,
-              bottom: 40,
-              transform: `scale(${pulse})`,
-            }}
-          >
-            <Img
-              src={resolveMediaSrc(logoSrc)}
+          {showLogo && logoSrc ? (
+            <div
               style={{
-                width: 300,
-                height: 300,
-                borderRadius: "50%",
-                objectFit: "cover",
-                border: "8px solid white",
-                boxShadow: "0 24px 56px rgba(0,0,0,0.55)",
-                backgroundColor: "white",
+                position: "absolute",
+                right: -72,
+                bottom: 40,
+                transform: `scale(${pulse})`,
               }}
-            />
-          </div>
+            >
+              <Img
+                src={resolveMediaSrc(logoSrc)}
+                style={{
+                  width: 300,
+                  height: 300,
+                  borderRadius: "50%",
+                  objectFit: "cover",
+                  border: "8px solid white",
+                  boxShadow: "0 24px 56px rgba(0,0,0,0.55)",
+                  backgroundColor: "white",
+                }}
+              />
+            </div>
+          ) : null}
         </div>
 
         {serviceTitle.trim() ? (

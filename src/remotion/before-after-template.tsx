@@ -32,6 +32,8 @@ export type BeforeAfterTemplateProps = {
   /** Background music (optional); pair with bg in dashboard via video theme. */
   musicSrc: string;
   logoSrc: string;
+  /** When false, the circular brand logo is not drawn. */
+  showLogo: boolean;
   /** Large top headline (brand title). */
   headlineColorHex: string;
   /** Service line below images. */
@@ -52,6 +54,7 @@ export const BeforeAfterTemplate: FC<BeforeAfterTemplateProps> = ({
   bgSrc,
   musicSrc,
   logoSrc,
+  showLogo,
   headlineColorHex,
   captionColorHex,
   serviceTitle,
@@ -188,27 +191,29 @@ export const BeforeAfterTemplate: FC<BeforeAfterTemplateProps> = ({
             }}
           />
 
-          <div
-            style={{
-              position: "absolute",
-              right: -72,
-              top: "50%",
-              transform: `translateY(-50%) scale(${pulse})`,
-            }}
-          >
-            <Img
-              src={resolveMediaSrc(logoSrc)}
+          {showLogo && logoSrc ? (
+            <div
               style={{
-                width: 300,
-                height: 300,
-                borderRadius: "50%",
-                objectFit: "cover",
-                border: "8px solid white",
-                boxShadow: "0 24px 56px rgba(0,0,0,0.55)",
-                backgroundColor: "white",
+                position: "absolute",
+                right: -72,
+                top: "50%",
+                transform: `translateY(-50%) scale(${pulse})`,
               }}
-            />
-          </div>
+            >
+              <Img
+                src={resolveMediaSrc(logoSrc)}
+                style={{
+                  width: 300,
+                  height: 300,
+                  borderRadius: "50%",
+                  objectFit: "cover",
+                  border: "8px solid white",
+                  boxShadow: "0 24px 56px rgba(0,0,0,0.55)",
+                  backgroundColor: "white",
+                }}
+              />
+            </div>
+          ) : null}
         </div>
 
         {serviceTitle.trim() ? (

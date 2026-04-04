@@ -61,6 +61,7 @@ export function DashboardClient() {
     useState<TemplateModeId>(DEFAULT_TEMPLATE_MODE);
   const [activeBrandId, setActiveBrandId] = useState(brands[0]!.id);
   const [logoFile, setLogoFile] = useState<string | null>(null);
+  const [showLogo, setShowLogo] = useState(true);
   const [serviceTitle, setServiceTitle] = useState("");
   const [brandTitleFontId, setBrandTitleFontId] =
     useState<ServiceFontId>(DEFAULT_SERVICE_FONT_ID);
@@ -231,7 +232,9 @@ export function DashboardClient() {
       bottomImageSrc: afterUrl ?? "",
       bgSrc: backgroundAndMusicPaths.bgSrc,
       musicSrc: backgroundAndMusicPaths.musicSrc,
-      logoSrc: logoFile ? brandLogoPublicUrl(brand, logoFile) : "",
+      logoSrc:
+        showLogo && logoFile ? brandLogoPublicUrl(brand, logoFile) : "",
+      showLogo,
       headlineColorHex,
       captionColorHex,
       serviceTitle,
@@ -244,6 +247,7 @@ export function DashboardClient() {
       beforeUrl,
       afterUrl,
       logoFile,
+      showLogo,
       backgroundAndMusicPaths.bgSrc,
       backgroundAndMusicPaths.musicSrc,
       headlineColorHex,
@@ -262,7 +266,9 @@ export function DashboardClient() {
       imageSrc: singleUrl ?? "",
       bgSrc: backgroundAndMusicPaths.bgSrc,
       musicSrc: backgroundAndMusicPaths.musicSrc,
-      logoSrc: logoFile ? brandLogoPublicUrl(brand, logoFile) : "",
+      logoSrc:
+        showLogo && logoFile ? brandLogoPublicUrl(brand, logoFile) : "",
+      showLogo,
       headlineColorHex,
       captionColorHex,
       serviceTitle,
@@ -274,6 +280,7 @@ export function DashboardClient() {
       brand,
       singleUrl,
       logoFile,
+      showLogo,
       backgroundAndMusicPaths.bgSrc,
       backgroundAndMusicPaths.musicSrc,
       headlineColorHex,
@@ -291,7 +298,9 @@ export function DashboardClient() {
       titleText: brand.displayName,
       bgSrc: backgroundAndMusicPaths.bgSrc,
       musicSrc: backgroundAndMusicPaths.musicSrc,
-      logoSrc: logoFile ? brandLogoPublicUrl(brand, logoFile) : "",
+      logoSrc:
+        showLogo && logoFile ? brandLogoPublicUrl(brand, logoFile) : "",
+      showLogo,
       headlineColorHex,
       captionColorHex,
       slides: carouselSlides.map((s) => ({
@@ -306,6 +315,7 @@ export function DashboardClient() {
       brand,
       carouselSlides,
       logoFile,
+      showLogo,
       backgroundAndMusicPaths.bgSrc,
       backgroundAndMusicPaths.musicSrc,
       headlineColorHex,
@@ -317,12 +327,14 @@ export function DashboardClient() {
   );
 
   const getInputProps = useCallback(async () => {
-    if (!logoFile) {
+    if (showLogo && !logoFile) {
       throw new Error("Select a logo from the brand folder.");
     }
     const origin =
       typeof window !== "undefined" ? window.location.origin : "";
-    const logoPath = brandLogoPublicUrl(brand, logoFile);
+    const logoPath = logoFile ? brandLogoPublicUrl(brand, logoFile) : "";
+    const logoSrcForRender =
+      showLogo && logoPath ? `${origin}${logoPath}` : "";
     const bgForRender = backgroundPath
       ? originPublicUrl(origin, backgroundPath)
       : "";
@@ -348,7 +360,8 @@ export function DashboardClient() {
         titleText: brand.displayName,
         bgSrc: bgForRender,
         musicSrc: musicForRender,
-        logoSrc: `${origin}${logoPath}`,
+        logoSrc: logoSrcForRender,
+        showLogo,
         headlineColorHex,
         captionColorHex,
         slides,
@@ -370,7 +383,8 @@ export function DashboardClient() {
         imageSrc: image,
         bgSrc: bgForRender,
         musicSrc: musicForRender,
-        logoSrc: `${origin}${logoPath}`,
+        logoSrc: logoSrcForRender,
+        showLogo,
         headlineColorHex,
         captionColorHex,
         serviceTitle,
@@ -395,7 +409,8 @@ export function DashboardClient() {
       bottomImageSrc: bottom,
       bgSrc: bgForRender,
       musicSrc: musicForRender,
-      logoSrc: `${origin}${logoPath}`,
+      logoSrc: logoSrcForRender,
+      showLogo,
       headlineColorHex,
       captionColorHex,
       serviceTitle,
@@ -420,18 +435,19 @@ export function DashboardClient() {
     backgroundPath,
     musicPath,
     durationFrames,
+    showLogo,
   ]);
 
   const canExport =
     templateMode === "single-image"
-      ? Boolean(singleFile && logoFile)
+      ? Boolean(singleFile && (!showLogo || logoFile))
       : templateMode === "carousel"
         ? Boolean(
-            logoFile &&
+            (!showLogo || logoFile) &&
               carouselSlides.length > 0 &&
               carouselSlides.every((s) => s.file),
           )
-        : Boolean(beforeFile && afterFile && logoFile);
+        : Boolean(beforeFile && afterFile && (!showLogo || logoFile));
 
   const photosHeading =
     templateMode === "single-image"
@@ -482,6 +498,20 @@ export function DashboardClient() {
               value={logoFile}
               onChange={setLogoFile}
             />
+            <label className="mt-3 flex cursor-pointer items-center gap-2 text-sm text-slate-800">
+              <input
+                type="checkbox"
+                checked={showLogo}
+                onChange={(e) => setShowLogo(e.target.checked)}
+                className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+              />
+              Show logo in video
+            </label>
+            {!showLogo ? (
+              <p className="mt-1 text-xs text-slate-500">
+                Logo is hidden; export does not require a logo file.
+              </p>
+            ) : null}
           </section>
 
           <section>
@@ -614,10 +644,16 @@ export function DashboardClient() {
           {!canExport ? (
             <p className="text-sm text-amber-700">
               {templateMode === "single-image"
-                ? "Select a logo and upload one image to enable export."
+                ? showLogo
+                  ? "Select a logo and upload one image to enable export."
+                  : "Upload one image to enable export."
                 : templateMode === "carousel"
-                  ? "Select a logo and add an image for every slide to enable export."
-                  : "Select a logo and upload both images to enable export."}
+                  ? showLogo
+                    ? "Select a logo and add an image for every slide to enable export."
+                    : "Add an image for every slide to enable export."
+                  : showLogo
+                    ? "Select a logo and upload both images to enable export."
+                    : "Upload both images to enable export."}
             </p>
           ) : null}
         </div>

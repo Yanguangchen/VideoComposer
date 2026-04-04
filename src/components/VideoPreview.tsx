@@ -48,6 +48,7 @@ export function VideoPreview({
       >
         {mode === "single-image" ? (
           <Player
+            key={`single-${singleImageProps.brandTitleFontId}-${singleImageProps.serviceFontId}`}
             component={SingleImageTemplate}
             inputProps={singleImageProps}
             durationInFrames={singleImageProps.durationInFrames}
@@ -55,6 +56,7 @@ export function VideoPreview({
           />
         ) : mode === "carousel" ? (
           <Player
+            key={`carousel-${carouselProps.brandTitleFontId}-${carouselProps.serviceFontId}`}
             component={CarouselTemplate}
             inputProps={carouselProps}
             durationInFrames={carouselDuration}
@@ -62,6 +64,7 @@ export function VideoPreview({
           />
         ) : (
           <Player
+            key={`ba-${beforeAfterProps.brandTitleFontId}-${beforeAfterProps.serviceFontId}`}
             component={BeforeAfterTemplate}
             inputProps={beforeAfterProps}
             durationInFrames={beforeAfterProps.durationInFrames}

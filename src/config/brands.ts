@@ -15,14 +15,14 @@ export type Brand = {
 export const brands: Brand[] = [
   {
     id: "le-motor",
-    displayName: "LE MOTOR",
+    displayName: "Le Motor Enterprise",
     primaryColor: "text-blue-600",
     primaryHex: "#2563eb",
     logoFolder: "assets/logos/le-motor",
   },
   {
     id: "vskin",
-    displayName: "VSKIN",
+    displayName: "VSKIN Beauty & Slimming",
     primaryColor: "text-teal-600",
     primaryHex: "#0d9488",
     logoFolder: "assets/logos/vskin",
