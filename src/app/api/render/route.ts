@@ -133,10 +133,23 @@ export async function POST(req: Request) {
         label: "Loading composition…",
       });
     }
+    const dockerArgs = (process.env.RAILWAY_ENVIRONMENT || process.env.DOCKER)
+      ? {
+          chromiumOptions: {
+            args: [
+              "--disable-dev-shm-usage",
+              "--disable-gpu",
+              "--no-sandbox",
+              "--single-process",
+            ],
+          },
+        }
+      : {};
     const composition = await selectComposition({
       serveUrl,
       id: compositionId,
       inputProps,
+      ...dockerArgs,
     });
 
     outputPath = path.join(tmpdir(), `remotion-${randomUUID()}.mp4`);
@@ -155,7 +168,10 @@ export async function POST(req: Request) {
       outputLocation: outputPath,
       inputProps,
       concurrency: 1,
-      chromiumOptions: { disableWebSecurity: true },
+      chromiumOptions: {
+        disableWebSecurity: true,
+        ...dockerArgs.chromiumOptions,
+      },
       onProgress: ({ progress, stitchStage }) => {
         if (!sessionId) return;
         const pct = 10 + Math.round(progress * 90);
