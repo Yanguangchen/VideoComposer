@@ -155,6 +155,9 @@ export async function POST(req: Request) {
       outputLocation: outputPath,
       inputProps,
       concurrency: 1,
+      disallowParallelEncoding: true,
+      x264Preset: "ultrafast",
+      jpegQuality: 80,
       chromiumOptions: {
         disableWebSecurity: true,
         enableMultiProcessOnLinux: false,
