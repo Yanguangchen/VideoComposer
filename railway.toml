@@ -1,0 +1,7 @@
+# Railway defaults new services to Railpack (Node only) — that skips FFmpeg and breaks MP4 export.
+# This forces a Docker build using the repo Dockerfile (FFmpeg + Chrome deps + Next standalone).
+# https://docs.railway.app/config-as-code/reference
+
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"

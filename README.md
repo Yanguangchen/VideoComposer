@@ -49,7 +49,7 @@ The repo `Dockerfile` installs **FFmpeg** and **Debian libraries** required by R
 
 1. Push this repo to **GitHub** (or GitLab / Bitbucket).
 2. Sign up at [railway.app](https://railway.app/) and click **New Project** → **Deploy from GitHub repo** → choose **VideoComposer** (install the Railway GitHub app if asked).
-3. Railway should detect the **`Dockerfile`** at the repo root and build automatically. If it tries to use Nixpacks instead, open the service → **Settings** → set **Dockerfile path** to `Dockerfile` (or pick **Docker** as the build method).
+3. **Important:** New Railway services default to **Railpack** (Node-only) — that has **no FFmpeg**, so export fails. This repo includes **`railway.toml`** with `builder = "DOCKERFILE"` so builds use the **`Dockerfile`**. Pull the latest code, redeploy, and confirm build logs show **`docker build`**, not only Railpack. If needed: service → **Settings** → set builder to **Dockerfile** / path `Dockerfile`.
 4. Wait for the build to finish. Railway assigns a **public URL** on the **Networking** / **Settings** tab (you may need to click **Generate domain**).
 5. Open that URL in a browser. The first **Export MP4** may take longer while Remotion downloads Chrome Headless Shell into the container’s disk.
 6. **Optional:** under **Variables**, add any app secrets later. You usually do **not** need to set `PORT` — Railway sets it; Next.js reads it.

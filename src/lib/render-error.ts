@@ -9,7 +9,11 @@ export function formatRenderError(error: unknown): string {
   const m = error.message;
 
   if (/ENOENT|no such file|not found/i.test(m) && /ffmpeg|chrome|browser/i.test(m)) {
-    return "FFmpeg or Remotion’s headless browser is missing on the machine running `next dev` (your web browser is not used for export). Install FFmpeg on your PATH, restart the terminal, then try again. See README → Export (MP4).";
+    const railway =
+      typeof process.env.RAILWAY_ENVIRONMENT === "string"
+        ? " On Railway: deploy must use Docker (see railway.toml in this repo, builder = DOCKERFILE). If build logs show Railpack instead of docker build, fix the service builder and redeploy."
+        : "";
+    return `FFmpeg or Remotion’s headless browser is missing on the server (your web browser is not used for export).${railway} Local dev: install FFmpeg on your PATH and restart the terminal. See README → Export (MP4).`;
   }
 
   if (/browser|chromium|puppeteer|executable|launch/i.test(m)) {
