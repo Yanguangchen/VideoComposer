@@ -133,16 +133,6 @@ export async function POST(req: Request) {
         label: "Loading composition…",
       });
     }
-    const isContainer = !!(process.env.RAILWAY_ENVIRONMENT || process.env.DOCKER);
-    const dockerChromeArgs = isContainer
-      ? [
-          "--disable-dev-shm-usage",
-          "--disable-gpu",
-          "--no-sandbox",
-          "--single-process",
-        ]
-      : [];
-
     const composition = await selectComposition({
       serveUrl,
       id: compositionId,
@@ -167,7 +157,7 @@ export async function POST(req: Request) {
       concurrency: 1,
       chromiumOptions: {
         disableWebSecurity: true,
-        args: dockerChromeArgs,
+        enableMultiProcessOnLinux: false,
       },
       onProgress: ({ progress, stitchStage }) => {
         if (!sessionId) return;
