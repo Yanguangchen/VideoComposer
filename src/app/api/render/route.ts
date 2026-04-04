@@ -188,7 +188,7 @@ export async function POST(req: Request) {
       },
     });
   } catch (e) {
-    console.error(e);
+    console.error("[render] export failed:", e);
     if (sessionId) {
       setRenderProgress(sessionId, {
         progress: 0,

@@ -1,4 +1,4 @@
-# Production image with FFmpeg + libraries for Remotion’s Chrome Headless Shell (Debian).
+# Production image with FFmpeg + libraries for Remotion's Chrome Headless Shell (Debian).
 # See README → Production deployment.
 
 FROM node:20-bookworm-slim AS deps
@@ -12,6 +12,9 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
+# Pre-download Remotion's Chrome headless shell so it's available at runtime
+# without needing a network fetch on the first export.
+RUN npx remotion browser ensure
 
 FROM node:20-bookworm-slim AS runner
 WORKDIR /app
@@ -40,6 +43,11 @@ ENV NEXT_TELEMETRY_DISABLED=1
 
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
+COPY --from=builder /app/public ./public
+
+# Copy the pre-downloaded Remotion browser from the builder stage.
+# Remotion stores it under ~/.cache/remotion by default.
+COPY --from=builder /root/.cache/remotion /root/.cache/remotion
 
 EXPOSE 3000
 # Railway (and others) set PORT at runtime — do not hardcode it here.

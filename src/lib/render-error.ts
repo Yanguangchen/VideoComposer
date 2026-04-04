@@ -7,17 +7,20 @@ export function formatRenderError(error: unknown): string {
   }
 
   const m = error.message;
+  const isRailway = typeof process.env.RAILWAY_ENVIRONMENT === "string";
+  const railwayHint = isRailway
+    ? " On Railway: deploy must use the Dockerfile (see railway.toml, builder = DOCKERFILE). Confirm build logs show 'docker build'. If they show Railpack, change the service builder and redeploy."
+    : "";
 
-  if (/ENOENT|no such file|not found/i.test(m) && /ffmpeg|chrome|browser/i.test(m)) {
-    const railway =
-      typeof process.env.RAILWAY_ENVIRONMENT === "string"
-        ? " On Railway: deploy must use Docker (see railway.toml in this repo, builder = DOCKERFILE). If build logs show Railpack instead of docker build, fix the service builder and redeploy."
-        : "";
-    return `FFmpeg or Remotion’s headless browser is missing on the server (your web browser is not used for export).${railway} Local dev: install FFmpeg on your PATH and restart the terminal. See README → Export (MP4).`;
+  if (
+    /ENOENT|no such file|not found|missing/i.test(m) &&
+    /ffmpeg|chrome|browser|headless/i.test(m)
+  ) {
+    return `FFmpeg or Remotion's headless browser is missing on the server.${railwayHint} Local dev: install FFmpeg on your PATH and restart the terminal. See README → Export (MP4). [${m.slice(0, 120)}]`;
   }
 
-  if (/browser|chromium|puppeteer|executable|launch/i.test(m)) {
-    return "Could not start the headless browser used for rendering. On Linux, install Chromium dependencies; see Remotion’s docs for server rendering.";
+  if (/browser|chromium|puppeteer|executable|launch|headless/i.test(m)) {
+    return `Could not start the headless browser for rendering.${railwayHint} On Linux, install Chromium dependencies; see Remotion's docs for server rendering. [${m.slice(0, 120)}]`;
   }
 
   if (/ffmpeg|encoding|codec|mux|stitch/i.test(m)) {
