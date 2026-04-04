@@ -133,23 +133,20 @@ export async function POST(req: Request) {
         label: "Loading composition…",
       });
     }
-    const dockerArgs = (process.env.RAILWAY_ENVIRONMENT || process.env.DOCKER)
-      ? {
-          chromiumOptions: {
-            args: [
-              "--disable-dev-shm-usage",
-              "--disable-gpu",
-              "--no-sandbox",
-              "--single-process",
-            ],
-          },
-        }
-      : {};
+    const isContainer = !!(process.env.RAILWAY_ENVIRONMENT || process.env.DOCKER);
+    const dockerChromeArgs = isContainer
+      ? [
+          "--disable-dev-shm-usage",
+          "--disable-gpu",
+          "--no-sandbox",
+          "--single-process",
+        ]
+      : [];
+
     const composition = await selectComposition({
       serveUrl,
       id: compositionId,
       inputProps,
-      ...dockerArgs,
     });
 
     outputPath = path.join(tmpdir(), `remotion-${randomUUID()}.mp4`);
@@ -170,7 +167,7 @@ export async function POST(req: Request) {
       concurrency: 1,
       chromiumOptions: {
         disableWebSecurity: true,
-        ...dockerArgs.chromiumOptions,
+        args: dockerChromeArgs,
       },
       onProgress: ({ progress, stitchStage }) => {
         if (!sessionId) return;
