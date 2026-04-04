@@ -154,10 +154,7 @@ export async function POST(req: Request) {
       codec: "h264",
       outputLocation: outputPath,
       inputProps,
-      concurrency: 1,
-      disallowParallelEncoding: true,
-      x264Preset: "ultrafast",
-      jpegQuality: 80,
+      concurrency: 2,
       chromiumOptions: {
         disableWebSecurity: true,
         enableMultiProcessOnLinux: false,
