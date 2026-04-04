@@ -19,6 +19,7 @@ import {
 } from "@/lib/hex-color";
 import { BackgroundLayer } from "@/remotion/background-layer";
 import { resolveMediaSrc } from "@/remotion/media-utils";
+import { PriceTagBadge } from "@/remotion/price-tag-badge";
 import {
   preloadAllServiceFonts,
   SERVICE_FONT_CSS,
@@ -49,6 +50,10 @@ export type CarouselSlide = {
 export type CarouselTemplateProps = {
   brandId: string;
   titleText: string;
+  /** Optional line below each slide’s image block (smaller type). */
+  subtitleText: string;
+  showPriceTag: boolean;
+  priceTagText: string;
   bgSrc: string;
   musicSrc: string;
   logoSrc: string;
@@ -69,6 +74,12 @@ type SlideCardProps = {
   logoSrc: string;
   showLogo: boolean;
   captionColor: string;
+  subtitleText: string;
+  showPriceTag: boolean;
+  priceTagText: string;
+  brandTitleResolved: string;
+  brandTitleFontId: string;
+  headlineColor: string;
 };
 
 const SlideCard: FC<SlideCardProps> = ({
@@ -78,6 +89,12 @@ const SlideCard: FC<SlideCardProps> = ({
   logoSrc,
   showLogo,
   captionColor,
+  subtitleText,
+  showPriceTag,
+  priceTagText,
+  brandTitleResolved,
+  brandTitleFontId,
+  headlineColor,
 }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
@@ -124,6 +141,46 @@ const SlideCard: FC<SlideCardProps> = ({
               borderRadius: 20,
             }}
           />
+
+          {subtitleText.trim() ||
+          (showPriceTag && priceTagText.trim()) ? (
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: 8,
+                marginTop: 20,
+                width: "100%",
+              }}
+            >
+              {subtitleText.trim() ? (
+                <div
+                  style={{
+                    fontFamily: brandTitleResolved,
+                    color: headlineColor,
+                    fontSize: 34,
+                    fontWeight: brandTitleFontId === "bebas-neue" ? 400 : 600,
+                    textAlign: "center",
+                    textShadow: "0 2px 16px rgba(0,0,0,0.4)",
+                    lineHeight: 1.25,
+                    opacity: 0.92,
+                    width: "100%",
+                  }}
+                >
+                  {subtitleText.trim()}
+                </div>
+              ) : null}
+              <PriceTagBadge
+                showPriceTag={showPriceTag}
+                priceTagText={priceTagText}
+                fontFamily={brandTitleResolved}
+                color={headlineColor}
+                fontSize={30}
+                brandTitleFontId={brandTitleFontId}
+              />
+            </div>
+          ) : null}
 
           {slide.title.trim() ? (
             <div
@@ -173,6 +230,9 @@ const SlideCard: FC<SlideCardProps> = ({
 
 export const CarouselTemplate: FC<CarouselTemplateProps> = ({
   titleText,
+  subtitleText,
+  showPriceTag,
+  priceTagText,
   bgSrc,
   musicSrc,
   logoSrc,
@@ -243,18 +303,24 @@ export const CarouselTemplate: FC<CarouselTemplateProps> = ({
             left: 0,
             right: 0,
             zIndex: 10,
-            fontFamily: brandTitleResolved,
-            color: headlineColor,
-            fontSize: 48,
-            fontWeight: brandTitleWeight,
-            textAlign: "center",
-            textShadow: "0 4px 24px rgba(0,0,0,0.45)",
             paddingLeft: 40,
             paddingRight: 40,
-            lineHeight: 1.15,
           }}
         >
-          {titleText}
+          <div
+            style={{
+              fontFamily: brandTitleResolved,
+              color: headlineColor,
+              fontSize: 48,
+              fontWeight: brandTitleWeight,
+              textAlign: "center",
+              textShadow: "0 4px 24px rgba(0,0,0,0.45)",
+              lineHeight: 1.15,
+              width: "100%",
+            }}
+          >
+            {titleText}
+          </div>
         </div>
 
         {safeSlides.map((slide, index) => {
@@ -276,6 +342,12 @@ export const CarouselTemplate: FC<CarouselTemplateProps> = ({
                 logoSrc={logoSrc}
                 showLogo={showLogo}
                 captionColor={captionColor}
+                subtitleText={subtitleText}
+                showPriceTag={showPriceTag}
+                priceTagText={priceTagText}
+                brandTitleResolved={brandTitleResolved}
+                brandTitleFontId={brandTitleFontId}
+                headlineColor={headlineColor}
               />
             </Sequence>
           );

@@ -63,6 +63,9 @@ export function DashboardClient() {
   const [logoFile, setLogoFile] = useState<string | null>(null);
   const [showLogo, setShowLogo] = useState(true);
   const [serviceTitle, setServiceTitle] = useState("");
+  const [subtitleText, setSubtitleText] = useState("");
+  const [showPriceTag, setShowPriceTag] = useState(false);
+  const [priceTagText, setPriceTagText] = useState("");
   const [brandTitleFontId, setBrandTitleFontId] =
     useState<ServiceFontId>(DEFAULT_SERVICE_FONT_ID);
   const [serviceFontId, setServiceFontId] =
@@ -228,6 +231,9 @@ export function DashboardClient() {
     () => ({
       brandId: brand.id,
       titleText: brand.displayName,
+      subtitleText,
+      showPriceTag,
+      priceTagText,
       topImageSrc: beforeUrl ?? "",
       bottomImageSrc: afterUrl ?? "",
       bgSrc: backgroundAndMusicPaths.bgSrc,
@@ -253,6 +259,9 @@ export function DashboardClient() {
       headlineColorHex,
       captionColorHex,
       serviceTitle,
+      subtitleText,
+      showPriceTag,
+      priceTagText,
       brandTitleFontId,
       serviceFontId,
       durationFrames,
@@ -263,6 +272,9 @@ export function DashboardClient() {
     () => ({
       brandId: brand.id,
       titleText: brand.displayName,
+      subtitleText,
+      showPriceTag,
+      priceTagText,
       imageSrc: singleUrl ?? "",
       bgSrc: backgroundAndMusicPaths.bgSrc,
       musicSrc: backgroundAndMusicPaths.musicSrc,
@@ -286,6 +298,9 @@ export function DashboardClient() {
       headlineColorHex,
       captionColorHex,
       serviceTitle,
+      subtitleText,
+      showPriceTag,
+      priceTagText,
       brandTitleFontId,
       serviceFontId,
       durationFrames,
@@ -296,6 +311,9 @@ export function DashboardClient() {
     () => ({
       brandId: brand.id,
       titleText: brand.displayName,
+      subtitleText,
+      showPriceTag,
+      priceTagText,
       bgSrc: backgroundAndMusicPaths.bgSrc,
       musicSrc: backgroundAndMusicPaths.musicSrc,
       logoSrc:
@@ -320,6 +338,9 @@ export function DashboardClient() {
       backgroundAndMusicPaths.musicSrc,
       headlineColorHex,
       captionColorHex,
+      subtitleText,
+      showPriceTag,
+      priceTagText,
       brandTitleFontId,
       serviceFontId,
       durationFrames,
@@ -358,6 +379,9 @@ export function DashboardClient() {
       const props: CarouselTemplateProps = {
         brandId: brand.id,
         titleText: brand.displayName,
+        subtitleText,
+        showPriceTag,
+        priceTagText,
         bgSrc: bgForRender,
         musicSrc: musicForRender,
         logoSrc: logoSrcForRender,
@@ -380,6 +404,9 @@ export function DashboardClient() {
       const props: SingleImageTemplateProps = {
         brandId: brand.id,
         titleText: brand.displayName,
+        subtitleText,
+        showPriceTag,
+        priceTagText,
         imageSrc: image,
         bgSrc: bgForRender,
         musicSrc: musicForRender,
@@ -405,6 +432,9 @@ export function DashboardClient() {
     const props: BeforeAfterTemplateProps = {
       brandId: brand.id,
       titleText: brand.displayName,
+      subtitleText,
+      showPriceTag,
+      priceTagText,
       topImageSrc: top,
       bottomImageSrc: bottom,
       bgSrc: bgForRender,
@@ -430,6 +460,9 @@ export function DashboardClient() {
     brandTitleFontId,
     serviceFontId,
     serviceTitle,
+    subtitleText,
+    showPriceTag,
+    priceTagText,
     singleFile,
     templateMode,
     backgroundPath,
@@ -555,6 +588,45 @@ export function DashboardClient() {
                 value={brandTitleFontId}
                 onChange={setBrandTitleFontId}
               />
+              <div>
+                <span className="text-sm font-semibold text-slate-800">
+                  Subtitle (optional)
+                </span>
+                <p className="mt-1 text-xs text-slate-500">
+                  Smaller line under the photos (same color and title font).
+                </p>
+                <input
+                  type="text"
+                  value={subtitleText}
+                  onChange={(e) => setSubtitleText(e.target.value)}
+                  placeholder="e.g. Beauty & Wellness"
+                  className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400"
+                />
+              </div>
+              <div>
+                <label className="flex cursor-pointer items-center gap-2 text-sm font-medium text-slate-800">
+                  <input
+                    type="checkbox"
+                    checked={showPriceTag}
+                    onChange={(e) => setShowPriceTag(e.target.checked)}
+                    className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  Show price tag (below images)
+                </label>
+                <p className="mt-1 text-xs text-slate-500">
+                  Optional pill under the images; uses the same headline color as
+                  the title block.
+                </p>
+                {showPriceTag ? (
+                  <input
+                    type="text"
+                    value={priceTagText}
+                    onChange={(e) => setPriceTagText(e.target.value)}
+                    placeholder="e.g. $99 · From $129"
+                    className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400"
+                  />
+                ) : null}
+              </div>
               {templateMode === "carousel" ? (
                 <ServiceFontPicker
                   label="Slide caption font"

@@ -28,6 +28,9 @@ const defaultBrand = brands[0]!;
 export const defaultBeforeAfterProps: BeforeAfterTemplateProps = {
   brandId: defaultBrand.id,
   titleText: defaultBrand.displayName,
+  subtitleText: "",
+  showPriceTag: false,
+  priceTagText: "",
   topImageSrc: "",
   bottomImageSrc: "",
   bgSrc: "",
@@ -45,6 +48,9 @@ export const defaultBeforeAfterProps: BeforeAfterTemplateProps = {
 export const defaultSingleImageProps: SingleImageTemplateProps = {
   brandId: defaultBrand.id,
   titleText: defaultBrand.displayName,
+  subtitleText: "",
+  showPriceTag: false,
+  priceTagText: "",
   imageSrc: "",
   bgSrc: "",
   musicSrc: "",
@@ -61,6 +67,9 @@ export const defaultSingleImageProps: SingleImageTemplateProps = {
 export const defaultCarouselProps: CarouselTemplateProps = {
   brandId: defaultBrand.id,
   titleText: defaultBrand.displayName,
+  subtitleText: "",
+  showPriceTag: false,
+  priceTagText: "",
   bgSrc: "",
   musicSrc: "",
   logoSrc: `/${defaultBrand.logoFolder}/logo.svg`,

@@ -7,6 +7,11 @@ import type { CarouselTemplateProps } from "@/remotion/carousel-template";
 import type { RemotionCompositionId } from "@/remotion/composition-ids";
 import type { SingleImageTemplateProps } from "@/remotion/single-image-template";
 import { remotionWebpackOverride } from "@/remotion/webpack-override";
+import { formatRenderError } from "@/lib/render-error";
+import {
+  clearRenderProgress,
+  setRenderProgress,
+} from "@/lib/render-progress-store";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -52,15 +57,22 @@ function validateInput(
   return null;
 }
 
+function isValidSessionId(id: unknown): id is string {
+  return typeof id === "string" && id.length >= 8 && id.length <= 128;
+}
+
 export async function POST(req: Request) {
   let outputPath: string | null = null;
+  let sessionId: string | undefined;
   try {
     const body = (await req.json()) as {
       compositionId?: RemotionCompositionId;
       inputProps?: BeforeAfterTemplateProps | SingleImageTemplateProps | CarouselTemplateProps;
+      sessionId?: string;
     };
     const compositionId = body.compositionId;
     const inputProps = body.inputProps;
+    sessionId = isValidSessionId(body.sessionId) ? body.sessionId : undefined;
 
     if (!compositionId || !inputProps) {
       return Response.json(
@@ -82,10 +94,31 @@ export async function POST(req: Request) {
       return Response.json({ error: validationError }, { status: 400 });
     }
 
+    if (sessionId) {
+      setRenderProgress(sessionId, {
+        progress: 0,
+        label: "Preparing…",
+      });
+    }
+
     const { renderMedia, selectComposition } = await import(
       "@remotion/renderer"
     );
+
+    if (sessionId) {
+      setRenderProgress(sessionId, {
+        progress: 3,
+        label: "Bundling Remotion project (first run may take a minute)…",
+      });
+    }
     const serveUrl = await getBundleUrl();
+
+    if (sessionId) {
+      setRenderProgress(sessionId, {
+        progress: 8,
+        label: "Loading composition…",
+      });
+    }
     const composition = await selectComposition({
       serveUrl,
       id: compositionId,
@@ -94,13 +127,39 @@ export async function POST(req: Request) {
 
     outputPath = path.join(tmpdir(), `remotion-${randomUUID()}.mp4`);
 
+    if (sessionId) {
+      setRenderProgress(sessionId, {
+        progress: 10,
+        label: "Rendering video…",
+      });
+    }
+
     await renderMedia({
       composition,
       serveUrl,
       codec: "h264",
       outputLocation: outputPath,
       inputProps,
+      onProgress: ({ progress, stitchStage }) => {
+        if (!sessionId) return;
+        const pct = 10 + Math.round(progress * 90);
+        const label =
+          stitchStage === "muxing"
+            ? "Muxing audio and video…"
+            : "Rendering frames…";
+        setRenderProgress(sessionId, {
+          progress: Math.min(99, pct),
+          label,
+        });
+      },
     });
+
+    if (sessionId) {
+      setRenderProgress(sessionId, {
+        progress: 100,
+        label: "Finalizing…",
+      });
+    }
 
     const { readFile } = await import("fs/promises");
     const buf = await readFile(outputPath);
@@ -116,9 +175,18 @@ export async function POST(req: Request) {
     });
   } catch (e) {
     console.error(e);
-    const message = e instanceof Error ? e.message : "Render failed";
+    if (sessionId) {
+      setRenderProgress(sessionId, {
+        progress: 0,
+        label: "Failed",
+      });
+    }
+    const message = formatRenderError(e);
     return Response.json({ error: message }, { status: 500 });
   } finally {
+    if (sessionId) {
+      clearRenderProgress(sessionId);
+    }
     if (outputPath) await unlink(outputPath).catch(() => {});
   }
 }

@@ -18,6 +18,7 @@ import {
 } from "@/lib/hex-color";
 import { BackgroundLayer } from "@/remotion/background-layer";
 import { resolveMediaSrc } from "@/remotion/media-utils";
+import { PriceTagBadge } from "@/remotion/price-tag-badge";
 import {
   preloadAllServiceFonts,
   SERVICE_FONT_CSS,
@@ -26,6 +27,11 @@ import {
 export type BeforeAfterTemplateProps = {
   brandId: string;
   titleText: string;
+  /** Optional line below the image block (smaller type). */
+  subtitleText: string;
+  /** When true, show `priceTagText` in a tag below the subtitle. */
+  showPriceTag: boolean;
+  priceTagText: string;
   topImageSrc: string;
   bottomImageSrc: string;
   bgSrc: string;
@@ -49,6 +55,9 @@ export type BeforeAfterTemplateProps = {
 
 export const BeforeAfterTemplate: FC<BeforeAfterTemplateProps> = ({
   titleText,
+  subtitleText,
+  showPriceTag,
+  priceTagText,
   topImageSrc,
   bottomImageSrc,
   bgSrc,
@@ -136,10 +145,11 @@ export const BeforeAfterTemplate: FC<BeforeAfterTemplateProps> = ({
             fontSize: 52,
             fontWeight: brandTitleWeight,
             textAlign: "center",
-            marginBottom: 40,
             textShadow: "0 4px 24px rgba(0,0,0,0.45)",
             lineHeight: 1.15,
             maxWidth: "92%",
+            marginBottom: 40,
+            width: "100%",
           }}
         >
           {titleText}
@@ -216,6 +226,46 @@ export const BeforeAfterTemplate: FC<BeforeAfterTemplateProps> = ({
           ) : null}
         </div>
 
+        {subtitleText.trim() ||
+        (showPriceTag && priceTagText.trim()) ? (
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: 10,
+              marginTop: 28,
+              maxWidth: "92%",
+            }}
+          >
+            {subtitleText.trim() ? (
+              <div
+                style={{
+                  fontFamily: brandTitleResolved,
+                  color: headlineColor,
+                  fontSize: 36,
+                  fontWeight: brandTitleFontId === "bebas-neue" ? 400 : 600,
+                  textAlign: "center",
+                  textShadow: "0 2px 16px rgba(0,0,0,0.4)",
+                  lineHeight: 1.25,
+                  opacity: 0.92,
+                  width: "100%",
+                }}
+              >
+                {subtitleText.trim()}
+              </div>
+            ) : null}
+            <PriceTagBadge
+              showPriceTag={showPriceTag}
+              priceTagText={priceTagText}
+              fontFamily={brandTitleResolved}
+              color={headlineColor}
+              fontSize={32}
+              brandTitleFontId={brandTitleFontId}
+            />
+          </div>
+        ) : null}
+
         {serviceTitle.trim() ? (
           <div
             style={{
@@ -224,7 +274,11 @@ export const BeforeAfterTemplate: FC<BeforeAfterTemplateProps> = ({
               fontSize: 52,
               fontWeight: serviceFontWeight,
               textAlign: "center",
-              marginTop: 28,
+              marginTop:
+                subtitleText.trim() ||
+                (showPriceTag && priceTagText.trim())
+                  ? 24
+                  : 28,
               maxWidth: "92%",
               lineHeight: 1.2,
               textShadow: "0 4px 20px rgba(0,0,0,0.55)",
