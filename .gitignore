@@ -27,7 +27,4 @@ __pycache__/
 venv/
 
 # Media scratch (keep large files out of git by default)
-*.mp4
-*.mov
-*.mkv
 .vercel
