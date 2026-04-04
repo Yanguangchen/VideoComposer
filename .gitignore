@@ -30,3 +30,4 @@ venv/
 *.mp4
 *.mov
 *.mkv
+.vercel
