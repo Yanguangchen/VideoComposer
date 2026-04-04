@@ -154,11 +154,13 @@ export async function POST(req: Request) {
       codec: "h264",
       outputLocation: outputPath,
       inputProps,
-      concurrency: 2,
+      concurrency: 1,
+      disallowParallelEncoding: true,
       chromiumOptions: {
         disableWebSecurity: true,
         enableMultiProcessOnLinux: false,
       },
+      ffmpegOverride: ({ args }) => [...args, "-threads", "4"],
       onProgress: ({ progress, stitchStage }) => {
         if (!sessionId) return;
         const pct = 10 + Math.round(progress * 90);
