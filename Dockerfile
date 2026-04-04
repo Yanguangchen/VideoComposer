@@ -14,7 +14,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
 # Pre-download Remotion's Chrome headless shell so it's available at runtime
 # without needing a network fetch on the first export.
-RUN npx remotion browser ensure
+RUN node -e "import('@remotion/renderer').then(m=>m.ensureBrowser()).then(()=>console.log('Browser ready')).catch(e=>{console.error(e);process.exit(1)})"
 
 FROM node:20-bookworm-slim AS runner
 WORKDIR /app
