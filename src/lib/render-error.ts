@@ -9,7 +9,7 @@ export function formatRenderError(error: unknown): string {
   const m = error.message;
 
   if (/ENOENT|no such file|not found/i.test(m) && /ffmpeg|chrome|browser/i.test(m)) {
-    return "A required program or file was not found. Ensure FFmpeg is installed and Remotion can launch Chromium.";
+    return "FFmpeg or Remotion’s headless browser is missing on the machine running `next dev` (your web browser is not used for export). Install FFmpeg on your PATH, restart the terminal, then try again. See README → Export (MP4).";
   }
 
   if (/browser|chromium|puppeteer|executable|launch/i.test(m)) {

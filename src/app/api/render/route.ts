@@ -8,6 +8,7 @@ import type { RemotionCompositionId } from "@/remotion/composition-ids";
 import type { SingleImageTemplateProps } from "@/remotion/single-image-template";
 import { remotionWebpackOverride } from "@/remotion/webpack-override";
 import { formatRenderError } from "@/lib/render-error";
+import { getServerlessExportBlockMessage } from "@/lib/render-environment";
 import {
   clearRenderProgress,
   setRenderProgress,
@@ -94,6 +95,11 @@ export async function POST(req: Request) {
       return Response.json({ error: validationError }, { status: 400 });
     }
 
+    const serverlessBlock = getServerlessExportBlockMessage();
+    if (serverlessBlock) {
+      return Response.json({ error: serverlessBlock }, { status: 503 });
+    }
+
     if (sessionId) {
       setRenderProgress(sessionId, {
         progress: 0,
@@ -101,7 +107,7 @@ export async function POST(req: Request) {
       });
     }
 
-    const { renderMedia, selectComposition } = await import(
+    const { ensureBrowser, renderMedia, selectComposition } = await import(
       "@remotion/renderer"
     );
 
@@ -112,6 +118,14 @@ export async function POST(req: Request) {
       });
     }
     const serveUrl = await getBundleUrl();
+
+    if (sessionId) {
+      setRenderProgress(sessionId, {
+        progress: 6,
+        label: "Preparing headless browser (first time may download Chromium)…",
+      });
+    }
+    await ensureBrowser();
 
     if (sessionId) {
       setRenderProgress(sessionId, {
