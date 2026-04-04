@@ -1,0 +1,32 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Env / secrets
+.env
+.env.local
+*.pem
+
+# Build / output
+dist/
+build/
+out/
+*.log
+node_modules/
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Media scratch (keep large files out of git by default)
+*.mp4
+*.mov
+*.mkv
+!samples/.gitkeep
