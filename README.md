@@ -1,14 +1,14 @@
 # Video Composer
 
-Next.js dashboard for multi-brand **Before / After** marketing videos: pick a client, upload two photos, preview a themed Remotion template, and export an MP4.
+Next.js dashboard for multi-brand **Before / After** (and related) marketing videos: pick a client, upload media, preview a Remotion template, and export an MP4.
 
 ## Stack
 
-- **Next.js 15** (App Router) + **Tailwind CSS**
-- **Remotion** — `@remotion/player` (preview), `@remotion/bundler` + `@remotion/renderer` (server render via `/api/render`)
+- **Next.js 15** (App Router) + **Tailwind CSS** + **next-themes** (dark/light)
+- **Remotion** — `@remotion/player` (preview), `@remotion/bundler` + `@remotion/renderer` (server render via `POST /api/render`)
 - **react-dropzone** — drag-and-drop uploads with `URL.createObjectURL` previews
 
-## Development
+## Quick start
 
 ```bash
 npm install
@@ -17,48 +17,74 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
-## Export (MP4)
+Full production deployment notes (Docker, Railway, memory, troubleshooting) are in **[docs/deployment.md](docs/deployment.md)**.
 
-Export runs **on the server** (`npm run dev` / `next start`), not inside Brave, Chrome, or any other browser tab. Remotion uses **FFmpeg** plus a **headless Chromium** bundle for frames.
+## How export works
+
+1. The browser sends composition props to **`/api/render`**.
+2. The server **bundles** the Remotion project (`src/remotion/`), opens **headless Chrome**, renders frames, and runs **FFmpeg** to produce H.264 MP4.
+3. Your desktop browser does **not** run FFmpeg or Chrome for export — it only downloads the finished file.
+
+So export needs **FFmpeg**, **Chrome Headless Shell**, and **Remotion source + node modules** on whatever machine runs `next start` (or your Docker container).
+
+## Export (MP4) — local development
+
+Export runs **on the machine that runs Next.js** (`npm run dev` / `npm run start`), not inside the user’s browser tab.
 
 ### Windows
 
-1. **FFmpeg** must be on your `PATH` (the terminal that runs Next.js must find `ffmpeg`).
-   - Example: `winget install Gyan.FFmpeg` (or install from [ffmpeg.org](https://ffmpeg.org/download.html) and add `bin` to PATH).
-   - Open a **new** terminal, run `ffmpeg -version`, then `npm run dev`.
-2. **Headless browser**: the first export calls Remotion’s `ensureBrowser()`, which may download Chrome Headless Shell under `node_modules` (can take a minute). You can also pre-download with: `npx remotion browser ensure`.
+1. Put **FFmpeg** on your `PATH` (the same terminal that runs Next.js must run `ffmpeg -version` successfully).
+   - Example: `winget install Gyan.FFmpeg`, or install from [ffmpeg.org](https://ffmpeg.org/download.html) and add `bin` to PATH.
+2. Open a **new** terminal, verify `ffmpeg -version`, then `npm run dev`.
+3. **Headless Chrome**: the first export may download Chrome Headless Shell (can take a minute). Optional: `npx remotion browser ensure`.
 
-### General
+### Docs
 
-- See [Remotion — FFmpeg](https://www.remotion.dev/docs/miscellaneous/ffmpeg) and [Chrome Headless Shell](https://www.remotion.dev/docs/miscellaneous/chrome-headless-shell).
+- [Remotion — FFmpeg](https://www.remotion.dev/docs/miscellaneous/ffmpeg)
+- [Chrome Headless Shell](https://www.remotion.dev/docs/miscellaneous/chrome-headless-shell)
 
-### Production deployment (export must work)
+## Production deployment
 
-**Vercel / Netlify serverless** do not provide FFmpeg or a full headless Chrome for Remotion. The `/api/render` route returns **503** with an explanation when `VERCEL` or `NETLIFY` is set. Preview in the browser still works; **MP4 export requires a different host** (or [Remotion Lambda](https://www.remotion.dev/docs/lambda)).
+**Vercel / Netlify (default serverless)** do not provide FFmpeg + a full headless Chrome for this workflow. The app returns **503** on `/api/render` when `VERCEL` or `NETLIFY` is set (see `src/lib/render-environment.ts`). In-browser preview can still work; **MP4 export requires a Node + FFmpeg + Chrome environment** (Docker, VPS, etc.), or a separate render service such as [Remotion Lambda](https://www.remotion.dev/docs/lambda).
 
-**Recommended:** run the app in **Docker** on [Railway](https://railway.app/), [Fly.io](https://fly.io/), [Render](https://render.com/), a VPS, or any host that runs containers with FFmpeg + OS libraries installed.
+### Docker (recommended)
 
 ```bash
 docker build -t video-composer .
-docker run -p 3000:3000 video-composer
+docker run -p 3000:3000 -e PORT=3000 video-composer
 ```
 
-The repo `Dockerfile` installs **FFmpeg** and **Debian libraries** required by Remotion’s Chrome Headless Shell ([Linux deps](https://www.remotion.dev/docs/miscellaneous/linux-dependencies)). Build uses Next.js **`output: "standalone"`**.
+The repo **`Dockerfile`** installs **FFmpeg**, Chrome runtime **libraries**, Next **`standalone`** output, and copies **`src/`** + full **`node_modules/`** so Remotion can bundle at runtime. See **[docs/deployment.md](docs/deployment.md)** for why those copies are required.
 
-#### Railway (quick start)
+### Railway (quick checklist)
 
-1. Push this repo to **GitHub** (or GitLab / Bitbucket).
-2. Sign up at [railway.app](https://railway.app/) and click **New Project** → **Deploy from GitHub repo** → choose **VideoComposer** (install the Railway GitHub app if asked).
-3. **Important:** New Railway services default to **Railpack** (Node-only) — that has **no FFmpeg**, so export fails. This repo includes **`railway.toml`** with `builder = "DOCKERFILE"` so builds use the **`Dockerfile`**. Pull the latest code, redeploy, and confirm build logs show **`docker build`**, not only Railpack. If needed: service → **Settings** → set builder to **Dockerfile** / path `Dockerfile`.
-4. Wait for the build to finish. Railway assigns a **public URL** on the **Networking** / **Settings** tab (you may need to click **Generate domain**).
-5. Open that URL in a browser. The first **Export MP4** may take longer while Remotion downloads Chrome Headless Shell into the container’s disk.
-6. **Optional:** under **Variables**, add any app secrets later. You usually do **not** need to set `PORT` — Railway sets it; Next.js reads it.
+1. Connect this **GitHub** repo and deploy from branch **`main`** (or your default branch).
+2. Use **Dockerfile** builds — this repo includes **`railway.toml`** with `builder = "DOCKERFILE"`. Build logs should show **`docker build`**, not only Railpack.
+3. Confirm each deployment shows the **same commit SHA** as GitHub (avoids stale builds).
+4. Allocate **enough RAM** for video export (often **1 GB+**; 1080×1920 is heavy). See metrics in Railway while exporting.
+5. **Networking**: generate a public URL if needed. **`PORT`** is set by Railway; do not hardcode it in the image.
 
-**Note:** Free tier limits change over time; check [Railway pricing](https://railway.app/pricing). Video rendering is CPU-heavy — pick a plan with enough RAM (e.g. 2 GB+) if exports fail or time out.
+**Escape hatch (not recommended):** `REMOTION_ALLOW_EXPORT_ON_SERVERLESS=1` only if your runtime actually has FFmpeg and Chrome.
 
-**Escape hatch (not recommended):** set `REMOTION_ALLOW_EXPORT_ON_SERVERLESS=1` only if you have a custom runtime where FFmpeg and the browser actually exist.
+## Project layout (selected)
 
-Brands are configured in `src/config/brands.ts`. Each brand has a **dedicated logo folder** under `public/assets/logos/<brand-id>/` (e.g. `public/assets/logos/le-motor/logo.png`). Drop files there once; the dashboard lists them and remembers your selection per brand in the browser. Optional backgrounds and music: `public/backgrounds/`, `public/music/`.
+| Path | Purpose |
+|------|---------|
+| `src/app/api/render/route.ts` | Server-side Remotion render + MP4 response |
+| `src/remotion/` | Remotion compositions and entry (`index.ts` → `Root.tsx`) |
+| `src/config/brands.ts` | Brand definitions |
+| `public/assets/logos/<brand-id>/` | Per-brand logos |
+| `public/backgrounds/`, `public/music/` | Optional assets |
+
+## Scripts
+
+```bash
+npm run dev      # development server
+npm run build    # production build
+npm run start    # production server (after build)
+npm run lint
+npm run verify   # remotion verify + lint + build
+```
 
 ## License
 
