@@ -1,0 +1,5 @@
+Music tracks live here (or any path you list in src/config/background-music.ts).
+
+Use .mp3 or other formats Remotion supports.
+
+Register each track in MUSIC_TRACKS in background-music.ts — independent from background video.

@@ -1,0 +1,5 @@
+Background backdrops live here (or any path you list in src/config/background-music.ts).
+
+Use .mp4 / .webm / .mov for looping video, or .jpg / .webp for a still image.
+
+Copy this folder or add files, then register each asset in BACKGROUND_VIDEOS in background-music.ts.
