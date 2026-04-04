@@ -148,6 +148,7 @@ export async function POST(req: Request) {
       });
     }
 
+    // ChromiumOptions has no `args` in Remotion types — use ffmpegOverride for thread limits.
     await renderMedia({
       composition,
       serveUrl,
