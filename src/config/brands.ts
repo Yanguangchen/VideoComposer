@@ -76,6 +76,20 @@ export const brands: Brand[] = [
     primaryHex: "#65a30d",
     logoFolder: "assets/logos/vibrant-employment",
   },
+  {
+    id: "kare-skin",
+    displayName: "Kare Skin",
+    primaryColor: "text-rose-600",
+    primaryHex: "#e11d48",
+    logoFolder: "assets/logos/kare-skin",
+  },
+  {
+    id: "tabernacle-beauty",
+    displayName: "Tabernacle Beauty",
+    primaryColor: "text-violet-600",
+    primaryHex: "#7c3aed",
+    logoFolder: "assets/logos/tabernacle-beauty",
+  },
 ];
 
 export function getBrandById(id: string): Brand | undefined {

@@ -41,7 +41,7 @@ export function VideoPreview({
   );
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-black shadow-inner">
+    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-black shadow-inner dark:border-slate-700">
       <div
         className="mx-auto w-full max-w-[360px]"
         style={{ aspectRatio: "1080 / 1920" }}

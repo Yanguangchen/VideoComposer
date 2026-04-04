@@ -33,18 +33,22 @@ export function MediaUploader({
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="text-sm font-semibold text-slate-800">{label}</div>
+      <div className="text-sm font-semibold text-slate-800 dark:text-slate-100">
+        {label}
+      </div>
       <div
         {...getRootProps()}
         className={`flex min-h-[160px] cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed p-4 transition-colors ${
           isDragActive
-            ? "border-blue-500 bg-blue-50"
-            : "border-slate-300 bg-white hover:border-blue-400"
+            ? "border-blue-500 bg-blue-50 dark:border-blue-400 dark:bg-blue-950/40"
+            : "border-slate-300 bg-white hover:border-blue-400 dark:border-slate-600 dark:bg-slate-900/40 dark:hover:border-blue-500"
         }`}
       >
         <input {...getInputProps()} />
-        <p className="text-center text-xs text-slate-600">{description}</p>
-        <p className="mt-2 text-[11px] text-slate-400">
+        <p className="text-center text-xs text-slate-600 dark:text-slate-300">
+          {description}
+        </p>
+        <p className="mt-2 text-[11px] text-slate-400 dark:text-slate-500">
           Drag &amp; drop or click to browse
         </p>
       </div>
@@ -53,7 +57,7 @@ export function MediaUploader({
         <img
           src={imageSrc}
           alt={label}
-          className="max-h-48 w-full rounded-lg object-contain ring-1 ring-slate-200"
+          className="max-h-48 w-full rounded-lg object-contain ring-1 ring-slate-200 dark:ring-slate-600"
         />
       ) : null}
     </div>

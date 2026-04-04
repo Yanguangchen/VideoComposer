@@ -37,6 +37,7 @@ export const defaultBeforeAfterProps: BeforeAfterTemplateProps = {
   musicSrc: "",
   logoSrc: `/${defaultBrand.logoFolder}/logo.svg`,
   showLogo: true,
+  showArrow: true,
   headlineColorHex: DEFAULT_HEADLINE_COLOR_HEX,
   captionColorHex: DEFAULT_CAPTION_COLOR_HEX,
   serviceTitle: "",

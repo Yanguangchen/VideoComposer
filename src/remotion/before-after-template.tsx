@@ -40,6 +40,8 @@ export type BeforeAfterTemplateProps = {
   logoSrc: string;
   /** When false, the circular brand logo is not drawn. */
   showLogo: boolean;
+  /** Decorative arrow between before and after images (left side). */
+  showArrow: boolean;
   /** Large top headline (brand title). */
   headlineColorHex: string;
   /** Service line below images. */
@@ -64,6 +66,7 @@ export const BeforeAfterTemplate: FC<BeforeAfterTemplateProps> = ({
   musicSrc,
   logoSrc,
   showLogo,
+  showArrow,
   headlineColorHex,
   captionColorHex,
   serviceTitle,
@@ -189,17 +192,19 @@ export const BeforeAfterTemplate: FC<BeforeAfterTemplateProps> = ({
             }}
           />
 
-          <Img
-            src={staticFile("assets/ui/arrow-down.svg")}
-            style={{
-              position: "absolute",
-              left: -56,
-              top: "24%",
-              width: 96,
-              height: "auto",
-              filter: "drop-shadow(0 6px 12px rgba(0,0,0,0.35))",
-            }}
-          />
+          {showArrow ? (
+            <Img
+              src={staticFile("assets/ui/arrow-down.svg")}
+              style={{
+                position: "absolute",
+                left: -56,
+                top: "32%",
+                width: 96,
+                height: "auto",
+                filter: "drop-shadow(0 6px 12px rgba(0,0,0,0.35))",
+              }}
+            />
+          ) : null}
 
           {showLogo && logoSrc ? (
             <div

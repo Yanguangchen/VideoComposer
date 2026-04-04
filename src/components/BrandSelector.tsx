@@ -10,7 +10,7 @@ type Props = {
 
 export function BrandSelector({ brands, activeBrandId, onSelect }: Props) {
   return (
-    <div className="grid grid-cols-1 gap-4 rounded-xl bg-gray-100 p-6 md:grid-cols-3">
+    <div className="grid grid-cols-1 gap-4 rounded-xl bg-gray-100 p-6 dark:bg-slate-800/80 md:grid-cols-3">
       {brands.map((b) => (
         <button
           key={b.id}

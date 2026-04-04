@@ -12,13 +12,22 @@ import { TemplateModeToggle } from "@/components/TemplateModeToggle";
 import { BackgroundMusicControls } from "@/components/BackgroundMusicControls";
 import { VideoDurationControl } from "@/components/VideoDurationControl";
 import { VideoTextColors } from "@/components/VideoTextColors";
+import { DashboardStepAccordion } from "@/components/DashboardStepAccordion";
+import { SignInModal } from "@/components/SignInModal";
+import { ThemeToggle } from "@/components/theme-toggle";
+import { readSimulatedSignedIn, writeSimulatedSignedIn } from "@/lib/simulated-auth";
 
 const VideoPreview = dynamic(
   () =>
     import("@/components/VideoPreview").then((m) => ({
       default: m.VideoPreview,
     })),
-  { ssr: false, loading: () => <p className="text-sm text-slate-500">Loading preview…</p> },
+  {
+    ssr: false,
+    loading: () => (
+      <p className="text-sm text-slate-500 dark:text-slate-400">Loading preview…</p>
+    ),
+  },
 );
 import { brandLogoPublicUrl, brands, getBrandById } from "@/config/brands";
 import {
@@ -97,9 +106,19 @@ export function DashboardClient() {
   const [durationSeconds, setDurationSeconds] = useState(
     DEFAULT_DURATION_SECONDS,
   );
+  const [openLeftStepId, setOpenLeftStepId] = useState<string | null>(null);
+  const [previewAccordionOpen, setPreviewAccordionOpen] = useState(true);
+  const [showBeforeAfterArrow, setShowBeforeAfterArrow] = useState(true);
+  const [simulatedAuthReady, setSimulatedAuthReady] = useState(false);
+  const [simulatedSignedIn, setSimulatedSignedIn] = useState(false);
 
   const carouselSlidesRef = useRef(carouselSlides);
   carouselSlidesRef.current = carouselSlides;
+
+  useEffect(() => {
+    setSimulatedSignedIn(readSimulatedSignedIn());
+    setSimulatedAuthReady(true);
+  }, []);
 
   useEffect(() => {
     setLogoFile(null);
@@ -241,6 +260,7 @@ export function DashboardClient() {
       logoSrc:
         showLogo && logoFile ? brandLogoPublicUrl(brand, logoFile) : "",
       showLogo,
+      showArrow: showBeforeAfterArrow,
       headlineColorHex,
       captionColorHex,
       serviceTitle,
@@ -254,6 +274,7 @@ export function DashboardClient() {
       afterUrl,
       logoFile,
       showLogo,
+      showBeforeAfterArrow,
       backgroundAndMusicPaths.bgSrc,
       backgroundAndMusicPaths.musicSrc,
       headlineColorHex,
@@ -441,6 +462,7 @@ export function DashboardClient() {
       musicSrc: musicForRender,
       logoSrc: logoSrcForRender,
       showLogo,
+      showArrow: showBeforeAfterArrow,
       headlineColorHex,
       captionColorHex,
       serviceTitle,
@@ -469,6 +491,7 @@ export function DashboardClient() {
     musicPath,
     durationFrames,
     showLogo,
+    showBeforeAfterArrow,
   ]);
 
   const canExport =
@@ -489,68 +512,117 @@ export function DashboardClient() {
         ? "7. Carousel slides"
         : "7. Before / After photos";
 
+  if (!simulatedAuthReady) {
+    return (
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950" aria-hidden />
+    );
+  }
+
+  if (!simulatedSignedIn) {
+    return (
+      <SignInModal
+        onSuccess={() => {
+          setSimulatedSignedIn(true);
+        }}
+      />
+    );
+  }
+
   return (
-    <div className="mx-auto flex max-w-7xl flex-col gap-8 px-4 py-10">
-      <header className="space-y-2">
-        <h1 className="text-3xl font-bold tracking-tight text-slate-900">
-          Video Composer
-        </h1>
-        <p className="text-slate-600">
-          Multi-brand marketing videos — choose a layout, pick a client,
-          select a logo, add copy, upload media, preview, then export MP4.
-        </p>
+    <div className="flex min-h-screen flex-col">
+      <header className="sticky top-0 z-40 border-b border-slate-200/90 bg-white/90 shadow-sm backdrop-blur-md supports-[backdrop-filter]:bg-white/75 dark:border-slate-700/80 dark:bg-slate-950/90 dark:supports-[backdrop-filter]:bg-slate-950/75">
+        <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:gap-4 sm:py-3.5">
+          <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-slate-100 sm:text-2xl">
+            Video Composer
+          </h1>
+          <p className="flex-1 text-sm leading-snug text-slate-600 dark:text-slate-400 sm:text-right">
+            Multi-brand marketing videos — choose a layout, pick a client,
+            select a logo, add copy, upload media, preview, then export MP4.
+          </p>
+          <div className="flex shrink-0 items-center gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                writeSimulatedSignedIn(false);
+                setSimulatedSignedIn(false);
+              }}
+              className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+            >
+              Sign out
+            </button>
+            <ThemeToggle />
+          </div>
+        </div>
       </header>
 
-      <div className="grid gap-8 lg:grid-cols-2">
-        <div className="space-y-6">
-          <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-            <TemplateModeToggle
-              value={templateMode}
-              onChange={setTemplateMode}
-            />
-          </section>
+      <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-8">
+        <div className="grid gap-8 lg:grid-cols-2">
+          <div className="space-y-3">
+          <DashboardStepAccordion
+            id="layout"
+            title="Layout"
+            accent="indigo"
+            openId={openLeftStepId}
+            onOpenChange={setOpenLeftStepId}
+          >
+            <div className="pt-1">
+              <TemplateModeToggle
+                value={templateMode}
+                onChange={setTemplateMode}
+              />
+            </div>
+          </DashboardStepAccordion>
 
-          <section>
-            <h2 className="mb-3 text-lg font-semibold text-slate-800">
-              1. Brand
-            </h2>
+          <DashboardStepAccordion
+            id="brand"
+            title="1. Brand"
+            accent="violet"
+            openId={openLeftStepId}
+            onOpenChange={setOpenLeftStepId}
+          >
             <BrandSelector
               brands={brands}
               activeBrandId={activeBrandId}
               onSelect={setActiveBrandId}
             />
-          </section>
+          </DashboardStepAccordion>
 
-          <section>
-            <h2 className="mb-3 text-lg font-semibold text-slate-800">
-              2. Logo (from disk)
-            </h2>
+          <DashboardStepAccordion
+            id="logo"
+            title="2. Logo (from disk)"
+            accent="sky"
+            openId={openLeftStepId}
+            onOpenChange={setOpenLeftStepId}
+          >
             <LogoPicker
               key={brand.id}
               brand={brand}
               value={logoFile}
               onChange={setLogoFile}
             />
-            <label className="mt-3 flex cursor-pointer items-center gap-2 text-sm text-slate-800">
+            <label className="mt-3 flex cursor-pointer items-center gap-2 text-sm text-slate-800 dark:text-slate-200">
               <input
                 type="checkbox"
                 checked={showLogo}
                 onChange={(e) => setShowLogo(e.target.checked)}
-                className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:ring-offset-slate-900"
               />
               Show logo in video
             </label>
             {!showLogo ? (
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                 Logo is hidden; export does not require a logo file.
               </p>
             ) : null}
-          </section>
+          </DashboardStepAccordion>
 
-          <section>
-            <h2 className="mb-3 text-lg font-semibold text-slate-800">
-              3. Video text colors
-            </h2>
+          <DashboardStepAccordion
+            id="colors"
+            title="3. Video text colors"
+            accent="rose"
+            openId={openLeftStepId}
+            onOpenChange={setOpenLeftStepId}
+          >
             <VideoTextColors
               headlineColorHex={headlineColorHex}
               captionColorHex={captionColorHex}
@@ -558,13 +630,16 @@ export function DashboardClient() {
               onHeadlineChange={setHeadlineColorHex}
               onCaptionChange={setCaptionColorHex}
             />
-          </section>
+          </DashboardStepAccordion>
 
-          <section>
-            <h2 className="mb-3 text-lg font-semibold text-slate-800">
-              4. Background video & music
-            </h2>
-            <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+          <DashboardStepAccordion
+            id="background"
+            title="4. Background video & music"
+            accent="emerald"
+            openId={openLeftStepId}
+            onOpenChange={setOpenLeftStepId}
+          >
+            <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-4 dark:border-slate-700 dark:bg-slate-800/50">
               <BackgroundMusicControls
                 backgroundOptions={backgroundOptions}
                 musicOptions={musicOptions}
@@ -575,13 +650,16 @@ export function DashboardClient() {
                 mediaLoading={mediaLoading}
               />
             </div>
-          </section>
+          </DashboardStepAccordion>
 
-          <section>
-            <h2 className="mb-3 text-lg font-semibold text-slate-800">
-              5. Text & fonts
-            </h2>
-            <div className="flex flex-col gap-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+          <DashboardStepAccordion
+            id="text"
+            title="5. Text & fonts"
+            accent="amber"
+            openId={openLeftStepId}
+            onOpenChange={setOpenLeftStepId}
+          >
+            <div className="flex flex-col gap-4 rounded-xl border border-slate-200 bg-slate-50/80 p-4 dark:border-slate-700 dark:bg-slate-800/50">
               <ServiceFontPicker
                 label="Brand title font"
                 description="Typeface for the large brand name at the top of the video."
@@ -589,10 +667,10 @@ export function DashboardClient() {
                 onChange={setBrandTitleFontId}
               />
               <div>
-                <span className="text-sm font-semibold text-slate-800">
+                <span className="text-sm font-semibold text-slate-800 dark:text-slate-200">
                   Subtitle (optional)
                 </span>
-                <p className="mt-1 text-xs text-slate-500">
+                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                   Smaller line under the photos (same color and title font).
                 </p>
                 <input
@@ -600,20 +678,20 @@ export function DashboardClient() {
                   value={subtitleText}
                   onChange={(e) => setSubtitleText(e.target.value)}
                   placeholder="e.g. Beauty & Wellness"
-                  className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400"
+                  className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500"
                 />
               </div>
               <div>
-                <label className="flex cursor-pointer items-center gap-2 text-sm font-medium text-slate-800">
+                <label className="flex cursor-pointer items-center gap-2 text-sm font-medium text-slate-800 dark:text-slate-200">
                   <input
                     type="checkbox"
                     checked={showPriceTag}
                     onChange={(e) => setShowPriceTag(e.target.checked)}
-                    className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                    className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:ring-offset-slate-900"
                   />
                   Show price tag (below images)
                 </label>
-                <p className="mt-1 text-xs text-slate-500">
+                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                   Optional pill under the images; uses the same headline color as
                   the title block.
                 </p>
@@ -623,7 +701,7 @@ export function DashboardClient() {
                     value={priceTagText}
                     onChange={(e) => setPriceTagText(e.target.value)}
                     placeholder="e.g. $99 · From $129"
-                    className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400"
+                    className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500"
                   />
                 ) : null}
               </div>
@@ -637,10 +715,10 @@ export function DashboardClient() {
               ) : (
                 <>
                   <div>
-                    <span className="text-sm font-semibold text-slate-800">
+                    <span className="text-sm font-semibold text-slate-800 dark:text-slate-200">
                       Service title
                     </span>
-                    <p className="mt-1 text-xs text-slate-500">
+                    <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                       Shown below the photo block (e.g. service name or offer).
                     </p>
                     <input
@@ -648,7 +726,7 @@ export function DashboardClient() {
                       value={serviceTitle}
                       onChange={(e) => setServiceTitle(e.target.value)}
                       placeholder="e.g. Signature Hydra Facial"
-                      className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400"
+                      className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500"
                     />
                   </div>
                   <ServiceFontPicker
@@ -660,22 +738,28 @@ export function DashboardClient() {
                 </>
               )}
             </div>
-          </section>
+          </DashboardStepAccordion>
 
-          <section>
-            <h2 className="mb-3 text-lg font-semibold text-slate-800">
-              6. Video length
-            </h2>
+          <DashboardStepAccordion
+            id="duration"
+            title="6. Video length"
+            accent="cyan"
+            openId={openLeftStepId}
+            onOpenChange={setOpenLeftStepId}
+          >
             <VideoDurationControl
               durationSeconds={durationSeconds}
               onChange={setDurationSeconds}
             />
-          </section>
+          </DashboardStepAccordion>
 
-          <section>
-            <h2 className="mb-3 text-lg font-semibold text-slate-800">
-              {photosHeading}
-            </h2>
+          <DashboardStepAccordion
+            id="photos"
+            title={photosHeading}
+            accent="fuchsia"
+            openId={openLeftStepId}
+            onOpenChange={setOpenLeftStepId}
+          >
             {templateMode === "single-image" ? (
               <MediaUploader
                 label="Hero image"
@@ -689,64 +773,90 @@ export function DashboardClient() {
                 onChange={setCarouselSlides}
               />
             ) : (
-              <div className="grid gap-4 sm:grid-cols-2">
-                <MediaUploader
-                  label="Before"
-                  description="Upload the &quot;before&quot; photo."
-                  imageSrc={beforeUrl}
-                  onFile={setBefore}
-                />
-                <MediaUploader
-                  label="After"
-                  description="Upload the &quot;after&quot; photo."
-                  imageSrc={afterUrl}
-                  onFile={setAfter}
-                />
+              <div className="flex flex-col gap-4">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <MediaUploader
+                    label="Before"
+                    description="Upload the &quot;before&quot; photo."
+                    imageSrc={beforeUrl}
+                    onFile={setBefore}
+                  />
+                  <MediaUploader
+                    label="After"
+                    description="Upload the &quot;after&quot; photo."
+                    imageSrc={afterUrl}
+                    onFile={setAfter}
+                  />
+                </div>
+                <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-800 dark:text-slate-200">
+                  <input
+                    type="checkbox"
+                    checked={showBeforeAfterArrow}
+                    onChange={(e) => setShowBeforeAfterArrow(e.target.checked)}
+                    className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:ring-offset-slate-900"
+                  />
+                  Show arrow between before &amp; after
+                </label>
               </div>
             )}
-          </section>
+          </DashboardStepAccordion>
 
-          <RenderAndDownload
-            disabled={!canExport}
-            isRendering={isRendering}
-            compositionId={templateModeToCompositionId(templateMode)}
-            getInputProps={getInputProps}
-            onBusyChange={setIsRendering}
-          />
-          {!canExport ? (
-            <p className="text-sm text-amber-700">
-              {templateMode === "single-image"
-                ? showLogo
-                  ? "Select a logo and upload one image to enable export."
-                  : "Upload one image to enable export."
-                : templateMode === "carousel"
+          <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900/60">
+            <h2 className="mb-3 text-lg font-semibold text-slate-800 dark:text-slate-100">
+              Export
+            </h2>
+            <RenderAndDownload
+              disabled={!canExport}
+              isRendering={isRendering}
+              compositionId={templateModeToCompositionId(templateMode)}
+              getInputProps={getInputProps}
+              onBusyChange={setIsRendering}
+            />
+            {!canExport ? (
+              <p className="mt-3 text-sm text-amber-700 dark:text-amber-400/90">
+                {templateMode === "single-image"
                   ? showLogo
-                    ? "Select a logo and add an image for every slide to enable export."
-                    : "Add an image for every slide to enable export."
-                  : showLogo
-                    ? "Select a logo and upload both images to enable export."
-                    : "Upload both images to enable export."}
-            </p>
-          ) : null}
-        </div>
+                    ? "Select a logo and upload one image to enable export."
+                    : "Upload one image to enable export."
+                  : templateMode === "carousel"
+                    ? showLogo
+                      ? "Select a logo and add an image for every slide to enable export."
+                      : "Add an image for every slide to enable export."
+                    : showLogo
+                      ? "Select a logo and upload both images to enable export."
+                      : "Upload both images to enable export."}
+              </p>
+            ) : null}
+          </section>
+          </div>
 
-        <div className="space-y-3">
-          <h2 className="text-lg font-semibold text-slate-800">8. Preview</h2>
-          <VideoPreview
-            mode={templateMode}
-            beforeAfterProps={beforeAfterProps}
-            singleImageProps={singleImageProps}
-            carouselProps={carouselProps}
-          />
-          <p className="text-xs text-slate-500">
-            Logos: add files under{" "}
-            <code className="rounded bg-slate-100 px-1">
-              public/assets/logos/&lt;brand-id&gt;/
-            </code>{" "}
-            — they appear in the dropdown automatically.
-          </p>
+          <div>
+            <DashboardStepAccordion
+              id="preview"
+              title="8. Preview"
+              accent="orange"
+              openId={previewAccordionOpen ? "preview" : null}
+              onOpenChange={(id) => setPreviewAccordionOpen(id === "preview")}
+            >
+              <div className="space-y-3 pt-1">
+                <VideoPreview
+                  mode={templateMode}
+                  beforeAfterProps={beforeAfterProps}
+                  singleImageProps={singleImageProps}
+                  carouselProps={carouselProps}
+                />
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Logos: add files under{" "}
+                  <code className="rounded bg-slate-100 px-1 dark:bg-slate-800 dark:text-slate-300">
+                    public/assets/logos/&lt;brand-id&gt;/
+                  </code>{" "}
+                  — they appear in the dropdown automatically.
+                </p>
+              </div>
+            </DashboardStepAccordion>
+          </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

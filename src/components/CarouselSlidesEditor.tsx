@@ -60,37 +60,37 @@ export function CarouselSlidesEditor({ slides, onChange }: Props) {
 
   return (
     <div className="flex flex-col gap-4">
-      <p className="text-xs text-slate-500">
+      <p className="text-xs text-slate-500 dark:text-slate-400">
         Each slide shows for ~1.5s. Add a title per image (caption). Up to{" "}
         {MAX_CAROUSEL_SLIDES} slides.
       </p>
       {slides.map((slide, index) => (
         <div
           key={slide.id}
-          className="rounded-xl border border-slate-200 bg-slate-50/80 p-4"
+          className="rounded-xl border border-slate-200 bg-slate-50/80 p-4 dark:border-slate-700 dark:bg-slate-800/40"
         >
           <div className="mb-2 flex items-center justify-between gap-2">
-            <span className="text-xs font-bold uppercase tracking-wide text-slate-600">
+            <span className="text-xs font-bold uppercase tracking-wide text-slate-600 dark:text-slate-400">
               Slide {index + 1}
             </span>
             {slides.length > 1 ? (
               <button
                 type="button"
                 onClick={() => removeSlide(slide.id)}
-                className="text-xs font-medium text-red-600 hover:underline"
+                className="text-xs font-medium text-red-600 hover:underline dark:text-red-400"
               >
                 Remove
               </button>
             ) : null}
           </div>
-          <label className="mb-2 block text-xs font-medium text-slate-700">
+          <label className="mb-2 block text-xs font-medium text-slate-700 dark:text-slate-200">
             Slide title
             <input
               type="text"
               value={slide.title}
               onChange={(e) => setTitle(slide.id, e.target.value)}
               placeholder="e.g. Deep cleanse"
-              className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400"
+              className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500"
             />
           </label>
           <MediaUploader
@@ -105,7 +105,7 @@ export function CarouselSlidesEditor({ slides, onChange }: Props) {
         <button
           type="button"
           onClick={addSlide}
-          className="rounded-lg border-2 border-dashed border-slate-300 bg-white py-3 text-sm font-semibold text-slate-700 transition hover:border-blue-400 hover:bg-blue-50/50"
+          className="rounded-lg border-2 border-dashed border-slate-300 bg-white py-3 text-sm font-semibold text-slate-700 transition hover:border-blue-400 hover:bg-blue-50/50 dark:border-slate-600 dark:bg-slate-900/60 dark:text-slate-200 dark:hover:border-blue-500 dark:hover:bg-blue-950/30"
         >
           + Add slide
         </button>

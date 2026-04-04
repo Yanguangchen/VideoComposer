@@ -133,7 +133,7 @@ export function RenderAndDownload({
         onClick={() => {
           void handleExport();
         }}
-        className="w-full rounded-lg bg-emerald-600 px-6 py-4 text-lg font-bold text-white shadow-md transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+        className="w-full rounded-lg bg-emerald-600 px-6 py-4 text-lg font-bold text-white shadow-md transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-emerald-600 dark:hover:bg-emerald-500"
       >
         {isRendering ? "Rendering…" : "Export MP4"}
       </button>
@@ -142,7 +142,7 @@ export function RenderAndDownload({
         href="https://wizards-dashboard.vercel.app/facebook.html"
         target="_blank"
         rel="noopener noreferrer"
-        className="flex w-full items-center justify-center rounded-lg border border-slate-300 bg-white px-6 py-3 text-center text-base font-semibold text-slate-800 shadow-sm transition hover:border-slate-400 hover:bg-slate-50"
+        className="flex w-full items-center justify-center rounded-lg border border-slate-300 bg-white px-6 py-3 text-center text-base font-semibold text-slate-800 shadow-sm transition hover:border-slate-400 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:border-slate-500 dark:hover:bg-slate-700"
       >
         Go to Facebook Pages
       </a>
@@ -150,7 +150,7 @@ export function RenderAndDownload({
       {isRendering ? (
         <div className="space-y-1.5">
           <div
-            className="h-2.5 w-full overflow-hidden rounded-full bg-slate-200"
+            className="h-2.5 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700"
             role="group"
             aria-label="Render progress"
           >
@@ -163,10 +163,10 @@ export function RenderAndDownload({
               aria-valuemax={100}
             />
           </div>
-          <p className="text-center text-sm text-slate-600">
+          <p className="text-center text-sm text-slate-600 dark:text-slate-300">
             {phaseLabel || "Working…"}
             {progress > 0 ? (
-              <span className="text-slate-400"> · {progress}%</span>
+              <span className="text-slate-400 dark:text-slate-500"> · {progress}%</span>
             ) : null}
           </p>
         </div>
@@ -174,10 +174,12 @@ export function RenderAndDownload({
 
       {lastError ? (
         <div
-          className="rounded-lg border border-red-300 bg-red-50 px-3 py-2.5 text-sm leading-snug text-red-900"
+          className="rounded-lg border border-red-300 bg-red-50 px-3 py-2.5 text-sm leading-snug text-red-900 dark:border-red-800 dark:bg-red-950/40 dark:text-red-100"
           role="alert"
         >
-          <p className="font-semibold text-red-950">Could not export video</p>
+          <p className="font-semibold text-red-950 dark:text-red-100">
+            Could not export video
+          </p>
           <p className="mt-1 whitespace-pre-wrap">{lastError}</p>
         </div>
       ) : null}
