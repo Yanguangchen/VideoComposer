@@ -23,6 +23,10 @@ export function formatRenderError(error: unknown): string {
     return `Could not start the headless browser for rendering.${railwayHint} On Linux, install Chromium dependencies; see Remotion's docs for server rendering. [${m.slice(0, 120)}]`;
   }
 
+  if (/SIGKILL/i.test(m) && /ffmpeg/i.test(m)) {
+    return "FFmpeg was killed by the OS — the server likely ran out of memory. Try a shorter video, lower resolution, or increase the container's RAM (Railway: upgrade plan or raise memory limit).";
+  }
+
   if (/ffmpeg|encoding|codec|mux|stitch/i.test(m)) {
     return `Video encoding failed: ${m}`;
   }
