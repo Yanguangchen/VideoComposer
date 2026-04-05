@@ -7,8 +7,9 @@ A **Next.js** dashboard to build **multi-brand marketing videos**: pick a templa
 ## Stack
 
 - **Next.js 15** (App Router), **React 18**, **TypeScript**
-- **Tailwind CSS** for the dashboard UI
+- **Tailwind CSS** + **next-themes** (dark/light)
 - **Remotion 4** — compositions in `src/remotion/`, preview with `@remotion/player`, export with `@remotion/renderer` + `@remotion/bundler`
+- **react-dropzone** — uploads; **react-easy-crop** — optional crop modal after upload
 - **Google Fonts** — loaded in `src/app/layout.tsx` via `<link>` (`src/config/google-fonts.ts`); templates also preload via `@remotion/google-fonts` in `src/remotion/service-font-loaders.ts`
 
 ## Directory map
@@ -17,9 +18,9 @@ A **Next.js** dashboard to build **multi-brand marketing videos**: pick a templa
 |------|------|
 | `src/app/page.tsx` | Server page; renders `DashboardClient` |
 | `src/app/dashboard-client.tsx` | Main client UI: brand, logos, media, text, fonts, duration, preview, export |
-| `src/app/layout.tsx` | Root layout; global Google Fonts stylesheet link |
-| `src/app/globals.css` | Tailwind entry (`@tailwind` only; no font `@import`) |
-| `src/app/api/render/route.ts` | `POST` — bundles Remotion, `renderMedia`, returns MP4 bytes |
+| `src/app/layout.tsx` | Root layout; ThemeProvider, viewport, PWA metadata |
+| `src/app/globals.css` | Tailwind entry + mobile/safe-area tweaks |
+| `src/app/api/render/route.ts` | `POST` — bundles Remotion, `renderMedia`, returns MP4 bytes (see **Render tuning** below) |
 | `src/app/api/render/progress/route.ts` | `GET` — polling progress by `sessionId` (in-memory store) |
 | `src/app/api/public-media/route.ts` | Lists scanned `public/` music & backgrounds |
 | `src/app/api/brand-logos/[brandId]/route.ts` | Lists logo files per brand folder |
@@ -27,6 +28,7 @@ A **Next.js** dashboard to build **multi-brand marketing videos**: pick a templa
 | `src/remotion/Root.tsx` | Three `<Composition>` definitions + default props |
 | `src/remotion/*-template.tsx` | **BeforeAfter**, **SingleImage**, **Carousel** scene components |
 | `src/remotion/webpack-override.ts` | Webpack alias `@` → `src` for the Remotion bundler (mirrors `tsconfig` paths) |
+| `src/remotion/price-tag-badge.tsx` | Pill UI for optional price line |
 | `src/config/brands.ts` | Brand ids, display names, logo folders under `public/` |
 | `src/config/service-fonts.ts` | Service/headline font ids and defaults |
 | `src/config/template-modes.ts` | Template mode ids ↔ composition ids |
@@ -34,8 +36,17 @@ A **Next.js** dashboard to build **multi-brand marketing videos**: pick a templa
 | `src/config/background-music.ts` | URL helpers for `public/` assets |
 | `src/components/VideoPreview.tsx` | `<Player>` per mode; **key** includes font ids to remount on font change |
 | `src/components/RenderAndDownload.tsx` | Export button, progress bar, errors, link to Facebook Pages dashboard |
+| `src/components/MediaUploader.tsx` | Dropzone + preview + **Crop & position** (opens `ImageCropModal`) |
+| `src/components/ImageCropModal.tsx` | `react-easy-crop` modal; outputs JPEG via `getCroppedImageBlob` |
+| `src/components/CarouselSlidesEditor.tsx` | Per-slide image + title; uses `MediaUploader` |
+| `src/lib/get-cropped-image.ts` | Canvas export from crop pixels (max dimension 1920) |
 | `src/lib/render-progress-store.ts` | Session progress for export (same Node process as API) |
-| `src/lib/render-error.ts` | User-facing render error messages |
+| `src/lib/render-error.ts` | User-facing render error messages (SIGKILL, module missing, etc.) |
+| `src/lib/render-environment.ts` | Blocks export on Vercel/Netlify serverless unless escape hatch env |
+| `src/lib/simulated-auth.ts` | Simulated sign-in gate (localStorage) |
+| `Dockerfile` | Production image: FFmpeg, Chrome libs, Next standalone, **full `node_modules` + `src/` + `public/`**, `ensureBrowser()` in runner |
+| `railway.toml` | Force `DOCKERFILE` builder; deploy restart policy |
+| `docs/deployment.md` | Long-form: why Docker, Railway checklist, OOM/thread notes, troubleshooting |
 | `scripts/verify-remotion.ts` | Bundles Remotion entry without `next build` — run `npm run verify:remotion` |
 | `public/` | Static assets: `assets/logos/<brand-id>/`, optional `backgrounds/`, `music/` |
 
@@ -59,6 +70,27 @@ Each template receives **input props** from the dashboard (brand id, images as d
 
 **Note:** Progress storage is **in-memory** — reliable when a single Node process handles both routes (`next dev` / `next start`). Serverless multi-instance setups may not show accurate progress.
 
+### Render tuning (`src/app/api/render/route.ts`)
+
+Tuned for **low RAM** hosts (e.g. small containers):
+
+- **`concurrency: 1`**
+- **`disallowParallelEncoding: true`** — avoids Chrome + FFmpeg peak RAM overlap
+- **`ffmpegOverride`** — appends **`-threads 4`** so libx264 does not spawn dozens of threads (OOM risk)
+- **`chromiumOptions`**: `disableWebSecurity`, `enableMultiProcessOnLinux: false`
+
+Do **not** pass arbitrary Chrome **`args`** on `ChromiumOptions` — Remotion’s types do not support it.
+
+### Production Docker
+
+Next **`standalone`** output does not include all of **`src/remotion/`** or the full **`node_modules`** graph the bundler needs. The **`Dockerfile`** copies **standalone `.next`**, **`public/`**, full **`node_modules`** from `npm ci`, and **`src/`** + **`tsconfig.json`**, then runs **`ensureBrowser()`** in the **runner** stage (after FFmpeg + system libs are installed). Deploy with **Docker**, not Railpack-only Node builds.
+
+See **`docs/deployment.md`** for Railway, OOM, and stale-deploy issues.
+
+## Image crop (dashboard)
+
+After upload, **Crop & position** opens **`ImageCropModal`**: pan/zoom, aspect presets (default **9:16**). **Apply** replaces the file with a JPEG (max long side **1920**). **`MediaUploader`** accepts `sourceFile` for naming; `enableCrop` / `cropAspect` optional.
+
 ## Verification
 
 - **`npm run verify:remotion`** — ensures the Remotion bundle compiles (independent of Next.js).
@@ -71,10 +103,11 @@ Each template receives **input props** from the dashboard (brand id, images as d
 
 ## UX details (dashboard)
 
-- **Brand title** = `brand.displayName`; optional **subtitle** and **price tag** appear **below the image area** in templates.
+- **Brand title** = `brand.displayName`; optional **subtitle** and **price tag** below the image area; spacing/size tuned in templates + `price-tag-badge.tsx`.
+- **Simulated sign-in** modal (password in `src/lib/simulated-auth.ts`).
 - **Export** includes render progress UI and parsed error messages.
 - Secondary link **“Go to Facebook Pages”** → `https://wizards-dashboard.vercel.app/facebook.html` (in `RenderAndDownload.tsx`).
 
 ## Related config
 
-- `next.config.ts` — `transpilePackages` for Remotion; `serverExternalPackages` for bundler/renderer tooling.
+- `next.config.ts` — `transpilePackages` for Remotion; `serverExternalPackages` for bundler/renderer tooling; `output: "standalone"`.

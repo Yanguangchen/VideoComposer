@@ -766,6 +766,7 @@ export function DashboardClient() {
                 description="One photo for promos, products, or non-transformation content."
                 imageSrc={singleUrl}
                 onFile={setSingle}
+                sourceFile={singleFile}
               />
             ) : templateMode === "carousel" ? (
               <CarouselSlidesEditor
@@ -780,12 +781,14 @@ export function DashboardClient() {
                     description="Upload the &quot;before&quot; photo."
                     imageSrc={beforeUrl}
                     onFile={setBefore}
+                    sourceFile={beforeFile}
                   />
                   <MediaUploader
                     label="After"
                     description="Upload the &quot;after&quot; photo."
                     imageSrc={afterUrl}
                     onFile={setAfter}
+                    sourceFile={afterFile}
                   />
                 </div>
                 <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-800 dark:text-slate-200">

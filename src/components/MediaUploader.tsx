@@ -1,13 +1,20 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { useDropzone } from "react-dropzone";
+import { ImageCropModal } from "@/components/ImageCropModal";
 
 type Props = {
   label: string;
   description: string;
   imageSrc: string | null;
   onFile: (file: File | null) => void;
+  /** Original file (used for naming cropped exports). */
+  sourceFile?: File | null;
+  /** Show “Crop & position” when an image is loaded (default true). */
+  enableCrop?: boolean;
+  /** Default crop frame width ÷ height (default 9:16 for vertical video). */
+  cropAspect?: number;
 };
 
 export function MediaUploader({
@@ -15,7 +22,12 @@ export function MediaUploader({
   description,
   imageSrc,
   onFile,
+  sourceFile = null,
+  enableCrop = true,
+  cropAspect = 9 / 16,
 }: Props) {
+  const [cropOpen, setCropOpen] = useState(false);
+
   const onDrop = useCallback(
     (accepted: File[]) => {
       const f = accepted[0];
@@ -32,6 +44,14 @@ export function MediaUploader({
     /** Improves compatibility with mobile browsers that mishandle the File System Access API. */
     useFsAccessApi: false,
   });
+
+  const handleCroppedFile = useCallback(
+    (file: File) => {
+      setCropOpen(false);
+      onFile(file);
+    },
+    [onFile],
+  );
 
   return (
     <div className="flex flex-col gap-2">
@@ -55,12 +75,31 @@ export function MediaUploader({
         </p>
       </div>
       {imageSrc ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={imageSrc}
-          alt={label}
-          className="max-h-48 w-full rounded-lg object-contain ring-1 ring-slate-200 dark:ring-slate-600"
-        />
+        <>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={imageSrc}
+            alt={label}
+            className="max-h-48 w-full rounded-lg object-contain ring-1 ring-slate-200 dark:ring-slate-600"
+          />
+          {enableCrop ? (
+            <button
+              type="button"
+              onClick={() => setCropOpen(true)}
+              className="rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-800 transition hover:bg-slate-100 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
+            >
+              Crop &amp; position
+            </button>
+          ) : null}
+          <ImageCropModal
+            open={cropOpen}
+            imageSrc={imageSrc}
+            onClose={() => setCropOpen(false)}
+            onApply={handleCroppedFile}
+            fileNameHint={sourceFile?.name ?? null}
+            defaultAspect={cropAspect}
+          />
+        </>
       ) : null}
     </div>
   );

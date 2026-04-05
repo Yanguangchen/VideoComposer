@@ -98,6 +98,7 @@ export function CarouselSlidesEditor({ slides, onChange }: Props) {
             description="Photo for this slide."
             imageSrc={slide.url}
             onFile={(f) => setSlideFile(slide.id, f)}
+            sourceFile={slide.file}
           />
         </div>
       ))}

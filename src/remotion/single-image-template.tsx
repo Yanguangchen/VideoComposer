@@ -137,7 +137,7 @@ export const SingleImageTemplate: FC<SingleImageTemplateProps> = ({
             textShadow: "0 4px 24px rgba(0,0,0,0.45)",
             lineHeight: 1.15,
             maxWidth: "92%",
-            marginBottom: 36,
+            marginBottom: 48,
             width: "100%",
           }}
         >
@@ -198,8 +198,8 @@ export const SingleImageTemplate: FC<SingleImageTemplateProps> = ({
               display: "flex",
               flexDirection: "column",
               alignItems: "center",
-              gap: 10,
-              marginTop: 28,
+              gap: 22,
+              marginTop: 40,
               maxWidth: "92%",
             }}
           >
@@ -225,7 +225,7 @@ export const SingleImageTemplate: FC<SingleImageTemplateProps> = ({
               priceTagText={priceTagText}
               fontFamily={brandTitleResolved}
               color={headlineColor}
-              fontSize={32}
+              fontSize={52}
               brandTitleFontId={brandTitleFontId}
             />
           </div>
@@ -242,8 +242,8 @@ export const SingleImageTemplate: FC<SingleImageTemplateProps> = ({
               marginTop:
                 subtitleText.trim() ||
                 (showPriceTag && priceTagText.trim())
-                  ? 24
-                  : 28,
+                  ? 40
+                  : 36,
               maxWidth: "92%",
               lineHeight: 1.2,
               textShadow: "0 4px 20px rgba(0,0,0,0.55)",

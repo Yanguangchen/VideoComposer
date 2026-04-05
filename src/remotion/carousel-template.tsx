@@ -149,8 +149,8 @@ const SlideCard: FC<SlideCardProps> = ({
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
-                gap: 8,
-                marginTop: 20,
+                gap: 18,
+                marginTop: 28,
                 width: "100%",
               }}
             >
@@ -176,7 +176,7 @@ const SlideCard: FC<SlideCardProps> = ({
                 priceTagText={priceTagText}
                 fontFamily={brandTitleResolved}
                 color={headlineColor}
-                fontSize={30}
+                fontSize={48}
                 brandTitleFontId={brandTitleFontId}
               />
             </div>
@@ -190,7 +190,7 @@ const SlideCard: FC<SlideCardProps> = ({
                 fontSize: 36,
                 fontWeight: serviceFontWeight,
                 textAlign: "center",
-                marginTop: 20,
+                marginTop: 32,
                 lineHeight: 1.2,
                 textShadow: "0 4px 20px rgba(0,0,0,0.55)",
               }}
