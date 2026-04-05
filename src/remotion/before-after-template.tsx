@@ -23,6 +23,7 @@ import {
   preloadAllServiceFonts,
   SERVICE_FONT_CSS,
 } from "@/remotion/service-font-loaders";
+import { uiLayerMotion } from "@/remotion/ui-motion";
 
 export type BeforeAfterTemplateProps = {
   brandId: string;
@@ -72,6 +73,7 @@ export const BeforeAfterTemplate: FC<BeforeAfterTemplateProps> = ({
   serviceTitle,
   brandTitleFontId,
   serviceFontId,
+  durationInFrames,
 }) => {
   const [fontBlock] = useState(() => delayRender());
 
@@ -101,10 +103,10 @@ export const BeforeAfterTemplate: FC<BeforeAfterTemplateProps> = ({
 
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
-  const fade = interpolate(frame, [0, 15], [0, 1], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-  });
+  const motionTitle = uiLayerMotion(frame, durationInFrames, 0, 3);
+  const motionPhotos = uiLayerMotion(frame, durationInFrames, 8, 2);
+  const motionSub = uiLayerMotion(frame, durationInFrames, 16, 1);
+  const motionService = uiLayerMotion(frame, durationInFrames, 24, 0);
   const pulse = interpolate(
     Math.sin((frame / fps) * Math.PI * 2),
     [-1, 1],
@@ -138,7 +140,6 @@ export const BeforeAfterTemplate: FC<BeforeAfterTemplateProps> = ({
           alignItems: "center",
           justifyContent: "center",
           padding: 40,
-          opacity: fade,
         }}
       >
         <div
@@ -153,6 +154,8 @@ export const BeforeAfterTemplate: FC<BeforeAfterTemplateProps> = ({
             maxWidth: "92%",
             marginBottom: 52,
             width: "100%",
+            opacity: motionTitle.opacity,
+            transform: `translateY(${motionTitle.translateY}px)`,
           }}
         >
           {titleText}
@@ -171,6 +174,8 @@ export const BeforeAfterTemplate: FC<BeforeAfterTemplateProps> = ({
             display: "flex",
             flexDirection: "column",
             gap: 16,
+            opacity: motionPhotos.opacity,
+            transform: `translateY(${motionPhotos.translateY}px)`,
           }}
         >
           <Img
@@ -241,6 +246,8 @@ export const BeforeAfterTemplate: FC<BeforeAfterTemplateProps> = ({
               gap: 22,
               marginTop: 40,
               maxWidth: "92%",
+              opacity: motionSub.opacity,
+              transform: `translateY(${motionSub.translateY}px)`,
             }}
           >
             {subtitleText.trim() ? (
@@ -287,6 +294,8 @@ export const BeforeAfterTemplate: FC<BeforeAfterTemplateProps> = ({
               maxWidth: "92%",
               lineHeight: 1.2,
               textShadow: "0 4px 20px rgba(0,0,0,0.55)",
+              opacity: motionService.opacity,
+              transform: `translateY(${motionService.translateY}px)`,
             }}
           >
             {serviceTitle.trim()}

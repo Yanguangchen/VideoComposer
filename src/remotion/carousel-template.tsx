@@ -24,6 +24,7 @@ import {
   preloadAllServiceFonts,
   SERVICE_FONT_CSS,
 } from "@/remotion/service-font-loaders";
+import { uiLayerMotion } from "@/remotion/ui-motion";
 
 /** Time each slide is visible (30 fps → 1.5s per slide). */
 export const CAROUSEL_FRAMES_PER_SLIDE = 45;
@@ -80,6 +81,7 @@ type SlideCardProps = {
   brandTitleResolved: string;
   brandTitleFontId: string;
   headlineColor: string;
+  slideDurationInFrames: number;
 };
 
 const SlideCard: FC<SlideCardProps> = ({
@@ -95,6 +97,7 @@ const SlideCard: FC<SlideCardProps> = ({
   brandTitleResolved,
   brandTitleFontId,
   headlineColor,
+  slideDurationInFrames,
 }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
@@ -103,13 +106,12 @@ const SlideCard: FC<SlideCardProps> = ({
     [-1, 1],
     [0.96, 1.04],
   );
-  const fade = interpolate(frame, [0, 12], [0, 1], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-  });
+  const motionCard = uiLayerMotion(frame, slideDurationInFrames, 0, 2);
+  const motionSub = uiLayerMotion(frame, slideDurationInFrames, 8, 1);
+  const motionSlideTitle = uiLayerMotion(frame, slideDurationInFrames, 16, 0);
 
   return (
-    <AbsoluteFill style={{ opacity: fade }}>
+    <AbsoluteFill>
       <AbsoluteFill
         style={{
           display: "flex",
@@ -130,6 +132,8 @@ const SlideCard: FC<SlideCardProps> = ({
             padding: 20,
             backdropFilter: "blur(10px)",
             boxShadow: "0 24px 80px rgba(0,0,0,0.35)",
+            opacity: motionCard.opacity,
+            transform: `translateY(${motionCard.translateY}px)`,
           }}
         >
           <Img
@@ -152,6 +156,8 @@ const SlideCard: FC<SlideCardProps> = ({
                 gap: 18,
                 marginTop: 28,
                 width: "100%",
+                opacity: motionSub.opacity,
+                transform: `translateY(${motionSub.translateY}px)`,
               }}
             >
               {subtitleText.trim() ? (
@@ -193,6 +199,8 @@ const SlideCard: FC<SlideCardProps> = ({
                 marginTop: 32,
                 lineHeight: 1.2,
                 textShadow: "0 4px 20px rgba(0,0,0,0.55)",
+                opacity: motionSlideTitle.opacity,
+                transform: `translateY(${motionSlideTitle.translateY}px)`,
               }}
             >
               {slide.title.trim()}
@@ -245,6 +253,13 @@ export const CarouselTemplate: FC<CarouselTemplateProps> = ({
 }) => {
   const [fontBlock] = useState(() => delayRender());
   const { durationInFrames: compositionDuration } = useVideoConfig();
+  const frame = useCurrentFrame();
+  const motionTopTitle = uiLayerMotion(
+    frame,
+    compositionDuration,
+    0,
+    3,
+  );
 
   useEffect(() => {
     preloadAllServiceFonts()
@@ -317,6 +332,8 @@ export const CarouselTemplate: FC<CarouselTemplateProps> = ({
               textShadow: "0 4px 24px rgba(0,0,0,0.45)",
               lineHeight: 1.15,
               width: "100%",
+              opacity: motionTopTitle.opacity,
+              transform: `translateY(${motionTopTitle.translateY}px)`,
             }}
           >
             {titleText}
@@ -348,6 +365,7 @@ export const CarouselTemplate: FC<CarouselTemplateProps> = ({
                 brandTitleResolved={brandTitleResolved}
                 brandTitleFontId={brandTitleFontId}
                 headlineColor={headlineColor}
+                slideDurationInFrames={segmentFrames}
               />
             </Sequence>
           );

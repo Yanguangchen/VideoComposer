@@ -22,6 +22,7 @@ import {
   preloadAllServiceFonts,
   SERVICE_FONT_CSS,
 } from "@/remotion/service-font-loaders";
+import { uiLayerMotion } from "@/remotion/ui-motion";
 
 export type SingleImageTemplateProps = {
   brandId: string;
@@ -58,6 +59,7 @@ export const SingleImageTemplate: FC<SingleImageTemplateProps> = ({
   serviceTitle,
   brandTitleFontId,
   serviceFontId,
+  durationInFrames,
 }) => {
   const [fontBlock] = useState(() => delayRender());
 
@@ -87,10 +89,10 @@ export const SingleImageTemplate: FC<SingleImageTemplateProps> = ({
 
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
-  const fade = interpolate(frame, [0, 15], [0, 1], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-  });
+  const motionTitle = uiLayerMotion(frame, durationInFrames, 0, 3);
+  const motionPhotos = uiLayerMotion(frame, durationInFrames, 8, 2);
+  const motionSub = uiLayerMotion(frame, durationInFrames, 16, 1);
+  const motionService = uiLayerMotion(frame, durationInFrames, 24, 0);
   const pulse = interpolate(
     Math.sin((frame / fps) * Math.PI * 2),
     [-1, 1],
@@ -124,7 +126,6 @@ export const SingleImageTemplate: FC<SingleImageTemplateProps> = ({
           alignItems: "center",
           justifyContent: "center",
           padding: 40,
-          opacity: fade,
         }}
       >
         <div
@@ -139,6 +140,8 @@ export const SingleImageTemplate: FC<SingleImageTemplateProps> = ({
             maxWidth: "92%",
             marginBottom: 48,
             width: "100%",
+            opacity: motionTitle.opacity,
+            transform: `translateY(${motionTitle.translateY}px)`,
           }}
         >
           {titleText}
@@ -154,6 +157,8 @@ export const SingleImageTemplate: FC<SingleImageTemplateProps> = ({
             padding: 20,
             backdropFilter: "blur(10px)",
             boxShadow: "0 24px 80px rgba(0,0,0,0.35)",
+            opacity: motionPhotos.opacity,
+            transform: `translateY(${motionPhotos.translateY}px)`,
           }}
         >
           <Img
@@ -201,6 +206,8 @@ export const SingleImageTemplate: FC<SingleImageTemplateProps> = ({
               gap: 22,
               marginTop: 40,
               maxWidth: "92%",
+              opacity: motionSub.opacity,
+              transform: `translateY(${motionSub.translateY}px)`,
             }}
           >
             {subtitleText.trim() ? (
@@ -247,6 +254,8 @@ export const SingleImageTemplate: FC<SingleImageTemplateProps> = ({
               maxWidth: "92%",
               lineHeight: 1.2,
               textShadow: "0 4px 20px rgba(0,0,0,0.55)",
+              opacity: motionService.opacity,
+              transform: `translateY(${motionService.translateY}px)`,
             }}
           >
             {serviceTitle.trim()}
