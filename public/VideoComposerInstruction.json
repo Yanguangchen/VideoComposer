@@ -190,6 +190,20 @@
     "optionalMusic": "public/music/",
     "brandsConfig": "src/config/brands.ts"
   },
+  "mediaSourcingForAgents": {
+    "whenNoLocalContent": "If the user has no photos, videos, logos, background clips, or music on disk, the agent may search the public web to find suitable assets, then download them locally and use the app’s upload and picker controls as usual. The UI only accepts files the user (or agent on their behalf) provides—it does not fetch media from the internet by itself.",
+    "suggestedSources": [
+      "Google Images (use Tools → Usage rights to filter for reuse-allowed images when appropriate)",
+      "Other image search engines or stock sites (e.g. Unsplash, Pexels, Pixabay for often permissively licensed photos)",
+      "Stock video or audio libraries for optional background video and music tracks compatible with the project license"
+    ],
+    "workflow": [
+      "Search for visuals that match the brand, template mode (before/after pair, single hero, or carousel slides), and aspect ratio needs (vertical 9:16 works well for this composer).",
+      "Download files to the machine, then upload them through MediaUploader, CarouselSlidesEditor, LogoPicker, or place them under public/ for backgrounds/music if deploying or developing locally.",
+      "Prefer royalty-free, CC0, or explicitly licensed assets when the video will be published commercially; avoid copyrighted material without permission."
+    ],
+    "legalNote": "Agents should remind users that they are responsible for rights to all images, video, music, and logos used in exports. Automated scraping of Google Images without checking license terms is risky; prefer sources with clear license terms."
+  },
   "imageCrop": {
     "description": "After upload, users can open Crop & position (ImageCropModal) with react-easy-crop; Apply exports JPEG with max long side 1920px.",
     "implementationFiles": [
