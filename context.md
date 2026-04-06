@@ -49,6 +49,14 @@ A **Next.js** dashboard to build **multi-brand marketing videos**: pick a templa
 | `docs/deployment.md` | Long-form: why Docker, Railway checklist, OOM/thread notes, troubleshooting |
 | `scripts/verify-remotion.ts` | Bundles Remotion entry without `next build` — run `npm run verify:remotion` |
 | `public/` | Static assets: `assets/logos/<brand-id>/`, optional `backgrounds/`, `music/` |
+| `public/VideoComposerInstruction.json` | **AI agent instructions** (JSON): app flow, APIs, template rules, deployment notes; served at **`/VideoComposerInstruction.json`** |
+| `src/components/AiAgentsInstructionFab.tsx` | Floating **bottom-right** control — opens the instruction JSON in a new browser tab (shown after auth gate, `z-index` above sign-in overlay) |
+
+## AI agent instructions
+
+- **File:** `public/VideoComposerInstruction.json` (same content must live under `public/` so Next.js serves it).
+- **Humans** use this **`context.md`** for prose; **agents** can load the JSON for structured fields (routing, auth, export steps, `templateModes`, API list, Remotion paths).
+- The JSON includes **`mediaSourcingForAgents`**: if there is no local media, agents may search the web (e.g. Google Images with usage-rights filters, stock sites), **download** files, then upload through the dashboard—the app does not fetch remote media automatically. Users remain responsible for **licensing** of all assets in exports.
 
 ## Remotion compositions
 
@@ -105,6 +113,7 @@ After upload, **Crop & position** opens **`ImageCropModal`**: pan/zoom, aspect p
 
 - **Brand title** = `brand.displayName`; optional **subtitle** and **price tag** below the image area; spacing/size tuned in templates + `price-tag-badge.tsx`.
 - **Simulated sign-in** modal (password in `src/lib/simulated-auth.ts`).
+- **Instruction for AI Agents** — floating button (`AiAgentsInstructionFab`) opens **`/VideoComposerInstruction.json`** in a new tab.
 - **Export** includes render progress UI and parsed error messages.
 - Secondary link **“Go to Facebook Pages”** → `https://wizards-dashboard.vercel.app/facebook.html` (in `RenderAndDownload.tsx`).
 
