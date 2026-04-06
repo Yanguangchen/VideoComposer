@@ -1,0 +1,226 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "schemaVersion": 1,
+  "documentType": "aiAgentInstructions",
+  "app": {
+    "name": "Video Composer",
+    "purpose": "Web dashboard to configure multi-brand marketing videos (Remotion templates), preview in-browser, and export MP4 via a server-side render API.",
+    "primaryUrl": "/",
+    "stack": [
+      "Next.js 15 App Router",
+      "React 18",
+      "TypeScript",
+      "Tailwind CSS",
+      "next-themes",
+      "Remotion 4 (@remotion/player, @remotion/renderer, @remotion/bundler)"
+    ]
+  },
+  "routing": {
+    "model": "single-page",
+    "description": "The home page loads the full dashboard. There is no multi-page in-app navigation for the main workflow."
+  },
+  "authentication": {
+    "type": "simulatedClientGate",
+    "storageKey": "video-composer-simulated-auth",
+    "storageFormat": "localStorage value '1' means signed in",
+    "implementationFile": "src/lib/simulated-auth.ts",
+    "note": "Password is defined in code (SIMULATED_AUTH_PASSWORD). Not production-grade auth.",
+    "userFlow": [
+      "On load, if not signed in, only the SignInModal is shown.",
+      "Successful password sets localStorage and reveals the dashboard.",
+      "Sign out in the header clears storage and returns to the sign-in modal."
+    ]
+  },
+  "dashboardLayout": {
+    "header": {
+      "sticky": true,
+      "contains": ["App title", "Short description", "Sign out", "Light/dark theme toggle"]
+    },
+    "main": {
+      "maxWidth": "max-w-7xl",
+      "largeScreens": "Two-column grid (lg:grid-cols-2): left = workflow steps + export; right = preview."
+    },
+    "leftColumn": {
+      "pattern": "Accordion steps (DashboardStepAccordion); only one left step open at a time (openLeftStepId).",
+      "sectionsInOrder": [
+        {
+          "id": "layout",
+          "title": "Layout",
+          "action": "Choose video layout via TemplateModeToggle."
+        },
+        {
+          "id": "brand",
+          "title": "1. Brand",
+          "action": "Select brand (BrandSelector). Changing brand clears the selected logo file."
+        },
+        {
+          "id": "logo",
+          "title": "2. Logo (from disk)",
+          "action": "Pick logo from brand folder (LogoPicker). Toggle 'Show logo in video'. If logo is hidden, export does not require a logo file."
+        },
+        {
+          "id": "colors",
+          "title": "3. Video text colors",
+          "action": "Set headline and caption hex colors (VideoTextColors)."
+        },
+        {
+          "id": "background",
+          "title": "4. Background video & music",
+          "action": "Select optional background and music from scanned public assets (BackgroundMusicControls)."
+        },
+        {
+          "id": "text",
+          "title": "5. Text & fonts",
+          "action": "Brand title font, optional subtitle, optional price tag. Non-carousel: service title + service font. Carousel: slide caption font instead of service title block."
+        },
+        {
+          "id": "duration",
+          "title": "6. Video length",
+          "action": "Duration in seconds clamped between min and max (VideoDurationControl)."
+        },
+        {
+          "id": "photos",
+          "title": "7. Photos (label changes by mode)",
+          "action": "Upload media appropriate to the selected template mode (MediaUploader, CarouselSlidesEditor, or before/after pair)."
+        },
+        {
+          "id": "exportCard",
+          "title": "Export",
+          "action": "RenderAndDownload — not inside the accordion list; separate card below step 7."
+        }
+      ]
+    },
+    "rightColumn": {
+      "title": "8. Preview",
+      "note": "Separate accordion state from left column. Remotion Player (VideoPreview) shows live preview; loaded with ssr:false."
+    }
+  },
+  "templateModes": {
+    "default": "before-after",
+    "modes": [
+      {
+        "id": "before-after",
+        "compositionId": "BeforeAfter",
+        "userFacingLabels": ["Before / After", "Before / After"],
+        "requires": {
+          "images": "Both 'before' and 'after' uploads",
+          "logoIfShown": "If 'Show logo in video' is on, a logo file must be selected"
+        },
+        "stateResetOnSwitch": "Changing template mode clears uploaded images and resets carousel slides."
+      },
+      {
+        "id": "single-image",
+        "compositionId": "SingleImage",
+        "requires": {
+          "images": "One hero image",
+          "logoIfShown": "If show logo is on, a logo file must be selected"
+        }
+      },
+      {
+        "id": "carousel",
+        "compositionId": "Carousel",
+        "requires": {
+          "images": "At least one slide; every slide must have an image file",
+          "logoIfShown": "If show logo is on, a logo file must be selected"
+        }
+      }
+    ],
+    "mappingFunction": "templateModeToCompositionId in src/config/template-modes.ts"
+  },
+  "videoParameters": {
+    "fps": 30,
+    "previewAndCompositionSize": {
+      "width": 1080,
+      "height": 1920,
+      "aspectRatio": "9:16"
+    },
+    "durationSeconds": {
+      "min": 2,
+      "max": 90,
+      "default": 5,
+      "configFile": "src/config/video-duration.ts"
+    }
+  },
+  "exportFlow": {
+    "clientSteps": [
+      "User clicks 'Export MP4' in RenderAndDownload (disabled until canExport is true).",
+      "Client generates a random sessionId (UUID).",
+      "Client polls GET /api/render/progress?sessionId=... approximately every 400ms.",
+      "Client builds inputProps via getInputProps() in dashboard-client (validation errors surface to the user).",
+      "Client POSTs JSON to /api/render with { compositionId, inputProps, sessionId }.",
+      "On success, response body is MP4 bytes; client triggers download with a filename based on composition and brandId.",
+      "On failure, client shows parsed error message."
+    ],
+    "serverStepsSummary": [
+      "Bundle Remotion entry (cached) from src/remotion/index.ts with webpack override for @/ alias.",
+      "selectComposition + renderMedia; onProgress updates in-memory progress store keyed by sessionId."
+    ],
+    "progressLimitation": "Progress is in-memory in the same Node process. Multi-instance serverless may not show accurate progress.",
+    "externalLinkAfterExport": {
+      "label": "Go to Facebook Pages",
+      "url": "https://wizards-dashboard.vercel.app/facebook.html"
+    }
+  },
+  "apiEndpoints": [
+    {
+      "method": "POST",
+      "path": "/api/render",
+      "role": "Server-side Remotion bundle + renderMedia; returns MP4 or JSON error."
+    },
+    {
+      "method": "GET",
+      "path": "/api/render/progress",
+      "query": "sessionId",
+      "role": "Polling progress for an active render session."
+    },
+    {
+      "method": "GET",
+      "path": "/api/public-media",
+      "role": "Lists scanned music and background assets under public/."
+    },
+    {
+      "method": "GET",
+      "path": "/api/brand-logos/[brandId]",
+      "role": "Lists logo files for a brand folder under public/assets/logos/."
+    }
+  ],
+  "staticAssets": {
+    "brandLogos": "public/assets/logos/<brand-id>/",
+    "optionalBackgrounds": "public/backgrounds/ (and similar paths scanned by API)",
+    "optionalMusic": "public/music/",
+    "brandsConfig": "src/config/brands.ts"
+  },
+  "imageCrop": {
+    "description": "After upload, users can open Crop & position (ImageCropModal) with react-easy-crop; Apply exports JPEG with max long side 1920px.",
+    "implementationFiles": [
+      "src/components/ImageCropModal.tsx",
+      "src/lib/get-cropped-image.ts",
+      "src/components/MediaUploader.tsx"
+    ]
+  },
+  "remotion": {
+    "entry": "src/remotion/index.ts",
+    "rootCompositions": "src/remotion/Root.tsx",
+    "templates": [
+      "src/remotion/before-after-template.tsx",
+      "src/remotion/single-image-template.tsx",
+      "src/remotion/carousel-template.tsx"
+    ],
+    "bundlerAlias": "src/remotion/webpack-override.ts maps @ to src (must match tsconfig paths)."
+  },
+  "deploymentNotesForAgents": {
+    "summary": "Server-side render needs FFmpeg and a Chromium bundle; production uses Docker with Next standalone plus full node_modules and src/ for the bundler. See Dockerfile and docs/deployment.md.",
+    "renderEnvironment": "src/lib/render-environment.ts may block export on certain serverless hosts unless env escape hatches are set.",
+    "verification": [
+      "npm run verify:remotion — compile Remotion bundle without full Next build",
+      "npm run verify — verify:remotion + lint + build"
+    ]
+  },
+  "keySourceFilesForBehavior": {
+    "mainUiState": "src/app/dashboard-client.tsx",
+    "previewPlayer": "src/components/VideoPreview.tsx",
+    "exportUi": "src/components/RenderAndDownload.tsx",
+    "renderApi": "src/app/api/render/route.ts",
+    "humanReadableContext": "context.md"
+  }
+}

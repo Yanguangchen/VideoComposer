@@ -14,6 +14,7 @@ import { VideoDurationControl } from "@/components/VideoDurationControl";
 import { VideoTextColors } from "@/components/VideoTextColors";
 import { DashboardStepAccordion } from "@/components/DashboardStepAccordion";
 import { SignInModal } from "@/components/SignInModal";
+import { AiAgentsInstructionFab } from "@/components/AiAgentsInstructionFab";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { readSimulatedSignedIn, writeSimulatedSignedIn } from "@/lib/simulated-auth";
 
@@ -520,15 +521,19 @@ export function DashboardClient() {
 
   if (!simulatedSignedIn) {
     return (
-      <SignInModal
-        onSuccess={() => {
-          setSimulatedSignedIn(true);
-        }}
-      />
+      <>
+        <SignInModal
+          onSuccess={() => {
+            setSimulatedSignedIn(true);
+          }}
+        />
+        <AiAgentsInstructionFab />
+      </>
     );
   }
 
   return (
+    <>
     <div className="flex min-h-screen flex-col">
       <header className="sticky top-0 z-40 border-b border-slate-200/90 bg-white/90 shadow-sm backdrop-blur-md supports-[backdrop-filter]:bg-white/75 dark:border-slate-700/80 dark:bg-slate-950/90 dark:supports-[backdrop-filter]:bg-slate-950/75">
         <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:gap-4 sm:py-3.5">
@@ -861,5 +866,7 @@ export function DashboardClient() {
         </div>
       </main>
     </div>
+    <AiAgentsInstructionFab />
+    </>
   );
 }
