@@ -63,7 +63,7 @@ export function VideoPreview({
       >
         {mode === "single-image" ? (
           <Player
-            key={`single-${singleImageProps.brandTitleFontId}-${singleImageProps.serviceFontId}`}
+            key={`single-${singleImageProps.brandTitleFontId}-${singleImageProps.serviceFontId}-${singleImageProps.textSizeScale}-${singleImageProps.logoOffsetXPx}-${singleImageProps.logoOffsetYPx}`}
             component={SingleImageTemplate}
             inputProps={singleImageProps}
             durationInFrames={singleImageProps.durationInFrames}
@@ -71,7 +71,7 @@ export function VideoPreview({
           />
         ) : mode === "carousel" ? (
           <Player
-            key={`carousel-${carouselProps.brandTitleFontId}-${carouselProps.serviceFontId}`}
+            key={`carousel-${carouselProps.brandTitleFontId}-${carouselProps.serviceFontId}-${carouselProps.textSizeScale}-${carouselProps.logoOffsetXPx}-${carouselProps.logoOffsetYPx}`}
             component={CarouselTemplate}
             inputProps={carouselProps}
             durationInFrames={carouselDuration}
@@ -79,7 +79,7 @@ export function VideoPreview({
           />
         ) : (
           <Player
-            key={`ba-${beforeAfterProps.brandTitleFontId}-${beforeAfterProps.serviceFontId}`}
+            key={`ba-${beforeAfterProps.brandTitleFontId}-${beforeAfterProps.serviceFontId}-${beforeAfterProps.textSizeScale}-${beforeAfterProps.logoOffsetXPx}-${beforeAfterProps.logoOffsetYPx}`}
             component={BeforeAfterTemplate}
             inputProps={beforeAfterProps}
             durationInFrames={beforeAfterProps.durationInFrames}

@@ -7,6 +7,11 @@ import type { CarouselTemplateProps } from "@/remotion/carousel-template";
 import type { RemotionCompositionId } from "@/remotion/composition-ids";
 import type { SingleImageTemplateProps } from "@/remotion/single-image-template";
 import { remotionWebpackOverride } from "@/remotion/webpack-override";
+import { clampLogoOffset } from "@/config/logo-offset";
+import {
+  clampVideoTextSizeScale,
+  DEFAULT_VIDEO_TEXT_SIZE_SCALE,
+} from "@/config/video-text-scale";
 import { formatRenderError } from "@/lib/render-error";
 import { getServerlessExportBlockMessage } from "@/lib/render-environment";
 import {
@@ -58,6 +63,29 @@ function validateInput(
   return null;
 }
 
+function normalizeRenderInputProps(
+  inputProps: BeforeAfterTemplateProps | SingleImageTemplateProps | CarouselTemplateProps,
+):
+  | BeforeAfterTemplateProps
+  | SingleImageTemplateProps
+  | CarouselTemplateProps {
+  const p = inputProps as {
+    textSizeScale?: unknown;
+    logoOffsetXPx?: unknown;
+    logoOffsetYPx?: unknown;
+  };
+  const textSizeScale = clampVideoTextSizeScale(
+    typeof p.textSizeScale === "number" ? p.textSizeScale : DEFAULT_VIDEO_TEXT_SIZE_SCALE,
+  );
+  const logoOffsetXPx = clampLogoOffset(
+    typeof p.logoOffsetXPx === "number" ? p.logoOffsetXPx : 0,
+  );
+  const logoOffsetYPx = clampLogoOffset(
+    typeof p.logoOffsetYPx === "number" ? p.logoOffsetYPx : 0,
+  );
+  return { ...inputProps, textSizeScale, logoOffsetXPx, logoOffsetYPx };
+}
+
 function isValidSessionId(id: unknown): id is string {
   return typeof id === "string" && id.length >= 8 && id.length <= 128;
 }
@@ -94,6 +122,8 @@ export async function POST(req: Request) {
     if (validationError) {
       return Response.json({ error: validationError }, { status: 400 });
     }
+
+    const normalizedProps = normalizeRenderInputProps(inputProps);
 
     const serverlessBlock = getServerlessExportBlockMessage();
     if (serverlessBlock) {
@@ -136,7 +166,7 @@ export async function POST(req: Request) {
     const composition = await selectComposition({
       serveUrl,
       id: compositionId,
-      inputProps,
+      inputProps: normalizedProps,
     });
 
     outputPath = path.join(tmpdir(), `remotion-${randomUUID()}.mp4`);
@@ -154,7 +184,7 @@ export async function POST(req: Request) {
       serveUrl,
       codec: "h264",
       outputLocation: outputPath,
-      inputProps,
+      inputProps: normalizedProps,
       concurrency: 1,
       disallowParallelEncoding: true,
       chromiumOptions: {

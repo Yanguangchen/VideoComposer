@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { BrandSelector } from "@/components/BrandSelector";
 import { CarouselSlidesEditor } from "@/components/CarouselSlidesEditor";
 import { LogoPicker } from "@/components/LogoPicker";
+import { LogoPositionControls } from "@/components/LogoPositionControls";
 import { MediaUploader } from "@/components/MediaUploader";
 import { RenderAndDownload } from "@/components/RenderAndDownload";
 import { ServiceFontPicker } from "@/components/ServiceFontPicker";
@@ -12,6 +13,7 @@ import { TemplateModeToggle } from "@/components/TemplateModeToggle";
 import { BackgroundMusicControls } from "@/components/BackgroundMusicControls";
 import { VideoDurationControl } from "@/components/VideoDurationControl";
 import { VideoTextColors } from "@/components/VideoTextColors";
+import { VideoTextSizeSlider } from "@/components/VideoTextSizeSlider";
 import { DashboardStepAccordion } from "@/components/DashboardStepAccordion";
 import { SignInModal } from "@/components/SignInModal";
 import { AiAgentsInstructionFab } from "@/components/AiAgentsInstructionFab";
@@ -58,6 +60,11 @@ import {
   DEFAULT_DURATION_SECONDS,
   secondsToDurationFrames,
 } from "@/config/video-duration";
+import { clampLogoOffset } from "@/config/logo-offset";
+import {
+  clampVideoTextSizeScale,
+  DEFAULT_VIDEO_TEXT_SIZE_SCALE,
+} from "@/config/video-text-scale";
 import {
   createInitialCarouselSlides,
   type CarouselSlideDraft,
@@ -107,6 +114,14 @@ export function DashboardClient() {
   const [durationSeconds, setDurationSeconds] = useState(
     DEFAULT_DURATION_SECONDS,
   );
+  const [textSizeScale, setTextSizeScale] = useState(
+    DEFAULT_VIDEO_TEXT_SIZE_SCALE,
+  );
+  const videoTextScale = clampVideoTextSizeScale(textSizeScale);
+  const [logoOffsetXPx, setLogoOffsetXPx] = useState(0);
+  const [logoOffsetYPx, setLogoOffsetYPx] = useState(0);
+  const logoOx = clampLogoOffset(logoOffsetXPx);
+  const logoOy = clampLogoOffset(logoOffsetYPx);
   const [openLeftStepId, setOpenLeftStepId] = useState<string | null>(null);
   const [previewAccordionOpen, setPreviewAccordionOpen] = useState(true);
   const [showBeforeAfterArrow, setShowBeforeAfterArrow] = useState(true);
@@ -268,6 +283,9 @@ export function DashboardClient() {
       brandTitleFontId,
       serviceFontId,
       durationInFrames: durationFrames,
+      textSizeScale: videoTextScale,
+      logoOffsetXPx: logoOx,
+      logoOffsetYPx: logoOy,
     }),
     [
       brand,
@@ -287,6 +305,9 @@ export function DashboardClient() {
       brandTitleFontId,
       serviceFontId,
       durationFrames,
+      videoTextScale,
+      logoOx,
+      logoOy,
     ],
   );
 
@@ -309,6 +330,9 @@ export function DashboardClient() {
       brandTitleFontId,
       serviceFontId,
       durationInFrames: durationFrames,
+      textSizeScale: videoTextScale,
+      logoOffsetXPx: logoOx,
+      logoOffsetYPx: logoOy,
     }),
     [
       brand,
@@ -326,6 +350,9 @@ export function DashboardClient() {
       brandTitleFontId,
       serviceFontId,
       durationFrames,
+      videoTextScale,
+      logoOx,
+      logoOy,
     ],
   );
 
@@ -350,6 +377,9 @@ export function DashboardClient() {
       brandTitleFontId,
       serviceFontId,
       durationInFrames: durationFrames,
+      textSizeScale: videoTextScale,
+      logoOffsetXPx: logoOx,
+      logoOffsetYPx: logoOy,
     }),
     [
       brand,
@@ -366,6 +396,9 @@ export function DashboardClient() {
       brandTitleFontId,
       serviceFontId,
       durationFrames,
+      videoTextScale,
+      logoOx,
+      logoOy,
     ],
   );
 
@@ -414,6 +447,9 @@ export function DashboardClient() {
         brandTitleFontId,
         serviceFontId,
         durationInFrames: durationFrames,
+        textSizeScale: videoTextScale,
+        logoOffsetXPx: logoOx,
+        logoOffsetYPx: logoOy,
       };
       return props;
     }
@@ -440,6 +476,9 @@ export function DashboardClient() {
         brandTitleFontId,
         serviceFontId,
         durationInFrames: durationFrames,
+        textSizeScale: videoTextScale,
+        logoOffsetXPx: logoOx,
+        logoOffsetYPx: logoOy,
       };
       return props;
     }
@@ -470,6 +509,9 @@ export function DashboardClient() {
       brandTitleFontId,
       serviceFontId,
       durationInFrames: durationFrames,
+      textSizeScale: videoTextScale,
+      logoOffsetXPx: logoOx,
+      logoOffsetYPx: logoOy,
     };
     return props;
   }, [
@@ -493,6 +535,9 @@ export function DashboardClient() {
     durationFrames,
     showLogo,
     showBeforeAfterArrow,
+    videoTextScale,
+    logoOx,
+    logoOy,
   ]);
 
   const canExport =
@@ -619,6 +664,13 @@ export function DashboardClient() {
                 Logo is hidden; export does not require a logo file.
               </p>
             ) : null}
+            <LogoPositionControls
+              offsetXPx={logoOx}
+              offsetYPx={logoOy}
+              onOffsetXChange={setLogoOffsetXPx}
+              onOffsetYChange={setLogoOffsetYPx}
+              disabled={!showLogo}
+            />
           </DashboardStepAccordion>
 
           <DashboardStepAccordion
@@ -670,6 +722,10 @@ export function DashboardClient() {
                 description="Typeface for the large brand name at the top of the video."
                 value={brandTitleFontId}
                 onChange={setBrandTitleFontId}
+              />
+              <VideoTextSizeSlider
+                value={videoTextScale}
+                onChange={setTextSizeScale}
               />
               <div>
                 <span className="text-sm font-semibold text-slate-800 dark:text-slate-200">

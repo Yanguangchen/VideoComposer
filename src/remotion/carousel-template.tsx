@@ -66,6 +66,12 @@ export type CarouselTemplateProps = {
   serviceFontId: string;
   /** Total composition length; carousel bumps up to fit every slide. */
   durationInFrames: number;
+  /** Multiplier for every text size in the composition (1 = default). */
+  textSizeScale: number;
+  /** Extra horizontal nudge in px (positive → right). */
+  logoOffsetXPx: number;
+  /** Extra vertical nudge in px (positive → down). */
+  logoOffsetYPx: number;
 };
 
 type SlideCardProps = {
@@ -82,6 +88,9 @@ type SlideCardProps = {
   brandTitleFontId: string;
   headlineColor: string;
   slideDurationInFrames: number;
+  textSizeScale: number;
+  logoOffsetXPx: number;
+  logoOffsetYPx: number;
 };
 
 const SlideCard: FC<SlideCardProps> = ({
@@ -98,7 +107,11 @@ const SlideCard: FC<SlideCardProps> = ({
   brandTitleFontId,
   headlineColor,
   slideDurationInFrames,
+  textSizeScale,
+  logoOffsetXPx,
+  logoOffsetYPx,
 }) => {
+  const fs = (px: number) => Math.round(px * textSizeScale);
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const pulse = interpolate(
@@ -165,7 +178,7 @@ const SlideCard: FC<SlideCardProps> = ({
                   style={{
                     fontFamily: brandTitleResolved,
                     color: headlineColor,
-                    fontSize: 34,
+                    fontSize: fs(34),
                     fontWeight: brandTitleFontId === "bebas-neue" ? 400 : 600,
                     textAlign: "center",
                     textShadow: "0 2px 16px rgba(0,0,0,0.4)",
@@ -182,7 +195,7 @@ const SlideCard: FC<SlideCardProps> = ({
                 priceTagText={priceTagText}
                 fontFamily={brandTitleResolved}
                 color={headlineColor}
-                fontSize={48}
+                fontSize={fs(48)}
                 brandTitleFontId={brandTitleFontId}
               />
             </div>
@@ -193,7 +206,7 @@ const SlideCard: FC<SlideCardProps> = ({
               style={{
                 fontFamily: serviceFontResolved,
                 color: captionColor,
-                fontSize: 36,
+                fontSize: fs(36),
                 fontWeight: serviceFontWeight,
                 textAlign: "center",
                 marginTop: 32,
@@ -213,7 +226,7 @@ const SlideCard: FC<SlideCardProps> = ({
                 position: "absolute",
                 right: -72,
                 bottom: 36,
-                transform: `scale(${pulse})`,
+                transform: `translate(${logoOffsetXPx}px, ${logoOffsetYPx}px) scale(${pulse})`,
               }}
             >
               <Img
@@ -250,7 +263,11 @@ export const CarouselTemplate: FC<CarouselTemplateProps> = ({
   slides,
   brandTitleFontId,
   serviceFontId,
+  textSizeScale,
+  logoOffsetXPx,
+  logoOffsetYPx,
 }) => {
+  const fs = (px: number) => Math.round(px * textSizeScale);
   const [fontBlock] = useState(() => delayRender());
   const { durationInFrames: compositionDuration } = useVideoConfig();
   const frame = useCurrentFrame();
@@ -326,7 +343,7 @@ export const CarouselTemplate: FC<CarouselTemplateProps> = ({
             style={{
               fontFamily: brandTitleResolved,
               color: headlineColor,
-              fontSize: 48,
+              fontSize: fs(48),
               fontWeight: brandTitleWeight,
               textAlign: "center",
               textShadow: "0 4px 24px rgba(0,0,0,0.45)",
@@ -366,6 +383,9 @@ export const CarouselTemplate: FC<CarouselTemplateProps> = ({
                 brandTitleFontId={brandTitleFontId}
                 headlineColor={headlineColor}
                 slideDurationInFrames={segmentFrames}
+                textSizeScale={textSizeScale}
+                logoOffsetXPx={logoOffsetXPx}
+                logoOffsetYPx={logoOffsetYPx}
               />
             </Sequence>
           );

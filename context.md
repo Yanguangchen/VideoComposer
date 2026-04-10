@@ -17,10 +17,10 @@ A **Next.js** dashboard to build **multi-brand marketing videos**: pick a templa
 | Path | Role |
 |------|------|
 | `src/app/page.tsx` | Server page; renders `DashboardClient` |
-| `src/app/dashboard-client.tsx` | Main client UI: brand, logos, media, text, fonts, duration, preview, export |
+| `src/app/dashboard-client.tsx` | Main client UI: brand, logos (incl. position nudge), media, text, fonts, video text size, duration, preview, export |
 | `src/app/layout.tsx` | Root layout; ThemeProvider, viewport, PWA metadata |
 | `src/app/globals.css` | Tailwind entry + mobile/safe-area tweaks |
-| `src/app/api/render/route.ts` | `POST` — bundles Remotion, `renderMedia`, returns MP4 bytes (see **Render tuning** below) |
+| `src/app/api/render/route.ts` | `POST` — bundles Remotion, `renderMedia`, returns MP4 bytes; **normalizes** `textSizeScale` and logo offsets before render (see **Render tuning** + **Input normalization**) |
 | `src/app/api/render/progress/route.ts` | `GET` — polling progress by `sessionId` (in-memory store) |
 | `src/app/api/public-media/route.ts` | Lists scanned `public/` music & backgrounds |
 | `src/app/api/brand-logos/[brandId]/route.ts` | Lists logo files per brand folder |
@@ -33,8 +33,12 @@ A **Next.js** dashboard to build **multi-brand marketing videos**: pick a templa
 | `src/config/service-fonts.ts` | Service/headline font ids and defaults |
 | `src/config/template-modes.ts` | Template mode ids ↔ composition ids |
 | `src/config/video-duration.ts` | Duration clamping / frames |
+| `src/config/video-text-scale.ts` | Min/max/default and `clampVideoTextSizeScale` for on-video typography |
+| `src/config/logo-offset.ts` | Min/max/step and `clampLogoOffset` for logo `translate` nudge (px) |
 | `src/config/background-music.ts` | URL helpers for `public/` assets |
-| `src/components/VideoPreview.tsx` | `<Player>` per mode; **key** includes font ids to remount on font change |
+| `src/components/VideoPreview.tsx` | `<Player>` per mode; **key** includes font ids, `textSizeScale`, and logo offsets so the player remounts when those change |
+| `src/components/VideoTextSizeSlider.tsx` | Range control in step 5 — scales all template text (preview + export) |
+| `src/components/LogoPositionControls.tsx` | Horizontal/vertical sliders in step 2 — disabled when logo hidden |
 | `src/components/RenderAndDownload.tsx` | Export button, progress bar, errors, link to Facebook Pages dashboard |
 | `src/components/MediaUploader.tsx` | Dropzone + preview + **Crop & position** (opens `ImageCropModal`) |
 | `src/components/ImageCropModal.tsx` | `react-easy-crop` modal; outputs JPEG via `getCroppedImageBlob` |
@@ -66,7 +70,7 @@ Registered in `src/remotion/Root.tsx`:
 - **`SingleImage`** — `single-image-template.tsx`
 - **`Carousel`** — `carousel-template.tsx`
 
-Each template receives **input props** from the dashboard (brand id, images as data URLs or paths, colors, fonts, duration, optional subtitle, optional price tag, etc.). Composition duration is driven by `calculateMetadata` + user duration controls where applicable.
+Each template receives **input props** from the dashboard (brand id, images as data URLs or paths, colors, fonts, duration, optional subtitle, optional price tag, **`textSizeScale`** for unified text sizing, **`logoOffsetXPx` / `logoOffsetYPx`** for nudging the circular logo, etc.). Composition duration is driven by `calculateMetadata` + user duration controls where applicable. Default props in `Root.tsx` include `textSizeScale: 1` and logo offsets `0`.
 
 ## Export pipeline
 
@@ -77,6 +81,15 @@ Each template receives **input props** from the dashboard (brand id, images as d
 5. Response: **MP4** binary (`video/mp4`), or JSON **`{ error }`** on failure.
 
 **Note:** Progress storage is **in-memory** — reliable when a single Node process handles both routes (`next dev` / `next start`). Serverless multi-instance setups may not show accurate progress.
+
+### Input normalization (`src/app/api/render/route.ts`)
+
+Before `selectComposition` / `renderMedia`, **`normalizeRenderInputProps`** clamps:
+
+- **`textSizeScale`** — same range as `src/config/video-text-scale.ts` (missing or non-number → default `1`).
+- **`logoOffsetXPx` / `logoOffsetYPx`** — same range as `src/config/logo-offset.ts` (missing or non-number → `0`).
+
+This keeps server renders stable if clients send out-of-range or partial payloads.
 
 ### Render tuning (`src/app/api/render/route.ts`)
 
@@ -111,7 +124,9 @@ After upload, **Crop & position** opens **`ImageCropModal`**: pan/zoom, aspect p
 
 ## UX details (dashboard)
 
-- **Brand title** = `brand.displayName`; optional **subtitle** and **price tag** below the image area; spacing/size tuned in templates + `price-tag-badge.tsx`.
+- **Brand title** = `brand.displayName` (from `src/config/brands.ts`); optional **subtitle** and **price tag** below the image area; spacing/size tuned in templates + `price-tag-badge.tsx`.
+- **Video text size** — step **5. Text & fonts**, `VideoTextSizeSlider`: one scale for headline, subtitle, price tag, service line, and carousel titles (templates multiply base `fontSize` values).
+- **Logo position** — step **2. Logo**, `LogoPositionControls`: pixel offsets applied via CSS `translate` on the logo wrapper (before/after keeps vertical centering with `calc(-50% + y)`); controls disabled when **Show logo** is off.
 - **Simulated sign-in** modal (password in `src/lib/simulated-auth.ts`).
 - **Instruction for AI Agents** — floating button (`AiAgentsInstructionFab`) opens **`/VideoComposerInstruction.json`** in a new tab.
 - **Export** includes render progress UI and parsed error messages.

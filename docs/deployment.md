@@ -70,6 +70,7 @@ Export is **blocked** by default when `VERCEL` or `NETLIFY` is detected (no FFmp
 
 - `Dockerfile` — image layout and `ensureBrowser()` at build time  
 - `railway.toml` — Railway builder + deploy restart policy  
-- `src/app/api/render/route.ts` — `renderMedia` options (concurrency, FFmpeg override)  
+- `src/app/api/render/route.ts` — `renderMedia` options (concurrency, FFmpeg override); **`normalizeRenderInputProps`** clamps `textSizeScale` and logo offset fields on the JSON body before render (see `src/config/video-text-scale.ts`, `src/config/logo-offset.ts`)  
 - `src/lib/render-environment.ts` — serverless export block  
 - `src/lib/render-error.ts` — user-facing error strings  
+- `context.md` — full dashboard/remotion file map and export pipeline details  

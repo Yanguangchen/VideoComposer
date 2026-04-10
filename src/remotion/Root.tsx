@@ -44,6 +44,9 @@ export const defaultBeforeAfterProps: BeforeAfterTemplateProps = {
   brandTitleFontId: DEFAULT_SERVICE_FONT_ID,
   serviceFontId: DEFAULT_SERVICE_FONT_ID,
   durationInFrames: DEFAULT_DURATION_FRAMES,
+  textSizeScale: 1,
+  logoOffsetXPx: 0,
+  logoOffsetYPx: 0,
 };
 
 export const defaultSingleImageProps: SingleImageTemplateProps = {
@@ -63,6 +66,9 @@ export const defaultSingleImageProps: SingleImageTemplateProps = {
   brandTitleFontId: DEFAULT_SERVICE_FONT_ID,
   serviceFontId: DEFAULT_SERVICE_FONT_ID,
   durationInFrames: DEFAULT_DURATION_FRAMES,
+  textSizeScale: 1,
+  logoOffsetXPx: 0,
+  logoOffsetYPx: 0,
 };
 
 export const defaultCarouselProps: CarouselTemplateProps = {
@@ -81,6 +87,9 @@ export const defaultCarouselProps: CarouselTemplateProps = {
   brandTitleFontId: DEFAULT_SERVICE_FONT_ID,
   serviceFontId: DEFAULT_SERVICE_FONT_ID,
   durationInFrames: DEFAULT_DURATION_FRAMES,
+  textSizeScale: 1,
+  logoOffsetXPx: 0,
+  logoOffsetYPx: 0,
 };
 
 export const RemotionRoot = () => {

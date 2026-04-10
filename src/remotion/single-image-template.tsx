@@ -42,6 +42,12 @@ export type SingleImageTemplateProps = {
   brandTitleFontId: string;
   serviceFontId: string;
   durationInFrames: number;
+  /** Multiplier for every text size in the composition (1 = default). */
+  textSizeScale: number;
+  /** Extra horizontal nudge in px (positive → right). */
+  logoOffsetXPx: number;
+  /** Extra vertical nudge in px (positive → down). */
+  logoOffsetYPx: number;
 };
 
 export const SingleImageTemplate: FC<SingleImageTemplateProps> = ({
@@ -60,7 +66,11 @@ export const SingleImageTemplate: FC<SingleImageTemplateProps> = ({
   brandTitleFontId,
   serviceFontId,
   durationInFrames,
+  textSizeScale,
+  logoOffsetXPx,
+  logoOffsetYPx,
 }) => {
+  const fs = (px: number) => Math.round(px * textSizeScale);
   const [fontBlock] = useState(() => delayRender());
 
   useEffect(() => {
@@ -132,7 +142,7 @@ export const SingleImageTemplate: FC<SingleImageTemplateProps> = ({
           style={{
             fontFamily: brandTitleResolved,
             color: headlineColor,
-            fontSize: 52,
+            fontSize: fs(52),
             fontWeight: brandTitleWeight,
             textAlign: "center",
             textShadow: "0 4px 24px rgba(0,0,0,0.45)",
@@ -177,7 +187,7 @@ export const SingleImageTemplate: FC<SingleImageTemplateProps> = ({
                 position: "absolute",
                 right: -72,
                 bottom: 40,
-                transform: `scale(${pulse})`,
+                transform: `translate(${logoOffsetXPx}px, ${logoOffsetYPx}px) scale(${pulse})`,
               }}
             >
               <Img
@@ -215,7 +225,7 @@ export const SingleImageTemplate: FC<SingleImageTemplateProps> = ({
                 style={{
                   fontFamily: brandTitleResolved,
                   color: headlineColor,
-                  fontSize: 36,
+                  fontSize: fs(36),
                   fontWeight: brandTitleFontId === "bebas-neue" ? 400 : 600,
                   textAlign: "center",
                   textShadow: "0 2px 16px rgba(0,0,0,0.4)",
@@ -232,7 +242,7 @@ export const SingleImageTemplate: FC<SingleImageTemplateProps> = ({
               priceTagText={priceTagText}
               fontFamily={brandTitleResolved}
               color={headlineColor}
-              fontSize={52}
+              fontSize={fs(52)}
               brandTitleFontId={brandTitleFontId}
             />
           </div>
@@ -243,7 +253,7 @@ export const SingleImageTemplate: FC<SingleImageTemplateProps> = ({
             style={{
               fontFamily: serviceFontResolved,
               color: captionColor,
-              fontSize: 52,
+              fontSize: fs(52),
               fontWeight: serviceFontWeight,
               textAlign: "center",
               marginTop:

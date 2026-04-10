@@ -29,7 +29,7 @@ export const brands: Brand[] = [
   },
   {
     id: "shebella-jurong",
-    displayName: "SHEBELLA JURONG",
+    displayName: "Shebella Beauty",
     primaryColor: "text-pink-500",
     primaryHex: "#ec4899",
     logoFolder: "assets/logos/shebella-jurong",

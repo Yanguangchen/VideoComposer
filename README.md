@@ -19,6 +19,15 @@ Open [http://localhost:3000](http://localhost:3000).
 
 Full production deployment notes (Docker, Railway, memory, troubleshooting) are in **[docs/deployment.md](docs/deployment.md)**.
 
+Human-oriented project map, file index, and behavior notes live in **[context.md](context.md)**.
+
+## Dashboard (high level)
+
+- **Brands** — `src/config/brands.ts` (`displayName`, `id`, `logoFolder` under `public/assets/logos/<brand-id>/`).
+- **Logo** — pick a file, toggle visibility, **nudge position** (horizontal/vertical px) when the logo is shown.
+- **Text** — colors, fonts, optional subtitle/price tag/service line (or carousel captions), and a **single slider** that scales all on-video text.
+- **Preview** — Remotion Player; **Export** — `POST /api/render` with the same props as preview (see context.md for normalization).
+
 ## How export works
 
 1. The browser sends composition props to **`/api/render`**.
@@ -73,6 +82,8 @@ The repo **`Dockerfile`** installs **FFmpeg**, Chrome runtime **libraries**, Nex
 | `src/app/api/render/route.ts` | Server-side Remotion render + MP4 response |
 | `src/remotion/` | Remotion compositions and entry (`index.ts` → `Root.tsx`) |
 | `src/config/brands.ts` | Brand definitions |
+| `src/config/video-text-scale.ts` | Clamped scale for all template text |
+| `src/config/logo-offset.ts` | Clamped logo `translate` offsets (px) |
 | `public/assets/logos/<brand-id>/` | Per-brand logos |
 | `public/backgrounds/`, `public/music/` | Optional assets |
 

@@ -56,7 +56,7 @@
         {
           "id": "logo",
           "title": "2. Logo (from disk)",
-          "action": "Pick logo from brand folder (LogoPicker). Toggle 'Show logo in video'. If logo is hidden, export does not require a logo file."
+          "action": "Pick logo from brand folder (LogoPicker). Toggle 'Show logo in video'. Logo position: horizontal/vertical pixel nudge (LogoPositionControls), disabled when logo is hidden; passes logoOffsetXPx/logoOffsetYPx to Remotion. If logo is hidden, export does not require a logo file."
         },
         {
           "id": "colors",
@@ -71,7 +71,7 @@
         {
           "id": "text",
           "title": "5. Text & fonts",
-          "action": "Brand title font, optional subtitle, optional price tag. Non-carousel: service title + service font. Carousel: slide caption font instead of service title block."
+          "action": "Brand title font, VideoTextSizeSlider (scales all on-video text via textSizeScale), optional subtitle, optional price tag. Non-carousel: service title + service font. Carousel: slide caption font instead of service title block."
         },
         {
           "id": "duration",
@@ -139,6 +139,19 @@
       "max": 90,
       "default": 5,
       "configFile": "src/config/video-duration.ts"
+    },
+    "textSizeScale": {
+      "role": "Single multiplier for every text size in Remotion templates (headline, subtitle, price tag, service line, carousel titles).",
+      "default": 1,
+      "configFile": "src/config/video-text-scale.ts",
+      "dashboardComponent": "src/components/VideoTextSizeSlider.tsx"
+    },
+    "logoPosition": {
+      "logoOffsetXPx": "Extra horizontal translate in px (positive moves right).",
+      "logoOffsetYPx": "Extra vertical translate in px (positive moves down); before/after template combines with vertical centering.",
+      "default": [0, 0],
+      "configFile": "src/config/logo-offset.ts",
+      "dashboardComponent": "src/components/LogoPositionControls.tsx"
     }
   },
   "exportFlow": {
@@ -152,6 +165,7 @@
       "On failure, client shows parsed error message."
     ],
     "serverStepsSummary": [
+      "After validation, normalizeRenderInputProps clamps textSizeScale and logoOffsetXPx/logoOffsetYPx (see src/app/api/render/route.ts and config files under src/config/).",
       "Bundle Remotion entry (cached) from src/remotion/index.ts with webpack override for @/ alias.",
       "selectComposition + renderMedia; onProgress updates in-memory progress store keyed by sessionId."
     ],
@@ -235,6 +249,8 @@
     "previewPlayer": "src/components/VideoPreview.tsx",
     "exportUi": "src/components/RenderAndDownload.tsx",
     "renderApi": "src/app/api/render/route.ts",
-    "humanReadableContext": "context.md"
+    "humanReadableContext": "context.md",
+    "readme": "README.md",
+    "deploymentDoc": "docs/deployment.md"
   }
 }
