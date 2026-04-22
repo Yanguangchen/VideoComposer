@@ -97,20 +97,18 @@ src/lib/simulated-auth.ts:12:export function writeSimulatedSignedIn(signedIn: bo
 src/lib/simulated-auth.ts:2:export const SIMULATED_AUTH_STORAGE_KEY = "video-composer-simulated-auth";
 src/lib/simulated-auth.ts:5:export const SIMULATED_AUTH_PASSWORD = "webwizards@01";
 src/lib/simulated-auth.ts:7:export function readSimulatedSignedIn(): boolean {
-src/remotion/Root.tsx:28:export const defaultBeforeAfterProps: BeforeAfterTemplateProps = {
-src/remotion/Root.tsx:52:export const defaultSingleImageProps: SingleImageTemplateProps = {
-src/remotion/Root.tsx:74:export const defaultCarouselProps: CarouselTemplateProps = {
-src/remotion/Root.tsx:95:export const RemotionRoot = () => {
+src/remotion/Root.tsx:27:export const defaultBeforeAfterProps: BeforeAfterTemplateProps = {
+src/remotion/Root.tsx:51:export const defaultSingleImageProps: SingleImageTemplateProps = {
+src/remotion/Root.tsx:73:export const defaultCarouselProps: CarouselTemplateProps = {
+src/remotion/Root.tsx:94:export const RemotionRoot = () => {
 src/remotion/background-layer.tsx:21:export const BackgroundLayer: FC<Props> = ({ bgSrc }) => {
 src/remotion/background-layer.tsx:5:export function isBackgroundVideoSrc(src: string): boolean {
 src/remotion/before-after-template.tsx:28:export type BeforeAfterTemplateProps = {
 src/remotion/before-after-template.tsx:65:export const BeforeAfterTemplate: FC<BeforeAfterTemplateProps> = ({
-src/remotion/carousel-template.tsx:252:export const CarouselTemplate: FC<CarouselTemplateProps> = ({
-src/remotion/carousel-template.tsx:30:export const CAROUSEL_FRAMES_PER_SLIDE = 45;
-src/remotion/carousel-template.tsx:32:export function getCarouselDurationInFrames(slideCount: number): number {
-src/remotion/carousel-template.tsx:37:export function getEffectiveCarouselDurationInFrames(
-src/remotion/carousel-template.tsx:45:export type CarouselSlide = {
-src/remotion/carousel-template.tsx:51:export type CarouselTemplateProps = {
+src/remotion/carousel-template.tsx:251:export const CarouselTemplate: FC<CarouselTemplateProps> = ({
+src/remotion/carousel-template.tsx:36:export function getEffectiveCarouselDurationInFrames(
+src/remotion/carousel-template.tsx:44:export type CarouselSlide = {
+src/remotion/carousel-template.tsx:50:export type CarouselTemplateProps = {
 src/remotion/composition-ids.ts:1:export type RemotionCompositionId =
 src/remotion/media-utils.ts:3:export const PIXEL =
 src/remotion/media-utils.ts:6:export function resolveMediaSrc(src: string): string {

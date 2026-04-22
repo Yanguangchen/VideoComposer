@@ -26,20 +26,19 @@ import {
 } from "@/remotion/service-font-loaders";
 import { uiLayerMotion } from "@/remotion/ui-motion";
 
-/** Time each slide is visible (30 fps → 1.5s per slide). */
-export const CAROUSEL_FRAMES_PER_SLIDE = 45;
-
-export function getCarouselDurationInFrames(slideCount: number): number {
-  return Math.max(1, slideCount) * CAROUSEL_FRAMES_PER_SLIDE;
-}
-
-/** Preview / Player: user duration cannot be shorter than all slides. */
+/**
+ * Preview / Player composition length.
+ *
+ * Honors the user-chosen duration — slides share it equally inside the
+ * template (see `CarouselTemplate`). Only enforces a minimum of one frame
+ * per slide so the divisor never produces a zero-length segment.
+ */
 export function getEffectiveCarouselDurationInFrames(
   durationInFrames: number,
   slideCount: number,
 ): number {
-  const required = getCarouselDurationInFrames(Math.max(1, slideCount));
-  return Math.max(clampDurationFrames(durationInFrames), required);
+  const n = Math.max(1, slideCount);
+  return Math.max(clampDurationFrames(durationInFrames), n);
 }
 
 export type CarouselSlide = {
