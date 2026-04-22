@@ -1,12 +1,14 @@
 src/app/dashboard-client.tsx
 src/components/AiAgentsInstructionFab.tsx
 src/components/BackgroundMusicControls.tsx
+src/components/BrandMediaLibrary.tsx
 src/components/BrandSelector.tsx
 src/components/CarouselSlidesEditor.tsx
 src/components/DashboardStepAccordion.tsx
 src/components/ImageCropModal.tsx
 src/components/LogoPicker.tsx
 src/components/LogoPositionControls.tsx
+src/components/MediaLibraryPicker.tsx
 src/components/MediaUploader.tsx
 src/components/RenderAndDownload.tsx
 src/components/ServiceFontPicker.tsx
@@ -18,3 +20,5 @@ src/components/VideoTextColors.tsx
 src/components/VideoTextSizeSlider.tsx
 src/components/theme-provider.tsx
 src/components/theme-toggle.tsx
+src/lib/firebase.ts
+src/lib/media-library.ts

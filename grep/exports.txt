@@ -7,21 +7,23 @@ src/app/api/render/progress/route.ts:5:export async function GET(req: Request) {
 src/app/api/render/route.ts:22:export const runtime = "nodejs";
 src/app/api/render/route.ts:23:export const maxDuration = 300;
 src/app/api/render/route.ts:93:export async function POST(req: Request) {
-src/app/dashboard-client.tsx:76:export function DashboardClient() {
+src/app/dashboard-client.tsx:79:export function DashboardClient() {
 src/app/layout.tsx:17:export const metadata: Metadata = {
 src/app/layout.tsx:33:export default function RootLayout({
 src/app/layout.tsx:7:export const viewport: Viewport = {
 src/app/page.tsx:3:export default function Home() {
 src/components/AiAgentsInstructionFab.tsx:5:export function AiAgentsInstructionFab() {
 src/components/BackgroundMusicControls.tsx:15:export function BackgroundMusicControls({
+src/components/BrandMediaLibrary.tsx:26:export function BrandMediaLibrary({ brandId, brandLabel }: Props) {
 src/components/BrandSelector.tsx:11:export function BrandSelector({ brands, activeBrandId, onSelect }: Props) {
-src/components/CarouselSlidesEditor.tsx:16:export function CarouselSlidesEditor({ slides, onChange }: Props) {
+src/components/CarouselSlidesEditor.tsx:23:export function CarouselSlidesEditor({
 src/components/DashboardStepAccordion.tsx:108:export function DashboardStepAccordion({
 src/components/DashboardStepAccordion.tsx:6:export type AccordionAccent =
 src/components/ImageCropModal.tsx:39:export function ImageCropModal({
 src/components/LogoPicker.tsx:17:export function LogoPicker({ brand, value, onChange }: Props) {
 src/components/LogoPositionControls.tsx:20:export function LogoPositionControls({
-src/components/MediaUploader.tsx:20:export function MediaUploader({
+src/components/MediaLibraryPicker.tsx:20:export function MediaLibraryPicker({
+src/components/MediaUploader.tsx:22:export function MediaUploader({
 src/components/RenderAndDownload.tsx:20:export function RenderAndDownload({
 src/components/ServiceFontPicker.tsx:17:export function ServiceFontPicker({
 src/components/SignInModal.tsx:17:export function SignInModal({ onSuccess }: Props) {
@@ -78,11 +80,21 @@ src/lib/carousel-slides.ts:19:export function createInitialCarouselSlides(): Car
 src/lib/carousel-slides.ts:1:export const MAX_CAROUSEL_SLIDES = 12;
 src/lib/carousel-slides.ts:3:export type CarouselSlideDraft = {
 src/lib/files.ts:1:export function fileToDataUrl(file: File): Promise<string> {
+src/lib/firebase.ts:48:export function getFirebaseApp(): FirebaseApp {
+src/lib/firebase.ts:57:export function getDb(): Firestore {
+src/lib/firebase.ts:64:export function getStorageBucket(): FirebaseStorage {
+src/lib/firebase.ts:70:export function isFirebaseConfigured(): boolean {
 src/lib/get-cropped-image.ts:13:export type CroppedImageOptions = {
 src/lib/get-cropped-image.ts:24:export async function getCroppedImageBlob(
 src/lib/hex-color.ts:16:export const DEFAULT_HEADLINE_COLOR_HEX = "#ffffff";
 src/lib/hex-color.ts:18:export const DEFAULT_CAPTION_COLOR_HEX = "#ffffff";
 src/lib/hex-color.ts:2:export function normalizeHexColor(input: string, fallback: string): string {
+src/lib/media-library.ts:111:export async function uploadLibraryMedia(
+src/lib/media-library.ts:208:export async function deleteLibraryAsset(asset: LibraryAsset): Promise<void> {
+src/lib/media-library.ts:233:export async function libraryAssetToFile(asset: LibraryAsset): Promise<File> {
+src/lib/media-library.ts:23:export type LibraryAsset = {
+src/lib/media-library.ts:34:export type UploadProgress = {
+src/lib/media-library.ts:50:export function subscribeLibraryMedia(
 src/lib/render-client.ts:2:export async function parseRenderErrorResponse(res: Response): Promise<string> {
 src/lib/render-environment.ts:6:export function getServerlessExportBlockMessage(): string | null {
 src/lib/render-error.ts:4:export function formatRenderError(error: unknown): string {

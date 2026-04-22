@@ -2,10 +2,13 @@
 
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { BrandMediaLibrary } from "@/components/BrandMediaLibrary";
 import { BrandSelector } from "@/components/BrandSelector";
+import { isFirebaseConfigured } from "@/lib/firebase";
 import { CarouselSlidesEditor } from "@/components/CarouselSlidesEditor";
 import { LogoPicker } from "@/components/LogoPicker";
 import { LogoPositionControls } from "@/components/LogoPositionControls";
+import { MediaLibraryPicker } from "@/components/MediaLibraryPicker";
 import { MediaUploader } from "@/components/MediaUploader";
 import { RenderAndDownload } from "@/components/RenderAndDownload";
 import { ServiceFontPicker } from "@/components/ServiceFontPicker";
@@ -127,6 +130,13 @@ export function DashboardClient() {
   const [showBeforeAfterArrow, setShowBeforeAfterArrow] = useState(true);
   const [simulatedAuthReady, setSimulatedAuthReady] = useState(false);
   const [simulatedSignedIn, setSimulatedSignedIn] = useState(false);
+
+  // Library picker — one modal at the dashboard level. Callers await a
+  // promise resolved when the user taps "Use selection" or "Close".
+  const [libraryPicker, setLibraryPicker] = useState<{
+    maxSelection: number;
+    resolve: (files: File[]) => void;
+  } | null>(null);
 
   const carouselSlidesRef = useRef(carouselSlides);
   carouselSlidesRef.current = carouselSlides;
@@ -251,6 +261,35 @@ export function DashboardClient() {
     });
     setSingleFile(file);
   }, []);
+
+  const libraryEnabled = isFirebaseConfigured();
+
+  const openLibraryPicker = useCallback(
+    (maxSelection: number) =>
+      new Promise<File[]>((resolve) => {
+        setLibraryPicker({ maxSelection, resolve });
+      }),
+    [],
+  );
+
+  const pickOneFromLibrary = useMemo(
+    () =>
+      libraryEnabled
+        ? async (): Promise<File | null> => {
+            const files = await openLibraryPicker(1);
+            return files[0] ?? null;
+          }
+        : undefined,
+    [libraryEnabled, openLibraryPicker],
+  );
+
+  const pickManyFromLibrary = useMemo(
+    () =>
+      libraryEnabled
+        ? (maxFiles: number) => openLibraryPicker(maxFiles)
+        : undefined,
+    [libraryEnabled, openLibraryPicker],
+  );
 
   const brand = getBrandById(activeBrandId) ?? brands[0]!;
 
@@ -553,10 +592,10 @@ export function DashboardClient() {
 
   const photosHeading =
     templateMode === "single-image"
-      ? "7. Image"
+      ? "8. Image"
       : templateMode === "carousel"
-        ? "7. Carousel slides"
-        : "7. Before / After photos";
+        ? "8. Carousel slides"
+        : "8. Before / After photos";
 
   if (!simulatedAuthReady) {
     return (
@@ -638,8 +677,22 @@ export function DashboardClient() {
           </DashboardStepAccordion>
 
           <DashboardStepAccordion
+            id="library"
+            title="2. Brand media library"
+            accent="emerald"
+            openId={openLeftStepId}
+            onOpenChange={setOpenLeftStepId}
+          >
+            <BrandMediaLibrary
+              key={brand.id}
+              brandId={brand.id}
+              brandLabel={brand.displayName}
+            />
+          </DashboardStepAccordion>
+
+          <DashboardStepAccordion
             id="logo"
-            title="2. Logo (from disk)"
+            title="3. Logo (from disk)"
             accent="sky"
             openId={openLeftStepId}
             onOpenChange={setOpenLeftStepId}
@@ -675,7 +728,7 @@ export function DashboardClient() {
 
           <DashboardStepAccordion
             id="colors"
-            title="3. Video text colors"
+            title="4. Video text colors"
             accent="rose"
             openId={openLeftStepId}
             onOpenChange={setOpenLeftStepId}
@@ -691,7 +744,7 @@ export function DashboardClient() {
 
           <DashboardStepAccordion
             id="background"
-            title="4. Background video & music"
+            title="5. Background video & music"
             accent="emerald"
             openId={openLeftStepId}
             onOpenChange={setOpenLeftStepId}
@@ -711,7 +764,7 @@ export function DashboardClient() {
 
           <DashboardStepAccordion
             id="text"
-            title="5. Text & fonts"
+            title="6. Text & fonts"
             accent="amber"
             openId={openLeftStepId}
             onOpenChange={setOpenLeftStepId}
@@ -803,7 +856,7 @@ export function DashboardClient() {
 
           <DashboardStepAccordion
             id="duration"
-            title="6. Video length"
+            title="7. Video length"
             accent="cyan"
             openId={openLeftStepId}
             onOpenChange={setOpenLeftStepId}
@@ -828,11 +881,14 @@ export function DashboardClient() {
                 imageSrc={singleUrl}
                 onFile={setSingle}
                 sourceFile={singleFile}
+                onPickFromLibrary={pickOneFromLibrary}
               />
             ) : templateMode === "carousel" ? (
               <CarouselSlidesEditor
                 slides={carouselSlides}
                 onChange={setCarouselSlides}
+                onPickFromLibrary={pickOneFromLibrary}
+                onBulkAddFromLibrary={pickManyFromLibrary}
               />
             ) : (
               <div className="flex flex-col gap-4">
@@ -843,6 +899,7 @@ export function DashboardClient() {
                     imageSrc={beforeUrl}
                     onFile={setBefore}
                     sourceFile={beforeFile}
+                    onPickFromLibrary={pickOneFromLibrary}
                   />
                   <MediaUploader
                     label="After"
@@ -850,6 +907,7 @@ export function DashboardClient() {
                     imageSrc={afterUrl}
                     onFile={setAfter}
                     sourceFile={afterFile}
+                    onPickFromLibrary={pickOneFromLibrary}
                   />
                 </div>
                 <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-800 dark:text-slate-200">
@@ -897,7 +955,7 @@ export function DashboardClient() {
           <div>
             <DashboardStepAccordion
               id="preview"
-              title="8. Preview"
+              title="9. Preview"
               accent="orange"
               openId={previewAccordionOpen ? "preview" : null}
               onOpenChange={(id) => setPreviewAccordionOpen(id === "preview")}
@@ -923,6 +981,20 @@ export function DashboardClient() {
       </main>
     </div>
     <AiAgentsInstructionFab />
+    <MediaLibraryPicker
+      open={libraryPicker !== null}
+      brandId={brand.id}
+      brandLabel={brand.displayName}
+      maxSelection={libraryPicker?.maxSelection ?? 1}
+      onClose={() => {
+        if (libraryPicker) libraryPicker.resolve([]);
+        setLibraryPicker(null);
+      }}
+      onApply={(files) => {
+        if (libraryPicker) libraryPicker.resolve(files);
+        setLibraryPicker(null);
+      }}
+    />
     </>
   );
 }
