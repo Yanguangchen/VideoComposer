@@ -31,15 +31,9 @@ export function LogoPositionControls({
     <div
       className={`mt-3 flex flex-col gap-3 rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-600 dark:bg-slate-900/40 ${disabled ? "pointer-events-none opacity-50" : ""}`}
     >
-      <div>
-        <span className="text-sm font-semibold text-slate-800 dark:text-slate-200">
-          Logo position
-        </span>
-        <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-          Nudge the logo on the exported frame. Positive horizontal moves it
-          right; positive vertical moves it down. Check the preview.
-        </p>
-      </div>
+      <span className="text-sm font-semibold text-slate-800 dark:text-slate-200">
+        Logo position
+      </span>
       <label className="flex flex-col gap-1.5">
         <span className="text-xs font-medium text-slate-700 dark:text-slate-200">
           Horizontal · {x}px

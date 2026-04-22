@@ -229,12 +229,33 @@ export async function deleteLibraryAsset(asset: LibraryAsset): Promise<void> {
 
 /**
  * Download an asset via the Firebase Storage SDK and wrap it as a File.
- * Using getBytes() avoids CORS — the SDK handles auth headers internally,
- * unlike a plain fetch() to the download URL which the browser would block.
+ *
+ * NOTE: `getBytes()` still uses XHR and therefore requires CORS to be
+ * configured on the Storage bucket to allow the app origin. If CORS is
+ * missing, the SDK retries for ~60s before failing with ERR_FAILED, which
+ * looks like the UI is "stuck" on a loading state. We rewrap the error
+ * with a clear message pointing at the fix.
+ *
+ * See `cors.json` at the repo root and
+ * `docs/media-library-setup.md` → "CORS" for the exact command to run.
  */
 export async function libraryAssetToFile(asset: LibraryAsset): Promise<File> {
   const bucket = getStorageBucket();
   const objectRef = storageRef(bucket, asset.storagePath);
-  const buffer = await getBytes(objectRef);
-  return new File([buffer], asset.filename, { type: asset.contentType });
+  try {
+    const buffer = await getBytes(objectRef);
+    return new File([buffer], asset.filename, { type: asset.contentType });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    if (
+      /cors|network|blocked|failed to fetch|err_failed/i.test(message) ||
+      (err as { code?: string } | null)?.code === "storage/unknown"
+    ) {
+      throw new Error(
+        "Couldn't download the image from Firebase Storage (likely a CORS issue on the bucket). " +
+          "Configure CORS on the bucket using `cors.json` — see docs/media-library-setup.md → CORS.",
+      );
+    }
+    throw err;
+  }
 }

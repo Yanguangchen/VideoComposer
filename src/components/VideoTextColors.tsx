@@ -24,15 +24,9 @@ export function VideoTextColors({
 }: Props) {
   return (
     <div className="flex flex-col gap-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900/60">
-      <div>
-        <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-100">
-          Video text colors
-        </h3>
-        <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-          Main headline is the large title at the top; caption is the service
-          line or slide titles (where applicable).
-        </p>
-      </div>
+      <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-100">
+        Video text colors
+      </h3>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="flex flex-col gap-2">

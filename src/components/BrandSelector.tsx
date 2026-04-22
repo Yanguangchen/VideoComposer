@@ -10,21 +10,25 @@ type Props = {
 
 export function BrandSelector({ brands, activeBrandId, onSelect }: Props) {
   return (
-    <div className="grid grid-cols-1 gap-4 rounded-xl bg-gray-100 p-6 dark:bg-slate-800/80 md:grid-cols-3">
-      {brands.map((b) => (
-        <button
-          key={b.id}
-          type="button"
-          onClick={() => onSelect(b.id)}
-          className={`rounded-md px-4 py-6 text-center text-sm font-semibold uppercase shadow-md transition-all focus:outline-none focus:ring-4 focus:ring-blue-300 md:text-base ${
-            activeBrandId === b.id
-              ? "bg-blue-900 text-white ring-2 ring-blue-400"
-              : "bg-blue-700 text-white hover:bg-blue-800"
-          }`}
-        >
-          {b.displayName}
-        </button>
-      ))}
+    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+      {brands.map((b) => {
+        const active = activeBrandId === b.id;
+        return (
+          <button
+            key={b.id}
+            type="button"
+            onClick={() => onSelect(b.id)}
+            title={b.displayName}
+            className={`min-w-0 break-words rounded-lg border px-3 py-2.5 text-center text-xs font-semibold uppercase leading-tight tracking-wide transition-colors focus:outline-none focus:ring-2 focus:ring-accent/40 ${
+              active
+                ? "border-accent/60 bg-accent-dim text-accent shadow-accent-glow"
+                : "border-white/10 bg-white/[0.04] text-slate-200 hover:border-white/20 hover:bg-white/[0.07] dark:text-slate-200"
+            }`}
+          >
+            {b.displayName}
+          </button>
+        );
+      })}
     </div>
   );
 }

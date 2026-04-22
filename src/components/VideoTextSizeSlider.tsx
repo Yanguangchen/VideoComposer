@@ -26,10 +26,6 @@ export function VideoTextSizeSlider({ value, onChange }: Props) {
           {(safe * 100).toFixed(0)}%
         </span>
       </div>
-      <p className="text-xs text-slate-500 dark:text-slate-400">
-        Scales every line in the export: brand title, subtitle, price tag,
-        service line, and carousel slide titles.
-      </p>
       <input
         type="range"
         min={MIN_VIDEO_TEXT_SIZE_SCALE}

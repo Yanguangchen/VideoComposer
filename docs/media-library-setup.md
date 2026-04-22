@@ -95,12 +95,43 @@ service firebase.storage {
 }
 ```
 
-### CORS
+### CORS (required for **Pick from library**)
 
-Browser `fetch` of a Firebase download URL works without extra CORS since the
-SDK issues tokenized URLs. If you later swap to `gs://` URIs or a CDN, you
-may need to `gcloud storage buckets update` with a CORS config allowing your
-app origin.
+Firebase Storage **always** enforces CORS for cross-origin browser requests
+(including `getBytes()` inside the Firebase SDK). Without a CORS config,
+clicking **Use selection** in the picker will look stuck on *"Preparing…"*
+while the SDK retries for ~60 seconds, then fail with:
+
+```
+Access to XMLHttpRequest at 'https://firebasestorage.googleapis.com/...'
+has been blocked by CORS policy
+```
+
+The repo ships a ready-to-apply config at **`cors.json`** (repo root). Edit
+it so `origin` includes your deployed app URL(s), then apply it to the
+bucket:
+
+```bash
+# Cloud SDK (installed via `gcloud components install cloud-storage`):
+gcloud storage buckets update gs://YOUR_BUCKET.firebasestorage.app \
+  --cors-file=cors.json
+
+# Or legacy gsutil:
+gsutil cors set cors.json gs://YOUR_BUCKET.firebasestorage.app
+```
+
+Replace `YOUR_BUCKET` with the value of **`NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET`**.
+
+Verify:
+
+```bash
+gcloud storage buckets describe gs://YOUR_BUCKET.firebasestorage.app --format='value(cors_config)'
+# or
+gsutil cors get gs://YOUR_BUCKET.firebasestorage.app
+```
+
+Changes propagate in seconds. Hard-refresh the app tab to clear any cached
+CORS preflight from a previous state.
 
 ## 4. Schema reference
 

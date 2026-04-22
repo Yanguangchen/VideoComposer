@@ -5,17 +5,218 @@
 @layer base {
   :root {
     color-scheme: light;
+    /* Accent: default oklch(63% 0.20 245) ≈ #3b6fd4, stored as RGB for Tailwind alpha syntax */
+    --accent-rgb: 59 111 212;
+    --accent-fg-rgb: 255 255 255;
+    --success-rgb: 45 178 138; /* oklch(64% 0.18 150) */
+    --scene-rgb: 7 8 15;
+
+    /* Layout tokens */
+    --sidebar-w: 380px;
+    --density-pad: 1rem; /* glass card padding; TweaksPanel can set "compact" */
+    --density-gap: 0.75rem;
+    --preview-tone: 214 48%; /* H S; combined with accent in preview ambient glow */
   }
+
   .dark {
     color-scheme: dark;
   }
+
   html {
     overflow-x: hidden;
     -webkit-text-size-adjust: 100%;
   }
+
   body {
     overflow-x: hidden;
     padding-left: env(safe-area-inset-left);
     padding-right: env(safe-area-inset-right);
+  }
+
+  [data-density="compact"] {
+    --density-pad: 0.625rem;
+    --density-gap: 0.5rem;
+  }
+}
+
+@layer components {
+  /* --- Background ambient scene (mounted once, behind everything) --- */
+  .bg-scene {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background:
+      radial-gradient(60% 45% at 15% 10%, rgb(var(--accent-rgb) / 0.22), transparent 60%),
+      radial-gradient(55% 45% at 85% 90%, rgb(120 80 230 / 0.22), transparent 60%),
+      radial-gradient(80% 60% at 50% 50%, rgb(40 50 90 / 0.18), transparent 70%),
+      linear-gradient(180deg, #0b0e1a 0%, #07080f 100%);
+  }
+
+  .light .bg-scene,
+  :root:not(.dark) .bg-scene {
+    background:
+      radial-gradient(60% 45% at 15% 10%, rgb(var(--accent-rgb) / 0.14), transparent 60%),
+      radial-gradient(55% 45% at 85% 90%, rgb(180 160 255 / 0.18), transparent 60%),
+      linear-gradient(180deg, #f6f7fb 0%, #eef1f8 100%);
+  }
+
+  /* --- Glass card (used everywhere a surface is needed) --- */
+  .glass-card {
+    position: relative;
+    border-radius: 1rem;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.11);
+    box-shadow:
+      0 1px 0 0 rgba(255, 255, 255, 0.06) inset,
+      0 10px 30px -12px rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+
+  :root:not(.dark) .glass-card {
+    background: rgba(255, 255, 255, 0.72);
+    border-color: rgba(0, 0, 0, 0.08);
+    box-shadow:
+      0 1px 0 0 rgba(255, 255, 255, 0.8) inset,
+      0 10px 25px -14px rgba(20, 30, 60, 0.22);
+  }
+
+  .glass-card--strong {
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+
+  /* --- Glass toolbar (header, export bar, tweaks drawer) --- */
+  .glass-bar {
+    background: rgba(9, 11, 21, 0.68);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border-color: rgba(255, 255, 255, 0.08);
+  }
+
+  :root:not(.dark) .glass-bar {
+    background: rgba(255, 255, 255, 0.72);
+    border-color: rgba(0, 0, 0, 0.08);
+  }
+
+  /* --- Badge pills used in section headers --- */
+  .badge-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.125rem 0.5rem;
+    border-radius: 9999px;
+    font-size: 0.625rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .badge-required {
+    color: rgb(var(--accent-rgb));
+    background: rgb(var(--accent-rgb) / 0.14);
+    border: 1px solid rgb(var(--accent-rgb) / 0.35);
+  }
+  .badge-done {
+    color: rgb(var(--success-rgb));
+    background: rgb(var(--success-rgb) / 0.14);
+    border: 1px solid rgb(var(--success-rgb) / 0.35);
+  }
+  .badge-optional {
+    color: rgb(150 160 200);
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+  }
+  :root:not(.dark) .badge-optional {
+    color: rgb(100 110 140);
+    background: rgba(0, 0, 0, 0.04);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+  }
+
+  /* --- Accent gradient button (export) --- */
+  .btn-accent {
+    background: linear-gradient(
+      135deg,
+      rgb(var(--accent-rgb)) 0%,
+      rgb(var(--accent-rgb) / 0.85) 100%
+    );
+    color: rgb(var(--accent-fg-rgb));
+    box-shadow:
+      0 1px 0 0 rgba(255, 255, 255, 0.2) inset,
+      0 8px 24px -8px rgb(var(--accent-rgb) / 0.6);
+  }
+  .btn-accent:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow:
+      0 1px 0 0 rgba(255, 255, 255, 0.24) inset,
+      0 12px 30px -8px rgb(var(--accent-rgb) / 0.7);
+  }
+  .btn-accent:disabled {
+    background: rgba(255, 255, 255, 0.06);
+    color: rgba(255, 255, 255, 0.35);
+    box-shadow: none;
+    cursor: not-allowed;
+  }
+  :root:not(.dark) .btn-accent:disabled {
+    background: rgba(0, 0, 0, 0.05);
+    color: rgba(0, 0, 0, 0.35);
+  }
+
+  /* --- Ghost button --- */
+  .btn-ghost {
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgba(255, 255, 255, 0.04);
+    color: inherit;
+  }
+  .btn-ghost:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.22);
+  }
+  :root:not(.dark) .btn-ghost {
+    border-color: rgba(0, 0, 0, 0.12);
+    background: rgba(0, 0, 0, 0.02);
+  }
+  :root:not(.dark) .btn-ghost:hover {
+    background: rgba(0, 0, 0, 0.05);
+  }
+
+  /* --- Smooth section collapse animation --- */
+  .collapse-grid {
+    display: grid;
+    transition: grid-template-rows 280ms ease;
+  }
+  .collapse-grid--open {
+    grid-template-rows: 1fr;
+  }
+  .collapse-grid--closed {
+    grid-template-rows: 0fr;
+  }
+  .collapse-grid > div {
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  /* --- Preview letterbox ambient glow --- */
+  .preview-ambient {
+    background:
+      radial-gradient(
+        60% 50% at 50% 50%,
+        hsl(var(--preview-tone) / 0.28),
+        transparent 70%
+      );
+  }
+}
+
+@layer utilities {
+  /* Hide scrollbars but keep the ability to scroll (left sidebar) */
+  .scrollbar-soft {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+  }
+  .scrollbar-soft::-webkit-scrollbar {
+    width: 6px;
+  }
+  .scrollbar-soft::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 3px;
   }
 }

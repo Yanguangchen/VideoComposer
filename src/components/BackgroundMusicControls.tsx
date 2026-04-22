@@ -23,22 +23,6 @@ export function BackgroundMusicControls({
 }: Props) {
   return (
     <div className="flex flex-col gap-6">
-      <p className="text-xs text-slate-500 dark:text-slate-400">
-        Drop files into{" "}
-        <code className="rounded bg-slate-100 px-1 dark:bg-slate-800 dark:text-slate-300">
-          public/music/
-        </code>{" "}
-        and background folders (e.g.{" "}
-        <code className="rounded bg-slate-100 px-1 dark:bg-slate-800 dark:text-slate-300">
-          public/background music/
-        </code>
-        ) — they are picked up automatically. Optional custom labels in{" "}
-        <code className="rounded bg-slate-100 px-1 dark:bg-slate-800 dark:text-slate-300">
-          background-music.ts
-        </code>
-        .
-      </p>
-
       {mediaLoading ? (
         <p className="text-xs text-slate-500 dark:text-slate-400">
           Scanning public folders…
@@ -49,10 +33,6 @@ export function BackgroundMusicControls({
         <label className="text-sm font-semibold text-slate-800 dark:text-slate-100">
           Background video (or image)
         </label>
-        <p className="text-xs text-slate-500 dark:text-slate-400">
-          Full-screen backdrop. Use .mp4 / .webm for video, or .jpg / .webp for a
-          still. Video plays muted so it does not clash with the music track.
-        </p>
         <select
           value={backgroundPath ?? ""}
           onChange={(e) => {
@@ -88,9 +68,6 @@ export function BackgroundMusicControls({
         <label className="text-sm font-semibold text-slate-800 dark:text-slate-100">
           Music
         </label>
-        <p className="text-xs text-slate-500 dark:text-slate-400">
-          Optional background music — separate from the backdrop video.
-        </p>
         <select
           value={musicPath ?? ""}
           onChange={(e) => {

@@ -10,18 +10,21 @@ import { LogoPicker } from "@/components/LogoPicker";
 import { LogoPositionControls } from "@/components/LogoPositionControls";
 import { MediaLibraryPicker } from "@/components/MediaLibraryPicker";
 import { MediaUploader } from "@/components/MediaUploader";
-import { RenderAndDownload } from "@/components/RenderAndDownload";
 import { ServiceFontPicker } from "@/components/ServiceFontPicker";
-import { TemplateModeToggle } from "@/components/TemplateModeToggle";
 import { BackgroundMusicControls } from "@/components/BackgroundMusicControls";
 import { VideoDurationControl } from "@/components/VideoDurationControl";
 import { VideoTextColors } from "@/components/VideoTextColors";
 import { VideoTextSizeSlider } from "@/components/VideoTextSizeSlider";
-import { DashboardStepAccordion } from "@/components/DashboardStepAccordion";
 import { SignInModal } from "@/components/SignInModal";
 import { AiAgentsInstructionFab } from "@/components/AiAgentsInstructionFab";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { onAuthChange, signOut, type User } from "@/lib/auth";
+import { BackgroundScene } from "@/components/ui/BackgroundScene";
+import { GlassCard } from "@/components/ui/GlassCard";
+import { ToastProvider, useToast } from "@/components/ui/Toast";
+import { TemplateModePills } from "@/components/TemplateModePills";
+import { ExportBar } from "@/components/ExportBar";
+import { TweaksPanel, useTweaks } from "@/components/TweaksPanel";
 
 const VideoPreview = dynamic(
   () =>
@@ -31,7 +34,7 @@ const VideoPreview = dynamic(
   {
     ssr: false,
     loading: () => (
-      <p className="text-sm text-slate-500 dark:text-slate-400">Loading preview…</p>
+      <p className="p-6 text-sm text-slate-400">Loading preview…</p>
     ),
   },
 );
@@ -77,11 +80,30 @@ import type { CarouselTemplateProps } from "@/remotion/carousel-template";
 import type { SingleImageTemplateProps } from "@/remotion/single-image-template";
 
 export function DashboardClient() {
+  return (
+    <ToastProvider>
+      <DashboardInner />
+    </ToastProvider>
+  );
+}
+
+function DashboardInner() {
+  const toast = useToast();
+  const { state: tweaks, setState: setTweaks } = useTweaks();
+  const [tweaksOpen, setTweaksOpen] = useState(false);
+
+  // --- Template / brand / logo ---
   const [templateMode, setTemplateMode] =
     useState<TemplateModeId>(DEFAULT_TEMPLATE_MODE);
   const [activeBrandId, setActiveBrandId] = useState(brands[0]!.id);
   const [logoFile, setLogoFile] = useState<string | null>(null);
   const [showLogo, setShowLogo] = useState(true);
+  const [logoOffsetXPx, setLogoOffsetXPx] = useState(0);
+  const [logoOffsetYPx, setLogoOffsetYPx] = useState(0);
+  const logoOx = clampLogoOffset(logoOffsetXPx);
+  const logoOy = clampLogoOffset(logoOffsetYPx);
+
+  // --- Text & styling ---
   const [serviceTitle, setServiceTitle] = useState("");
   const [subtitleText, setSubtitleText] = useState("");
   const [showPriceTag, setShowPriceTag] = useState(false);
@@ -96,7 +118,12 @@ export function DashboardClient() {
   const [captionColorHex, setCaptionColorHex] = useState(
     () => DEFAULT_CAPTION_COLOR_HEX,
   );
-  /** `public/` relative paths, e.g. `music/bed.mp3` */
+  const [textSizeScale, setTextSizeScale] = useState(
+    DEFAULT_VIDEO_TEXT_SIZE_SCALE,
+  );
+  const videoTextScale = clampVideoTextSizeScale(textSizeScale);
+
+  // --- Media paths (background / music) ---
   const [backgroundPath, setBackgroundPath] = useState<string | null>(null);
   const [musicPath, setMusicPath] = useState<string | null>(null);
   const [mediaLoading, setMediaLoading] = useState(true);
@@ -104,6 +131,8 @@ export function DashboardClient() {
     music: MediaAsset[];
     backgrounds: MediaAsset[];
   } | null>(null);
+
+  // --- Uploaded files ---
   const [beforeFile, setBeforeFile] = useState<File | null>(null);
   const [afterFile, setAfterFile] = useState<File | null>(null);
   const [beforeUrl, setBeforeUrl] = useState<string | null>(null);
@@ -113,26 +142,27 @@ export function DashboardClient() {
   const [carouselSlides, setCarouselSlides] = useState<CarouselSlideDraft[]>(
     () => createInitialCarouselSlides(),
   );
+
+  // --- Misc ---
   const [isRendering, setIsRendering] = useState(false);
   const [durationSeconds, setDurationSeconds] = useState(
     DEFAULT_DURATION_SECONDS,
   );
-  const [textSizeScale, setTextSizeScale] = useState(
-    DEFAULT_VIDEO_TEXT_SIZE_SCALE,
-  );
-  const videoTextScale = clampVideoTextSizeScale(textSizeScale);
-  const [logoOffsetXPx, setLogoOffsetXPx] = useState(0);
-  const [logoOffsetYPx, setLogoOffsetYPx] = useState(0);
-  const logoOx = clampLogoOffset(logoOffsetXPx);
-  const logoOy = clampLogoOffset(logoOffsetYPx);
-  const [openLeftStepId, setOpenLeftStepId] = useState<string | null>(null);
-  const [previewAccordionOpen, setPreviewAccordionOpen] = useState(true);
   const [showBeforeAfterArrow, setShowBeforeAfterArrow] = useState(true);
   const [authReady, setAuthReady] = useState(false);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
 
-  // Library picker — one modal at the dashboard level. Callers await a
-  // promise resolved when the user taps "Use selection" or "Close".
+  // --- Section open/close (default: identity + content open) ---
+  const [openIdentity, setOpenIdentity] = useState(true);
+  const [openContent, setOpenContent] = useState(true);
+  const [openStyle, setOpenStyle] = useState(false);
+
+  // --- Mobile tab state ---
+  const [mobileTab, setMobileTab] = useState<"configure" | "preview">(
+    "configure",
+  );
+
+  // --- Library picker ---
   const [libraryPicker, setLibraryPicker] = useState<{
     maxSelection: number;
     resolve: (files: File[]) => void;
@@ -156,6 +186,8 @@ export function DashboardClient() {
     setHeadlineColorHex(DEFAULT_HEADLINE_COLOR_HEX);
   }, [activeBrandId]);
 
+  // --- Template switch: reset uploads (keep everything else), show toast ---
+  const isFirstRender = useRef(true);
   useEffect(() => {
     setBeforeFile(null);
     setAfterFile(null);
@@ -178,7 +210,12 @@ export function DashboardClient() {
       });
       return createInitialCarouselSlides();
     });
-  }, [templateMode]);
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+    toast("Template switched — photos reset, all other settings kept", "info");
+  }, [templateMode, toast]);
 
   useEffect(() => {
     return () => {
@@ -222,11 +259,7 @@ export function DashboardClient() {
   }, []);
 
   const backgroundOptions = useMemo(
-    () =>
-      mergeMediaAssets(
-        scannedMedia?.backgrounds ?? [],
-        BACKGROUND_VIDEOS,
-      ),
+    () => mergeMediaAssets(scannedMedia?.backgrounds ?? [], BACKGROUND_VIDEOS),
     [scannedMedia],
   );
 
@@ -581,33 +614,34 @@ export function DashboardClient() {
     logoOy,
   ]);
 
-  const canExport =
+  // --- Completion indicators (wired to Export bar dots + section badges) ---
+  const hasBrand = Boolean(brand);
+  const hasLogo = !showLogo || Boolean(logoFile);
+  const hasContent =
     templateMode === "single-image"
-      ? Boolean(singleFile && (!showLogo || logoFile))
+      ? Boolean(singleFile)
       : templateMode === "carousel"
-        ? Boolean(
-            (!showLogo || logoFile) &&
-              carouselSlides.length > 0 &&
-              carouselSlides.every((s) => s.file),
-          )
-        : Boolean(beforeFile && afterFile && (!showLogo || logoFile));
+        ? carouselSlides.length > 0 && carouselSlides.every((s) => s.file)
+        : Boolean(beforeFile && afterFile);
 
-  const photosHeading =
-    templateMode === "single-image"
-      ? "8. Image"
-      : templateMode === "carousel"
-        ? "8. Carousel slides"
-        : "8. Before / After photos";
+  const canExport = hasBrand && hasLogo && hasContent;
+
+  const identityBadge = hasBrand && hasLogo ? "done" : "required";
+  const contentBadge = hasContent ? "done" : "required";
 
   if (!authReady) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-950" aria-hidden />
+      <>
+        <BackgroundScene />
+        <div className="min-h-dvh" aria-hidden />
+      </>
     );
   }
 
   if (!currentUser) {
     return (
       <>
+        <BackgroundScene />
         <SignInModal onSuccess={() => {}} />
         <AiAgentsInstructionFab />
       </>
@@ -616,389 +650,449 @@ export function DashboardClient() {
 
   return (
     <>
-    <div className="flex min-h-screen flex-col">
-      <header className="sticky top-0 z-40 border-b border-slate-200/90 bg-white/90 shadow-sm backdrop-blur-md supports-[backdrop-filter]:bg-white/75 dark:border-slate-700/80 dark:bg-slate-950/90 dark:supports-[backdrop-filter]:bg-slate-950/75">
-        <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:gap-4 sm:py-3.5">
-          <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-slate-100 sm:text-2xl">
-            Video Composer
-          </h1>
-          <p className="flex-1 text-sm leading-snug text-slate-600 dark:text-slate-400 sm:text-right">
-            Multi-brand marketing videos — choose a layout, pick a client,
-            select a logo, add copy, upload media, preview, then export MP4.
-          </p>
-          <div className="flex shrink-0 items-center gap-2">
-            {currentUser.photoURL ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={currentUser.photoURL}
-                alt={currentUser.displayName ?? "User"}
-                className="h-8 w-8 rounded-full border border-slate-200 dark:border-slate-600"
-                referrerPolicy="no-referrer"
-              />
-            ) : null}
-            <button
-              type="button"
-              onClick={() => signOut()}
-              className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
-            >
-              Sign out
-            </button>
-            <ThemeToggle />
+      <BackgroundScene />
+      <div className="flex min-h-dvh flex-col text-slate-100">
+        {/* ------------- Header ------------- */}
+        <header className="glass-bar sticky top-0 z-40 border-b">
+          <div className="mx-auto flex h-[52px] w-full max-w-[1600px] items-center gap-3 px-4">
+            <h1 className="text-base font-extrabold tracking-tight sm:text-lg">
+              Video
+              <span className="text-accent">Composer</span>
+            </h1>
+            <p className="hidden flex-1 truncate text-xs text-slate-400 md:block">
+              Multi-brand marketing videos — choose a layout, pick a client,
+              select a logo, add copy, upload media, preview, then export MP4.
+            </p>
+            <div className="flex flex-1 md:hidden" />
+            <div className="flex shrink-0 items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setTweaksOpen((v) => !v)}
+                className="btn-ghost rounded-lg px-2.5 py-1 text-xs font-semibold"
+                aria-pressed={tweaksOpen}
+              >
+                Tweaks
+              </button>
+              {currentUser.photoURL ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={currentUser.photoURL}
+                  alt={currentUser.displayName ?? "User"}
+                  className="h-7 w-7 rounded-full border border-white/10"
+                  referrerPolicy="no-referrer"
+                />
+              ) : null}
+              <button
+                type="button"
+                onClick={() => signOut()}
+                className="btn-ghost rounded-lg px-2.5 py-1 text-xs font-semibold"
+              >
+                Sign out
+              </button>
+              <ThemeToggle />
+            </div>
+          </div>
+        </header>
+
+        {/* ------------- Mobile tab bar ------------- */}
+        <div className="glass-bar sticky top-[52px] z-30 border-b lg:hidden">
+          <div className="mx-auto flex max-w-[1600px] gap-1 px-4 py-2">
+            {(["configure", "preview"] as const).map((tab) => (
+              <button
+                key={tab}
+                type="button"
+                onClick={() => setMobileTab(tab)}
+                className={`flex-1 rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
+                  mobileTab === tab
+                    ? "bg-accent-dim text-accent"
+                    : "text-slate-400 hover:bg-white/[0.04]"
+                }`}
+              >
+                {tab === "configure" ? "Configure" : "Preview"}
+              </button>
+            ))}
           </div>
         </div>
-      </header>
 
-      <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-8">
-        <div className="grid gap-8 lg:grid-cols-2">
-          <div className="space-y-3">
-          <DashboardStepAccordion
-            id="layout"
-            title="Layout"
-            accent="indigo"
-            openId={openLeftStepId}
-            onOpenChange={setOpenLeftStepId}
+        {/* ------------- Body: left config + right preview ------------- */}
+        <main
+          className="relative flex min-h-0 flex-1"
+          style={{
+            ["--left-w" as string]: "var(--sidebar-w, 380px)",
+          }}
+        >
+          {/* Left column */}
+          <aside
+            className={`${mobileTab === "configure" ? "flex" : "hidden"} relative min-h-0 w-full flex-col lg:flex lg:w-[var(--left-w)] lg:shrink-0 lg:border-r lg:border-white/[0.06]`}
           >
-            <div className="pt-1">
-              <TemplateModeToggle
-                value={templateMode}
-                onChange={setTemplateMode}
-              />
-            </div>
-          </DashboardStepAccordion>
-
-          <DashboardStepAccordion
-            id="brand"
-            title="1. Brand"
-            accent="violet"
-            openId={openLeftStepId}
-            onOpenChange={setOpenLeftStepId}
-          >
-            <BrandSelector
-              brands={brands}
-              activeBrandId={activeBrandId}
-              onSelect={setActiveBrandId}
-            />
-          </DashboardStepAccordion>
-
-          <DashboardStepAccordion
-            id="library"
-            title="2. Brand media library"
-            accent="emerald"
-            openId={openLeftStepId}
-            onOpenChange={setOpenLeftStepId}
-          >
-            <BrandMediaLibrary
-              key={brand.id}
-              brandId={brand.id}
-              brandLabel={brand.displayName}
-            />
-          </DashboardStepAccordion>
-
-          <DashboardStepAccordion
-            id="logo"
-            title="3. Logo (from disk)"
-            accent="sky"
-            openId={openLeftStepId}
-            onOpenChange={setOpenLeftStepId}
-          >
-            <LogoPicker
-              key={brand.id}
-              brand={brand}
-              value={logoFile}
-              onChange={setLogoFile}
-            />
-            <label className="mt-3 flex cursor-pointer items-center gap-2 text-sm text-slate-800 dark:text-slate-200">
-              <input
-                type="checkbox"
-                checked={showLogo}
-                onChange={(e) => setShowLogo(e.target.checked)}
-                className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:ring-offset-slate-900"
-              />
-              Show logo in video
-            </label>
-            {!showLogo ? (
-              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                Logo is hidden; export does not require a logo file.
-              </p>
-            ) : null}
-            <LogoPositionControls
-              offsetXPx={logoOx}
-              offsetYPx={logoOy}
-              onOffsetXChange={setLogoOffsetXPx}
-              onOffsetYChange={setLogoOffsetYPx}
-              disabled={!showLogo}
-            />
-          </DashboardStepAccordion>
-
-          <DashboardStepAccordion
-            id="colors"
-            title="4. Video text colors"
-            accent="rose"
-            openId={openLeftStepId}
-            onOpenChange={setOpenLeftStepId}
-          >
-            <VideoTextColors
-              headlineColorHex={headlineColorHex}
-              captionColorHex={captionColorHex}
-              defaultHeadlineHex={DEFAULT_HEADLINE_COLOR_HEX}
-              onHeadlineChange={setHeadlineColorHex}
-              onCaptionChange={setCaptionColorHex}
-            />
-          </DashboardStepAccordion>
-
-          <DashboardStepAccordion
-            id="background"
-            title="5. Background video & music"
-            accent="emerald"
-            openId={openLeftStepId}
-            onOpenChange={setOpenLeftStepId}
-          >
-            <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-4 dark:border-slate-700 dark:bg-slate-800/50">
-              <BackgroundMusicControls
-                backgroundOptions={backgroundOptions}
-                musicOptions={musicOptions}
-                backgroundPath={backgroundPath}
-                musicPath={musicPath}
-                onBackgroundChange={setBackgroundPath}
-                onMusicChange={setMusicPath}
-                mediaLoading={mediaLoading}
-              />
-            </div>
-          </DashboardStepAccordion>
-
-          <DashboardStepAccordion
-            id="text"
-            title="6. Text & fonts"
-            accent="amber"
-            openId={openLeftStepId}
-            onOpenChange={setOpenLeftStepId}
-          >
-            <div className="flex flex-col gap-4 rounded-xl border border-slate-200 bg-slate-50/80 p-4 dark:border-slate-700 dark:bg-slate-800/50">
-              <ServiceFontPicker
-                label="Brand title font"
-                description="Typeface for the large brand name at the top of the video."
-                value={brandTitleFontId}
-                onChange={setBrandTitleFontId}
-              />
-              <VideoTextSizeSlider
-                value={videoTextScale}
-                onChange={setTextSizeScale}
-              />
-              <div>
-                <span className="text-sm font-semibold text-slate-800 dark:text-slate-200">
-                  Subtitle (optional)
-                </span>
-                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                  Smaller line under the photos (same color and title font).
-                </p>
-                <input
-                  type="text"
-                  value={subtitleText}
-                  onChange={(e) => setSubtitleText(e.target.value)}
-                  placeholder="e.g. Beauty & Wellness"
-                  className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500"
-                />
-              </div>
-              <div>
-                <label className="flex cursor-pointer items-center gap-2 text-sm font-medium text-slate-800 dark:text-slate-200">
-                  <input
-                    type="checkbox"
-                    checked={showPriceTag}
-                    onChange={(e) => setShowPriceTag(e.target.checked)}
-                    className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:ring-offset-slate-900"
-                  />
-                  Show price tag (below images)
-                </label>
-                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                  Optional pill under the images; uses the same headline color as
-                  the title block.
-                </p>
-                {showPriceTag ? (
-                  <input
-                    type="text"
-                    value={priceTagText}
-                    onChange={(e) => setPriceTagText(e.target.value)}
-                    placeholder="e.g. $99 · From $129"
-                    className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500"
-                  />
-                ) : null}
-              </div>
-              {templateMode === "carousel" ? (
-                <ServiceFontPicker
-                  label="Slide caption font"
-                  description="Typeface for each slide title under the image (separate from the brand title)."
-                  value={serviceFontId}
-                  onChange={setServiceFontId}
-                />
-              ) : (
-                <>
-                  <div>
-                    <span className="text-sm font-semibold text-slate-800 dark:text-slate-200">
-                      Service title
-                    </span>
-                    <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                      Shown below the photo block (e.g. service name or offer).
-                    </p>
-                    <input
-                      type="text"
-                      value={serviceTitle}
-                      onChange={(e) => setServiceTitle(e.target.value)}
-                      placeholder="e.g. Signature Hydra Facial"
-                      className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500"
-                    />
-                  </div>
-                  <ServiceFontPicker
-                    label="Service title font"
-                    description="Typeface for the service line below the photos (independent from the brand title)."
-                    value={serviceFontId}
-                    onChange={setServiceFontId}
-                  />
-                </>
-              )}
-            </div>
-          </DashboardStepAccordion>
-
-          <DashboardStepAccordion
-            id="duration"
-            title="7. Video length"
-            accent="cyan"
-            openId={openLeftStepId}
-            onOpenChange={setOpenLeftStepId}
-          >
-            <VideoDurationControl
-              durationSeconds={durationSeconds}
-              onChange={setDurationSeconds}
-            />
-          </DashboardStepAccordion>
-
-          <DashboardStepAccordion
-            id="photos"
-            title={photosHeading}
-            accent="fuchsia"
-            openId={openLeftStepId}
-            onOpenChange={setOpenLeftStepId}
-          >
-            {templateMode === "single-image" ? (
-              <MediaUploader
-                label="Hero image"
-                description="One photo for promos, products, or non-transformation content."
-                imageSrc={singleUrl}
-                onFile={setSingle}
-                sourceFile={singleFile}
-                onPickFromLibrary={pickOneFromLibrary}
-              />
-            ) : templateMode === "carousel" ? (
-              <CarouselSlidesEditor
-                slides={carouselSlides}
-                onChange={setCarouselSlides}
-                onPickFromLibrary={pickOneFromLibrary}
-                onBulkAddFromLibrary={pickManyFromLibrary}
-              />
-            ) : (
-              <div className="flex flex-col gap-4">
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <MediaUploader
-                    label="Before"
-                    description="Upload the &quot;before&quot; photo."
-                    imageSrc={beforeUrl}
-                    onFile={setBefore}
-                    sourceFile={beforeFile}
-                    onPickFromLibrary={pickOneFromLibrary}
-                  />
-                  <MediaUploader
-                    label="After"
-                    description="Upload the &quot;after&quot; photo."
-                    imageSrc={afterUrl}
-                    onFile={setAfter}
-                    sourceFile={afterFile}
-                    onPickFromLibrary={pickOneFromLibrary}
+            {/* Scrollable config area */}
+            <div className="scrollbar-soft flex-1 overflow-y-auto px-4 pb-24 pt-4 lg:pb-6">
+              <div className="flex flex-col gap-3">
+                {/* Sticky template selector */}
+                <div className="sticky top-0 z-10 -mx-1 -mt-1 px-1 pt-1 pb-2">
+                  <TemplateModePills
+                    value={templateMode}
+                    onChange={setTemplateMode}
                   />
                 </div>
-                <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-800 dark:text-slate-200">
-                  <input
-                    type="checkbox"
-                    checked={showBeforeAfterArrow}
-                    onChange={(e) => setShowBeforeAfterArrow(e.target.checked)}
-                    className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:ring-offset-slate-900"
-                  />
-                  Show arrow between before &amp; after
-                </label>
+
+                {/* --------- Section 1 · Identity --------- */}
+                <GlassCard
+                  id="identity"
+                  title="Identity"
+                  badge={identityBadge}
+                  hint={brand.displayName}
+                  open={openIdentity}
+                  onToggle={() => setOpenIdentity((v) => !v)}
+                >
+                  <div className="flex flex-col gap-4">
+                    <div>
+                      <span className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-400">
+                        Brand
+                      </span>
+                      <BrandSelector
+                        brands={brands}
+                        activeBrandId={activeBrandId}
+                        onSelect={setActiveBrandId}
+                      />
+                    </div>
+
+                    <div>
+                      <div className="mb-2 flex items-center justify-between gap-2">
+                        <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                          Logo
+                        </span>
+                        <label className="flex cursor-pointer items-center gap-1.5 text-xs text-slate-300">
+                          <input
+                            type="checkbox"
+                            checked={showLogo}
+                            onChange={(e) => setShowLogo(e.target.checked)}
+                            className="h-3.5 w-3.5 rounded border-slate-500 accent-accent"
+                          />
+                          Show in video
+                        </label>
+                      </div>
+                      <LogoPicker
+                        key={brand.id}
+                        brand={brand}
+                        value={logoFile}
+                        onChange={setLogoFile}
+                      />
+                      {!showLogo ? (
+                        <p className="mt-2 text-[11px] text-slate-500">
+                          Logo is hidden; export does not require a logo file.
+                        </p>
+                      ) : null}
+                      <div className="mt-3">
+                        <LogoPositionControls
+                          offsetXPx={logoOx}
+                          offsetYPx={logoOy}
+                          onOffsetXChange={setLogoOffsetXPx}
+                          onOffsetYChange={setLogoOffsetYPx}
+                          disabled={!showLogo}
+                        />
+                      </div>
+                    </div>
+
+                    <details className="group rounded-lg border border-white/10 bg-white/[0.02]">
+                      <summary className="cursor-pointer list-none px-3 py-2 text-xs font-semibold text-slate-300 transition hover:text-slate-100">
+                        <span className="mr-1 inline-block transition group-open:rotate-90">
+                          ›
+                        </span>
+                        Brand media library
+                      </summary>
+                      <div className="border-t border-white/10 p-3">
+                        <BrandMediaLibrary
+                          key={brand.id}
+                          brandId={brand.id}
+                          brandLabel={brand.displayName}
+                        />
+                      </div>
+                    </details>
+                  </div>
+                </GlassCard>
+
+                {/* --------- Section 2 · Content --------- */}
+                <GlassCard
+                  id="content"
+                  title="Content"
+                  badge={contentBadge}
+                  hint={
+                    templateMode === "single-image"
+                      ? "1 hero image"
+                      : templateMode === "carousel"
+                        ? `${carouselSlides.length} slide${carouselSlides.length === 1 ? "" : "s"}`
+                        : "Before + After photos"
+                  }
+                  open={openContent}
+                  onToggle={() => setOpenContent((v) => !v)}
+                >
+                  {templateMode === "single-image" ? (
+                    <MediaUploader
+                      label="Hero image"
+                      description="One photo for promos, products, or non-transformation content."
+                      imageSrc={singleUrl}
+                      onFile={setSingle}
+                      sourceFile={singleFile}
+                      onPickFromLibrary={pickOneFromLibrary}
+                    />
+                  ) : templateMode === "carousel" ? (
+                    <CarouselSlidesEditor
+                      slides={carouselSlides}
+                      onChange={setCarouselSlides}
+                      onPickFromLibrary={pickOneFromLibrary}
+                      onBulkAddFromLibrary={pickManyFromLibrary}
+                    />
+                  ) : (
+                    <div className="flex flex-col gap-4">
+                      <div className="grid gap-4 sm:grid-cols-2">
+                        <MediaUploader
+                          label="Before"
+                          description='Upload the "before" photo.'
+                          imageSrc={beforeUrl}
+                          onFile={setBefore}
+                          sourceFile={beforeFile}
+                          onPickFromLibrary={pickOneFromLibrary}
+                        />
+                        <MediaUploader
+                          label="After"
+                          description='Upload the "after" photo.'
+                          imageSrc={afterUrl}
+                          onFile={setAfter}
+                          sourceFile={afterFile}
+                          onPickFromLibrary={pickOneFromLibrary}
+                        />
+                      </div>
+                      <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-300">
+                        <input
+                          type="checkbox"
+                          checked={showBeforeAfterArrow}
+                          onChange={(e) =>
+                            setShowBeforeAfterArrow(e.target.checked)
+                          }
+                          className="h-4 w-4 rounded border-slate-500 accent-accent"
+                        />
+                        Show arrow between before &amp; after
+                      </label>
+                    </div>
+                  )}
+                </GlassCard>
+
+                {/* --------- Section 3 · Style --------- */}
+                <GlassCard
+                  id="style"
+                  title="Style"
+                  badge="optional"
+                  hint={`${durationSeconds}s · ${Math.round(videoTextScale * 100)}% text`}
+                  open={openStyle}
+                  onToggle={() => setOpenStyle((v) => !v)}
+                >
+                  <div className="flex flex-col gap-5">
+                    {/* Colors */}
+                    <div>
+                      <span className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-400">
+                        Text colors
+                      </span>
+                      <VideoTextColors
+                        headlineColorHex={headlineColorHex}
+                        captionColorHex={captionColorHex}
+                        defaultHeadlineHex={DEFAULT_HEADLINE_COLOR_HEX}
+                        onHeadlineChange={setHeadlineColorHex}
+                        onCaptionChange={setCaptionColorHex}
+                      />
+                    </div>
+
+                    {/* Copy */}
+                    <div className="flex flex-col gap-3">
+                      <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                        Copy
+                      </span>
+                      {templateMode !== "carousel" ? (
+                        <label className="flex flex-col gap-1 text-xs text-slate-300">
+                          Service title
+                          <input
+                            type="text"
+                            value={serviceTitle}
+                            onChange={(e) => setServiceTitle(e.target.value)}
+                            placeholder="e.g. Signature Hydra Facial"
+                            className="rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-accent/60 focus:outline-none focus:ring-2 focus:ring-accent/25"
+                          />
+                        </label>
+                      ) : null}
+                      <label className="flex flex-col gap-1 text-xs text-slate-300">
+                        Subtitle
+                        <input
+                          type="text"
+                          value={subtitleText}
+                          onChange={(e) => setSubtitleText(e.target.value)}
+                          placeholder="e.g. Beauty & Wellness"
+                          className="rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-accent/60 focus:outline-none focus:ring-2 focus:ring-accent/25"
+                        />
+                      </label>
+                      <div>
+                        <label className="flex cursor-pointer items-center gap-2 text-xs text-slate-300">
+                          <input
+                            type="checkbox"
+                            checked={showPriceTag}
+                            onChange={(e) =>
+                              setShowPriceTag(e.target.checked)
+                            }
+                            className="h-3.5 w-3.5 rounded border-slate-500 accent-accent"
+                          />
+                          Show price tag
+                        </label>
+                        {showPriceTag ? (
+                          <input
+                            type="text"
+                            value={priceTagText}
+                            onChange={(e) =>
+                              setPriceTagText(e.target.value)
+                            }
+                            placeholder="e.g. $99 · From $129"
+                            className="mt-2 w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-accent/60 focus:outline-none focus:ring-2 focus:ring-accent/25"
+                          />
+                        ) : null}
+                      </div>
+                    </div>
+
+                    {/* Fonts */}
+                    <div className="flex flex-col gap-3">
+                      <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                        Fonts
+                      </span>
+                      <ServiceFontPicker
+                        label="Brand title font"
+                        description="Typeface for the large brand name at the top of the video."
+                        value={brandTitleFontId}
+                        onChange={setBrandTitleFontId}
+                      />
+                      <ServiceFontPicker
+                        label={
+                          templateMode === "carousel"
+                            ? "Slide caption font"
+                            : "Service title font"
+                        }
+                        description={
+                          templateMode === "carousel"
+                            ? "Typeface for each slide title under the image."
+                            : "Typeface for the service line below the photos."
+                        }
+                        value={serviceFontId}
+                        onChange={setServiceFontId}
+                      />
+                      <VideoTextSizeSlider
+                        value={videoTextScale}
+                        onChange={setTextSizeScale}
+                      />
+                    </div>
+
+                    {/* Background & music */}
+                    <div>
+                      <span className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-400">
+                        Background & music
+                      </span>
+                      <BackgroundMusicControls
+                        backgroundOptions={backgroundOptions}
+                        musicOptions={musicOptions}
+                        backgroundPath={backgroundPath}
+                        musicPath={musicPath}
+                        onBackgroundChange={setBackgroundPath}
+                        onMusicChange={setMusicPath}
+                        mediaLoading={mediaLoading}
+                      />
+                    </div>
+
+                    {/* Duration */}
+                    <div>
+                      <span className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-400">
+                        Video length
+                      </span>
+                      <VideoDurationControl
+                        durationSeconds={durationSeconds}
+                        onChange={setDurationSeconds}
+                      />
+                    </div>
+                  </div>
+                </GlassCard>
               </div>
-            )}
-          </DashboardStepAccordion>
+            </div>
 
-          <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900/60">
-            <h2 className="mb-3 text-lg font-semibold text-slate-800 dark:text-slate-100">
-              Export
-            </h2>
-            <RenderAndDownload
-              disabled={!canExport}
-              isRendering={isRendering}
-              compositionId={templateModeToCompositionId(templateMode)}
-              getInputProps={getInputProps}
-              onBusyChange={setIsRendering}
+            {/* Sticky tweaks drawer (inside sidebar, above export bar) */}
+            <TweaksPanel
+              open={tweaksOpen}
+              onClose={() => setTweaksOpen(false)}
+              state={tweaks}
+              setState={setTweaks}
             />
-            {!canExport ? (
-              <p className="mt-3 text-sm text-amber-700 dark:text-amber-400/90">
-                {templateMode === "single-image"
-                  ? showLogo
-                    ? "Select a logo and upload one image to enable export."
-                    : "Upload one image to enable export."
-                  : templateMode === "carousel"
-                    ? showLogo
-                      ? "Select a logo and add an image for every slide to enable export."
-                      : "Add an image for every slide to enable export."
-                    : showLogo
-                      ? "Select a logo and upload both images to enable export."
-                      : "Upload both images to enable export."}
-              </p>
-            ) : null}
-          </section>
-          </div>
+          </aside>
 
-          <div>
-            <DashboardStepAccordion
-              id="preview"
-              title="9. Preview"
-              accent="orange"
-              openId={previewAccordionOpen ? "preview" : null}
-              onOpenChange={(id) => setPreviewAccordionOpen(id === "preview")}
-            >
-              <div className="space-y-3 pt-1">
-                <VideoPreview
-                  mode={templateMode}
-                  beforeAfterProps={beforeAfterProps}
-                  singleImageProps={singleImageProps}
-                  carouselProps={carouselProps}
-                />
-                <p className="text-xs text-slate-500 dark:text-slate-400">
-                  Logos: add files under{" "}
-                  <code className="rounded bg-slate-100 px-1 dark:bg-slate-800 dark:text-slate-300">
-                    public/assets/logos/&lt;brand-id&gt;/
-                  </code>{" "}
-                  — they appear in the dropdown automatically.
+          {/* Right column — preview (sticky, grows with viewport height) */}
+          <section
+            className={`${mobileTab === "preview" ? "flex" : "hidden"} relative min-h-0 flex-1 lg:flex lg:overflow-y-auto`}
+          >
+            <div
+              aria-hidden
+              className="preview-ambient pointer-events-none absolute inset-0"
+            />
+            <div className="relative flex w-full flex-1 flex-col items-center justify-start px-4 py-6 lg:justify-center lg:px-8">
+              <div className="flex w-full flex-col items-center gap-3 lg:sticky lg:top-4">
+                <div
+                  className="aspect-[9/16] overflow-hidden rounded-2xl border border-white/10 bg-black shadow-[0_24px_80px_-20px_rgba(0,0,0,0.7)]"
+                  style={{
+                    /* Width-driven: never exceeds parent width, and never large
+                     * enough to push height past the viewport (aspect-ratio
+                     * derives height automatically). Works on mobile + desktop
+                     * without forcing the ratio to break. */
+                    width: "min(100%, calc((100dvh - 180px) * 9 / 16))",
+                  }}
+                >
+                  <VideoPreview
+                    mode={templateMode}
+                    beforeAfterProps={beforeAfterProps}
+                    singleImageProps={singleImageProps}
+                    carouselProps={carouselProps}
+                  />
+                </div>
+                <p className="text-center text-[11px] font-medium uppercase tracking-[0.2em] text-slate-500">
+                  {durationSeconds}s · 9:16 · MP4
                 </p>
               </div>
-            </DashboardStepAccordion>
-          </div>
-        </div>
-      </main>
-    </div>
-    <AiAgentsInstructionFab />
-    <MediaLibraryPicker
-      open={libraryPicker !== null}
-      brandId={brand.id}
-      brandLabel={brand.displayName}
-      maxSelection={libraryPicker?.maxSelection ?? 1}
-      onClose={() => {
-        if (libraryPicker) libraryPicker.resolve([]);
-        setLibraryPicker(null);
-      }}
-      onApply={(files) => {
-        if (libraryPicker) libraryPicker.resolve(files);
-        setLibraryPicker(null);
-      }}
-    />
+            </div>
+          </section>
+        </main>
+
+        {/* ------------- Export bar (sticky bottom, full width) ------------- */}
+        <ExportBar
+          hasBrand={hasBrand}
+          hasLogo={hasLogo}
+          hasContent={hasContent}
+          canExport={canExport}
+          compositionId={templateModeToCompositionId(templateMode)}
+          getInputProps={getInputProps}
+          onBusyChange={setIsRendering}
+        />
+      </div>
+
+      <AiAgentsInstructionFab />
+      <MediaLibraryPicker
+        open={libraryPicker !== null}
+        brandId={brand.id}
+        brandLabel={brand.displayName}
+        maxSelection={libraryPicker?.maxSelection ?? 1}
+        onClose={() => {
+          if (libraryPicker) libraryPicker.resolve([]);
+          setLibraryPicker(null);
+        }}
+        onApply={(files) => {
+          if (libraryPicker) libraryPicker.resolve(files);
+          setLibraryPicker(null);
+        }}
+      />
+
+      {/* isRendering state is hoisted so sidebars can react to it later if needed */}
+      <span className="sr-only" aria-live="polite">
+        {isRendering ? "Rendering video" : ""}
+      </span>
     </>
   );
 }

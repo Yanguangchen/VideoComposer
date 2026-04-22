@@ -55,38 +55,36 @@ export function VideoPreview({
     acknowledgeRemotionLicense: true as const,
   };
 
+  /* Player fills whatever the parent frame gives it; the parent controls sizing,
+   * rounded corners and the border. That way the preview can scale up on wide
+   * desktops without this component hard-capping the width. */
   return (
-    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-black shadow-inner dark:border-slate-700">
-      <div
-        className="mx-auto w-full max-w-[360px]"
-        style={{ aspectRatio: "1080 / 1920" }}
-      >
-        {mode === "single-image" ? (
-          <Player
-            key={`single-${singleImageProps.brandTitleFontId}-${singleImageProps.serviceFontId}-${singleImageProps.textSizeScale}-${singleImageProps.logoOffsetXPx}-${singleImageProps.logoOffsetYPx}`}
-            component={SingleImageTemplate}
-            inputProps={singleImageProps}
-            durationInFrames={singleImageProps.durationInFrames}
-            {...playerCommon}
-          />
-        ) : mode === "carousel" ? (
-          <Player
-            key={`carousel-${carouselProps.brandTitleFontId}-${carouselProps.serviceFontId}-${carouselProps.textSizeScale}-${carouselProps.logoOffsetXPx}-${carouselProps.logoOffsetYPx}`}
-            component={CarouselTemplate}
-            inputProps={carouselProps}
-            durationInFrames={carouselDuration}
-            {...playerCommon}
-          />
-        ) : (
-          <Player
-            key={`ba-${beforeAfterProps.brandTitleFontId}-${beforeAfterProps.serviceFontId}-${beforeAfterProps.textSizeScale}-${beforeAfterProps.logoOffsetXPx}-${beforeAfterProps.logoOffsetYPx}`}
-            component={BeforeAfterTemplate}
-            inputProps={beforeAfterProps}
-            durationInFrames={beforeAfterProps.durationInFrames}
-            {...playerCommon}
-          />
-        )}
-      </div>
+    <div className="h-full w-full bg-black">
+      {mode === "single-image" ? (
+        <Player
+          key={`single-${singleImageProps.brandTitleFontId}-${singleImageProps.serviceFontId}-${singleImageProps.textSizeScale}-${singleImageProps.logoOffsetXPx}-${singleImageProps.logoOffsetYPx}`}
+          component={SingleImageTemplate}
+          inputProps={singleImageProps}
+          durationInFrames={singleImageProps.durationInFrames}
+          {...playerCommon}
+        />
+      ) : mode === "carousel" ? (
+        <Player
+          key={`carousel-${carouselProps.brandTitleFontId}-${carouselProps.serviceFontId}-${carouselProps.textSizeScale}-${carouselProps.logoOffsetXPx}-${carouselProps.logoOffsetYPx}`}
+          component={CarouselTemplate}
+          inputProps={carouselProps}
+          durationInFrames={carouselDuration}
+          {...playerCommon}
+        />
+      ) : (
+        <Player
+          key={`ba-${beforeAfterProps.brandTitleFontId}-${beforeAfterProps.serviceFontId}-${beforeAfterProps.textSizeScale}-${beforeAfterProps.logoOffsetXPx}-${beforeAfterProps.logoOffsetYPx}`}
+          component={BeforeAfterTemplate}
+          inputProps={beforeAfterProps}
+          durationInFrames={beforeAfterProps.durationInFrames}
+          {...playerCommon}
+        />
+      )}
     </div>
   );
 }

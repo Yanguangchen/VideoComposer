@@ -75,14 +75,6 @@ export function LogoPicker({ brand, value, onChange }: Props) {
       <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-100">
         Brand logo
       </h3>
-      <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-        Files live in{" "}
-        <code className="rounded bg-slate-100 px-1 dark:bg-slate-800 dark:text-slate-300">
-          public/{brand.logoFolder}/
-        </code>{" "}
-        — add PNG/SVG/JPG here; selection is remembered per brand in this
-        browser.
-      </p>
 
       {loading ? (
         <p className="mt-3 text-sm text-slate-600 dark:text-slate-300">

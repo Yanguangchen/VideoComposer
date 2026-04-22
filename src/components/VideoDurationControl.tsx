@@ -17,11 +17,6 @@ export function VideoDurationControl({ durationSeconds, onChange }: Props) {
 
   return (
     <div className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900/60">
-      <p className="text-xs text-slate-500 dark:text-slate-400">
-        Total duration of the exported MP4. Carousel mode uses at least one
-        segment per slide; if that is longer than your choice, the video
-        extends to fit all slides.
-      </p>
       <div className="flex flex-wrap items-center gap-4">
         <label className="flex min-w-[200px] flex-1 flex-col gap-2">
           <span className="text-xs font-medium text-slate-700 dark:text-slate-200">
