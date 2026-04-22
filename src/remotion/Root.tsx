@@ -14,7 +14,6 @@ import {
   type BeforeAfterTemplateProps,
 } from "./before-after-template";
 import {
-  CAROUSEL_FRAMES_PER_SLIDE,
   CarouselTemplate,
   type CarouselTemplateProps,
 } from "./carousel-template";
@@ -139,13 +138,14 @@ export const RemotionRoot = () => {
         defaultProps={defaultCarouselProps}
         calculateMetadata={async ({ props }) => {
           const p = props as CarouselTemplateProps;
-          const n = Math.max(1, p.slides?.length ?? 1);
-          const required = n * CAROUSEL_FRAMES_PER_SLIDE;
+          const slideCount = Math.max(1, p.slides?.length ?? 1);
           const user = clampDurationFrames(
-            p.durationInFrames ?? required,
+            p.durationInFrames ?? DEFAULT_DURATION_FRAMES,
           );
+          // Honor the user's duration — slides share it equally in the template.
+          // Only lift to `slideCount` frames so each slide has at least one frame.
           return {
-            durationInFrames: Math.max(user, required),
+            durationInFrames: Math.max(user, slideCount),
           };
         }}
       />
