@@ -27,8 +27,8 @@ export pipeline unchanged.
 
 ## 1. Configure env vars
 
-Copy `.env.example` to `.env.local` and fill in the Firebase web config from
-the Firebase console (**Project settings → General → Your apps → SDK setup**).
+Locally, create `.env.local` and fill in the Firebase web config from the
+Firebase console (**Project settings → General → Your apps → SDK setup**).
 
 ```
 NEXT_PUBLIC_FIREBASE_API_KEY=…
@@ -41,6 +41,10 @@ NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=…  # optional
 ```
 
 `apiKey` is **not a secret**. Real security comes from the rules below.
+
+### Production (Docker / Railway)
+
+These are `NEXT_PUBLIC_*` variables: they must be present when **`next build`** runs (see **`Dockerfile`** `builder` stage and **[docs/deployment.md](deployment.md) → Environment variables and Docker builds**). On Railway, add the same keys under the service **Variables** and redeploy. If the library still shows “Firebase not configured”, redeploy **without build cache** so the client bundle is rebuilt with the new values.
 
 ## 2. Firestore setup
 

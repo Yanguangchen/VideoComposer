@@ -18,6 +18,22 @@ The `Dockerfile` in this repo encodes that layout. **Do not** deploy with Railpa
 
 ## Railway
 
+### Environment variables and Docker builds
+
+**Symptom:** Firebase (or any `NEXT_PUBLIC_*` feature) works locally with `.env.local` but on Railway the app acts like the variables are missing.
+
+**Cause (two parts):**
+
+1. **`NEXT_PUBLIC_*` is compile-time** — Next.js inlines these into the client JS at **`next build`**, which runs in the **`builder`** stage of the `Dockerfile`, not when the container starts.
+2. **Docker + Railway** — Railway passes your service variables into `docker build`, but Docker **only exposes them to `RUN` lines if you declare `ARG`** (see [Railway — Dockerfiles, build-time variables](https://docs.railway.com/builds/dockerfiles#using-variables-at-build-time)). This repo’s `Dockerfile` declares **`ARG` + `ENV`** for the Firebase web config keys before `RUN npm run build`.
+
+**What you must do in Railway:**
+
+1. **Variables tab:** define the same names as locally (`NEXT_PUBLIC_FIREBASE_API_KEY`, `NEXT_PUBLIC_FIREBASE_PROJECT_ID`, …). Railway makes service variables available to the build by default.
+2. **Redeploy** after adding or changing them so `npm run build` runs again. If the site still shows “Firebase not configured”, trigger a **redeploy without build cache** so an old layer is not reused from a build that ran with empty values.
+
+Variables **without** the `NEXT_PUBLIC_` prefix are read at **runtime** by `node server.js` only; they do not need to be in the `builder` stage unless something in `next build` reads them (rare).
+
 ### Builder
 
 New Railway services often default to **Railpack** (Node only). That image has **no system FFmpeg** and no Chrome libs. This repo includes **`railway.toml`** with `builder = "DOCKERFILE"` so Railway runs **`docker build`**.

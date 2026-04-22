@@ -301,6 +301,7 @@ VideoPreview <Player>         RenderAndDownload
 
 ## Environment & persistence
 
+- **`NEXT_PUBLIC_*` (e.g. Firebase)** — Inlined at **`next build`**. For **Docker** deploys (Railway), the `Dockerfile` **`builder`** stage declares matching **`ARG` / `ENV`** so Railway build-args reach `npm run build`. Railway variables must be enabled for the **build** step, not only runtime — see **`docs/deployment.md`**.
 - **Serverless gate** — `src/lib/render-environment.ts` returns a block message on `VERCEL` or `NETLIFY`; escape hatch `REMOTION_ALLOW_EXPORT_ON_SERVERLESS=1`.
 - **Bundle cache** — `/api/render` keeps a single `bundle()` result alive per process.
 - **Progress store** — in-memory `Map<sessionId, RenderProgressSnapshot>`; works only when the same Node process serves both `/api/render` and `/api/render/progress` (so: `next dev`, `next start`, or a single Docker container — not multi-instance serverless).

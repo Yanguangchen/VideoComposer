@@ -72,6 +72,7 @@ The repo **`Dockerfile`** installs **FFmpeg**, Chrome runtime **libraries**, Nex
 3. Confirm each deployment shows the **same commit SHA** as GitHub (avoids stale builds).
 4. Allocate **enough RAM** for video export (often **1 GB+**; 1080×1920 is heavy). See metrics in Railway while exporting.
 5. **Networking**: generate a public URL if needed. **`PORT`** is set by Railway; do not hardcode it in the image.
+6. **`NEXT_PUBLIC_*` (Firebase, etc.):** baked in at **`next build`** inside Docker — add the same names in Railway **Variables** and redeploy. The `Dockerfile` uses **`ARG`/`ENV`** so Docker passes Railway’s values into that build (see **[docs/deployment.md](docs/deployment.md)**). If the app still looks unconfigured, redeploy **without build cache**.
 
 **Escape hatch (not recommended):** `REMOTION_ALLOW_EXPORT_ON_SERVERLESS=1` only if your runtime actually has FFmpeg and Chrome.
 

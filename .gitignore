@@ -25,6 +25,7 @@ __pycache__/
 *.py[cod]
 .venv/
 venv/
+.env.local
 
 # Media scratch (keep large files out of git by default)
 .vercel
