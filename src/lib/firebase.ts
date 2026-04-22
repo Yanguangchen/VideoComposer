@@ -1,6 +1,7 @@
 "use client";
 
 import { type FirebaseApp, getApps, initializeApp } from "firebase/app";
+import { type Auth, getAuth } from "firebase/auth";
 import { type Firestore, getFirestore } from "firebase/firestore";
 import { type FirebaseStorage, getStorage } from "firebase/storage";
 
@@ -65,6 +66,13 @@ export function getStorageBucket(): FirebaseStorage {
   if (storageSingleton) return storageSingleton;
   storageSingleton = getStorage(getFirebaseApp());
   return storageSingleton;
+}
+
+let authSingleton: Auth | null = null;
+export function getFirebaseAuth(): Auth {
+  if (authSingleton) return authSingleton;
+  authSingleton = getAuth(getFirebaseApp());
+  return authSingleton;
 }
 
 export function isFirebaseConfigured(): boolean {
