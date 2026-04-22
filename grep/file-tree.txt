@@ -1,0 +1,70 @@
+src/
+├─ app/
+│  ├─ page.tsx                                     # Server entry — renders <DashboardClient />
+│  ├─ layout.tsx                                   # Root layout, ThemeProvider, viewport, PWA metadata, Google Fonts <link>
+│  ├─ globals.css                                  # Tailwind entry + mobile/safe-area CSS
+│  ├─ dashboard-client.tsx                         # MAIN client UI — state hub, step accordion, passes props to VideoPreview + RenderAndDownload
+│  └─ api/
+│     ├─ public-media/route.ts                     # GET  — lists scanned public/{music,backgrounds}
+│     ├─ brand-logos/[brandId]/route.ts            # GET  — lists logos under public/assets/logos/<brand-id>/
+│     └─ render/
+│        ├─ route.ts                               # POST — bundles Remotion, selectComposition + renderMedia, streams MP4; normalizes input props
+│        └─ progress/route.ts                      # GET  — read render progress by sessionId (in-memory store)
+│
+├─ components/                                     # All "use client" React components
+│  ├─ DashboardStepAccordion.tsx                   # Numbered step card wrapper (accent + expand/collapse)
+│  ├─ BrandSelector.tsx                            # Brand picker (uses config/brands.ts)
+│  ├─ LogoPicker.tsx                               # Fetches brand logos, picks one, toggles visibility
+│  ├─ LogoPositionControls.tsx                     # Horizontal/vertical px sliders (disabled when hidden)
+│  ├─ TemplateModeToggle.tsx                       # before-after / single-image / carousel toggle
+│  ├─ MediaUploader.tsx                            # Dropzone + preview + Crop/position button → ImageCropModal
+│  ├─ ImageCropModal.tsx                           # react-easy-crop modal → getCroppedImageBlob → JPEG
+│  ├─ CarouselSlidesEditor.tsx                     # Per-slide MediaUploader + title rows (max MAX_CAROUSEL_SLIDES)
+│  ├─ VideoDurationControl.tsx                     # Seconds slider (clamped)
+│  ├─ VideoTextColors.tsx                          # Color inputs for headline/subtitle/service line
+│  ├─ VideoTextSizeSlider.tsx                      # Single scale for all on-video text
+│  ├─ ServiceFontPicker.tsx                        # Service/headline font id picker
+│  ├─ BackgroundMusicControls.tsx                  # Music/background selection + volume
+│  ├─ VideoPreview.tsx                             # <Player> per mode, remount key includes scale/offsets/fonts
+│  ├─ RenderAndDownload.tsx                        # Export flow: sessionId → POST /api/render → MP4 download
+│  ├─ SignInModal.tsx                              # Simulated auth gate (localStorage)
+│  ├─ AiAgentsInstructionFab.tsx                   # Floating FAB → opens /VideoComposerInstruction.json
+│  ├─ theme-provider.tsx                           # next-themes wrapper
+│  └─ theme-toggle.tsx                             # Dark/light toggle
+│
+├─ config/                                         # Pure constants + tiny helpers (no React)
+│  ├─ brands.ts                                    # Brand[] registry + getBrandById + brandLogoPublicUrl
+│  ├─ template-modes.ts                            # TemplateModeId → composition id mapping
+│  ├─ service-fonts.ts                             # Service font options + ServiceFontId
+│  ├─ google-fonts.ts                              # Google Fonts <link> URL for layout.tsx
+│  ├─ video-duration.ts                            # FPS, min/max/default, clampDurationSeconds/Frames
+│  ├─ video-text-scale.ts                          # Scale range + clampVideoTextSizeScale
+│  ├─ logo-offset.ts                               # Offset range + clampLogoOffset
+│  └─ background-music.ts                          # MediaAsset, mergeMediaAssets, URL helpers
+│
+├─ lib/                                            # Pure helpers, no JSX
+│  ├─ brand-logos.ts                               # pickDefaultLogoFile, filterLogoFilenames, LOGO_STORAGE_PREFIX
+│  ├─ carousel-slides.ts                           # CarouselSlideDraft + factories, MAX_CAROUSEL_SLIDES
+│  ├─ files.ts                                     # fileToDataUrl
+│  ├─ get-cropped-image.ts                         # Canvas blob export from crop pixels (max 1920)
+│  ├─ hex-color.ts                                 # normalizeHexColor + default color consts
+│  ├─ render-client.ts                             # parseRenderErrorResponse (client-side error decoding)
+│  ├─ render-environment.ts                        # getServerlessExportBlockMessage — blocks export on Vercel/Netlify
+│  ├─ render-error.ts                              # formatRenderError — map error → user-facing message
+│  ├─ render-progress-store.ts                     # In-memory session progress (single Node process)
+│  ├─ scan-public-media.ts                         # Walks public/ to enumerate music/backgrounds
+│  └─ simulated-auth.ts                            # localStorage gate + hardcoded password
+│
+└─ remotion/                                       # Remotion bundle — consumed by Player (browser) AND bundler/renderer (server)
+   ├─ index.ts                                     # registerRoot(RemotionRoot) — bundler entry
+   ├─ Root.tsx                                     # 3 <Composition> registrations + defaultProps
+   ├─ composition-ids.ts                           # RemotionCompositionId union type
+   ├─ before-after-template.tsx                    # BeforeAfter scene + BeforeAfterTemplateProps
+   ├─ single-image-template.tsx                    # SingleImage scene + SingleImageTemplateProps
+   ├─ carousel-template.tsx                        # Carousel scene + CarouselTemplateProps + duration helpers
+   ├─ background-layer.tsx                         # <BackgroundLayer> (video/image) + isBackgroundVideoSrc
+   ├─ price-tag-badge.tsx                          # <PriceTagBadge> pill UI
+   ├─ service-font-loaders.ts                      # @remotion/google-fonts preloaders per ServiceFontId
+   ├─ ui-motion.ts                                 # Shared interpolate/easing helpers (uiLayerMotion)
+   ├─ media-utils.ts                               # PIXEL placeholder + resolveMediaSrc (data URL vs staticFile)
+   └─ webpack-override.ts                          # remotionWebpackOverride — adds @ → src/ alias for bundler

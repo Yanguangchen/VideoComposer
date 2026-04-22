@@ -1,0 +1,100 @@
+src/app/dashboard-client.tsx:100:  const [scannedMedia, setScannedMedia] = useState<{
+src/app/dashboard-client.tsx:104:  const [beforeFile, setBeforeFile] = useState<File | null>(null);
+src/app/dashboard-client.tsx:105:  const [afterFile, setAfterFile] = useState<File | null>(null);
+src/app/dashboard-client.tsx:106:  const [beforeUrl, setBeforeUrl] = useState<string | null>(null);
+src/app/dashboard-client.tsx:107:  const [afterUrl, setAfterUrl] = useState<string | null>(null);
+src/app/dashboard-client.tsx:108:  const [singleFile, setSingleFile] = useState<File | null>(null);
+src/app/dashboard-client.tsx:109:  const [singleUrl, setSingleUrl] = useState<string | null>(null);
+src/app/dashboard-client.tsx:110:  const [carouselSlides, setCarouselSlides] = useState<CarouselSlideDraft[]>(
+src/app/dashboard-client.tsx:113:  const [isRendering, setIsRendering] = useState(false);
+src/app/dashboard-client.tsx:114:  const [durationSeconds, setDurationSeconds] = useState(
+src/app/dashboard-client.tsx:117:  const [textSizeScale, setTextSizeScale] = useState(
+src/app/dashboard-client.tsx:121:  const [logoOffsetXPx, setLogoOffsetXPx] = useState(0);
+src/app/dashboard-client.tsx:122:  const [logoOffsetYPx, setLogoOffsetYPx] = useState(0);
+src/app/dashboard-client.tsx:125:  const [openLeftStepId, setOpenLeftStepId] = useState<string | null>(null);
+src/app/dashboard-client.tsx:126:  const [previewAccordionOpen, setPreviewAccordionOpen] = useState(true);
+src/app/dashboard-client.tsx:127:  const [showBeforeAfterArrow, setShowBeforeAfterArrow] = useState(true);
+src/app/dashboard-client.tsx:128:  const [simulatedAuthReady, setSimulatedAuthReady] = useState(false);
+src/app/dashboard-client.tsx:129:  const [simulatedSignedIn, setSimulatedSignedIn] = useState(false);
+src/app/dashboard-client.tsx:131:  const carouselSlidesRef = useRef(carouselSlides);
+src/app/dashboard-client.tsx:134:  useEffect(() => {
+src/app/dashboard-client.tsx:139:  useEffect(() => {
+src/app/dashboard-client.tsx:143:  useEffect(() => {
+src/app/dashboard-client.tsx:147:  useEffect(() => {
+src/app/dashboard-client.tsx:171:  useEffect(() => {
+src/app/dashboard-client.tsx:179:  useEffect(() => {
+src/app/dashboard-client.tsx:187:  useEffect(() => {
+src/app/dashboard-client.tsx:212:  const backgroundOptions = useMemo(
+src/app/dashboard-client.tsx:221:  const musicOptions = useMemo(
+src/app/dashboard-client.tsx:226:  const durationFrames = useMemo(
+src/app/dashboard-client.tsx:231:  const setBefore = useCallback((file: File | null) => {
+src/app/dashboard-client.tsx:239:  const setAfter = useCallback((file: File | null) => {
+src/app/dashboard-client.tsx:247:  const setSingle = useCallback((file: File | null) => {
+src/app/dashboard-client.tsx:257:  const backgroundAndMusicPaths = useMemo(
+src/app/dashboard-client.tsx:265:  const beforeAfterProps: BeforeAfterTemplateProps = useMemo(
+src/app/dashboard-client.tsx:314:  const singleImageProps: SingleImageTemplateProps = useMemo(
+src/app/dashboard-client.tsx:359:  const carouselProps: CarouselTemplateProps = useMemo(
+src/app/dashboard-client.tsx:405:  const getInputProps = useCallback(async () => {
+src/app/dashboard-client.tsx:4:import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+src/app/dashboard-client.tsx:78:    useState<TemplateModeId>(DEFAULT_TEMPLATE_MODE);
+src/app/dashboard-client.tsx:79:  const [activeBrandId, setActiveBrandId] = useState(brands[0]!.id);
+src/app/dashboard-client.tsx:80:  const [logoFile, setLogoFile] = useState<string | null>(null);
+src/app/dashboard-client.tsx:81:  const [showLogo, setShowLogo] = useState(true);
+src/app/dashboard-client.tsx:82:  const [serviceTitle, setServiceTitle] = useState("");
+src/app/dashboard-client.tsx:83:  const [subtitleText, setSubtitleText] = useState("");
+src/app/dashboard-client.tsx:84:  const [showPriceTag, setShowPriceTag] = useState(false);
+src/app/dashboard-client.tsx:85:  const [priceTagText, setPriceTagText] = useState("");
+src/app/dashboard-client.tsx:87:    useState<ServiceFontId>(DEFAULT_SERVICE_FONT_ID);
+src/app/dashboard-client.tsx:89:    useState<ServiceFontId>(DEFAULT_SERVICE_FONT_ID);
+src/app/dashboard-client.tsx:90:  const [headlineColorHex, setHeadlineColorHex] = useState(
+src/app/dashboard-client.tsx:93:  const [captionColorHex, setCaptionColorHex] = useState(
+src/app/dashboard-client.tsx:97:  const [backgroundPath, setBackgroundPath] = useState<string | null>(null);
+src/app/dashboard-client.tsx:98:  const [musicPath, setMusicPath] = useState<string | null>(null);
+src/app/dashboard-client.tsx:99:  const [mediaLoading, setMediaLoading] = useState(true);
+src/components/CarouselSlidesEditor.tsx:17:  const updateSlide = useCallback(
+src/components/CarouselSlidesEditor.tsx:26:  const setSlideFile = useCallback(
+src/components/CarouselSlidesEditor.tsx:39:  const setTitle = useCallback(
+src/components/CarouselSlidesEditor.tsx:3:import { useCallback } from "react";
+src/components/CarouselSlidesEditor.tsx:46:  const addSlide = useCallback(() => {
+src/components/CarouselSlidesEditor.tsx:51:  const removeSlide = useCallback(
+src/components/ImageCropModal.tsx:3:import { useCallback, useEffect, useRef, useState } from "react";
+src/components/ImageCropModal.tsx:47:  const [crop, setCrop] = useState<Point>({ x: 0, y: 0 });
+src/components/ImageCropModal.tsx:48:  const [zoom, setZoom] = useState(1);
+src/components/ImageCropModal.tsx:49:  const [aspectPresetIndex, setAspectPresetIndex] = useState(0);
+src/components/ImageCropModal.tsx:50:  const croppedAreaPixelsRef = useRef<Area | null>(null);
+src/components/ImageCropModal.tsx:53:  useEffect(() => {
+src/components/ImageCropModal.tsx:62:  const onCropComplete = useCallback(
+src/components/ImageCropModal.tsx:69:  const handleApply = useCallback(async () => {
+src/components/LogoPicker.tsx:18:  const [files, setFiles] = useState<string[]>([]);
+src/components/LogoPicker.tsx:19:  const [loading, setLoading] = useState(true);
+src/components/LogoPicker.tsx:20:  const [error, setError] = useState<string | null>(null);
+src/components/LogoPicker.tsx:22:  useEffect(() => {
+src/components/LogoPicker.tsx:3:import { useEffect, useState } from "react";
+src/components/MediaUploader.tsx:29:  const [cropOpen, setCropOpen] = useState(false);
+src/components/MediaUploader.tsx:31:  const onDrop = useCallback(
+src/components/MediaUploader.tsx:3:import { useCallback, useState } from "react";
+src/components/MediaUploader.tsx:48:  const handleCroppedFile = useCallback(
+src/components/RenderAndDownload.tsx:27:  const [progress, setProgress] = useState(0);
+src/components/RenderAndDownload.tsx:28:  const [phaseLabel, setPhaseLabel] = useState("");
+src/components/RenderAndDownload.tsx:29:  const [lastError, setLastError] = useState<string | null>(null);
+src/components/RenderAndDownload.tsx:30:  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+src/components/RenderAndDownload.tsx:39:  useEffect(() => {
+src/components/RenderAndDownload.tsx:3:import { useEffect, useRef, useState } from "react";
+src/components/SignInModal.tsx:21:  const [password, setPassword] = useState("");
+src/components/SignInModal.tsx:22:  const [error, setError] = useState<string | null>(null);
+src/components/SignInModal.tsx:4:import { useId, useState } from "react";
+src/components/VideoPreview.tsx:17:  const [narrow, setNarrow] = useState(false);
+src/components/VideoPreview.tsx:18:  useEffect(() => {
+src/components/VideoPreview.tsx:3:import { useEffect, useState } from "react";
+src/components/theme-toggle.tsx:10:  useEffect(() => {
+src/components/theme-toggle.tsx:4:import { useEffect, useState } from "react";
+src/components/theme-toggle.tsx:8:  const [mounted, setMounted] = useState(false);
+src/remotion/before-after-template.tsx:2:import { useEffect, useState } from "react";
+src/remotion/before-after-template.tsx:88:  const [fontBlock] = useState(() => delayRender());
+src/remotion/before-after-template.tsx:90:  useEffect(() => {
+src/remotion/carousel-template.tsx:271:  const [fontBlock] = useState(() => delayRender());
+src/remotion/carousel-template.tsx:281:  useEffect(() => {
+src/remotion/carousel-template.tsx:2:import { useEffect, useState } from "react";
+src/remotion/single-image-template.tsx:2:import { useEffect, useState } from "react";
+src/remotion/single-image-template.tsx:74:  const [fontBlock] = useState(() => delayRender());
+src/remotion/single-image-template.tsx:76:  useEffect(() => {

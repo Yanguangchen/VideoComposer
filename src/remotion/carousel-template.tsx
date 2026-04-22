@@ -304,8 +304,11 @@ export const CarouselTemplate: FC<CarouselTemplateProps> = ({
 
   const safeSlides = slides.length > 0 ? slides : [{ imageSrc: "", title: "" }];
   const slideCount = safeSlides.length;
-  const requiredFrames = slideCount * CAROUSEL_FRAMES_PER_SLIDE;
-  const extraFrames = Math.max(0, compositionDuration - requiredFrames);
+  // Split the composition evenly so every slide gets ~the same screen time.
+  // The first `remainder` slides absorb the leftover frame so segments sum
+  // exactly to compositionDuration and differ by at most one frame.
+  const baseFrames = Math.floor(compositionDuration / slideCount);
+  const remainder = compositionDuration - baseFrames * slideCount;
 
   return (
     <AbsoluteFill style={{ backgroundColor: "#0f172a" }}>
@@ -357,39 +360,40 @@ export const CarouselTemplate: FC<CarouselTemplateProps> = ({
           </div>
         </div>
 
-        {safeSlides.map((slide, index) => {
-          const from = index * CAROUSEL_FRAMES_PER_SLIDE;
-          const isLast = index === slideCount - 1;
-          const segmentFrames = isLast
-            ? CAROUSEL_FRAMES_PER_SLIDE + extraFrames
-            : CAROUSEL_FRAMES_PER_SLIDE;
-          return (
-            <Sequence
-              key={index}
-              from={from}
-              durationInFrames={segmentFrames}
-            >
-              <SlideCard
-                slide={slide}
-                serviceFontResolved={serviceFontResolved}
-                serviceFontWeight={serviceFontWeight}
-                logoSrc={logoSrc}
-                showLogo={showLogo}
-                captionColor={captionColor}
-                subtitleText={subtitleText}
-                showPriceTag={showPriceTag}
-                priceTagText={priceTagText}
-                brandTitleResolved={brandTitleResolved}
-                brandTitleFontId={brandTitleFontId}
-                headlineColor={headlineColor}
-                slideDurationInFrames={segmentFrames}
-                textSizeScale={textSizeScale}
-                logoOffsetXPx={logoOffsetXPx}
-                logoOffsetYPx={logoOffsetYPx}
-              />
-            </Sequence>
-          );
-        })}
+        {(() => {
+          let cursor = 0;
+          return safeSlides.map((slide, index) => {
+            const segmentFrames = baseFrames + (index < remainder ? 1 : 0);
+            const from = cursor;
+            cursor += segmentFrames;
+            return (
+              <Sequence
+                key={index}
+                from={from}
+                durationInFrames={segmentFrames}
+              >
+                <SlideCard
+                  slide={slide}
+                  serviceFontResolved={serviceFontResolved}
+                  serviceFontWeight={serviceFontWeight}
+                  logoSrc={logoSrc}
+                  showLogo={showLogo}
+                  captionColor={captionColor}
+                  subtitleText={subtitleText}
+                  showPriceTag={showPriceTag}
+                  priceTagText={priceTagText}
+                  brandTitleResolved={brandTitleResolved}
+                  brandTitleFontId={brandTitleFontId}
+                  headlineColor={headlineColor}
+                  slideDurationInFrames={segmentFrames}
+                  textSizeScale={textSizeScale}
+                  logoOffsetXPx={logoOffsetXPx}
+                  logoOffsetYPx={logoOffsetYPx}
+                />
+              </Sequence>
+            );
+          });
+        })()}
       </AbsoluteFill>
     </AbsoluteFill>
   );

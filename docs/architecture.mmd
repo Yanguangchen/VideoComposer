@@ -1,0 +1,194 @@
+%% VideoComposer — Architecture (Mermaid)
+%%
+%% Three linked views:
+%%   1. UML class diagram  — key types & relationships
+%%   2. Component graph    — client React components + Remotion templates
+%%   3. Export sequence    — client → /api/render → MP4
+%%
+%% Render any fence individually or via `docs/architecture.md`.
+
+%% ────────────────────────────────────────────────────────────────────
+%% 1. UML class diagram
+%% ────────────────────────────────────────────────────────────────────
+classDiagram
+    direction LR
+
+    class Brand {
+      +string id
+      +string displayName
+      +string primaryColor
+      +string primaryHex
+      +string logoFolder
+    }
+
+    class TemplateModeId {
+      <<type>>
+      "before-after" | "single-image" | "carousel"
+    }
+
+    class RemotionCompositionId {
+      <<type>>
+      "BeforeAfter" | "SingleImage" | "Carousel"
+    }
+
+    class ServiceFontId {
+      <<type>>
+      "inter" | "montserrat" | "oswald" | "playfair-display" | "lato" | "roboto" | "bebas-neue" | "dancing-script"
+    }
+
+    class BaseTemplateProps {
+      <<abstract>>
+      +string brandId
+      +string titleText
+      +string subtitleText
+      +boolean showPriceTag
+      +string priceTagText
+      +string bgSrc
+      +string musicSrc
+      +string logoSrc
+      +boolean showLogo
+      +string headlineColorHex
+      +string captionColorHex
+      +string brandTitleFontId
+      +string serviceFontId
+      +number durationInFrames
+      +number textSizeScale
+      +number logoOffsetXPx
+      +number logoOffsetYPx
+    }
+
+    class BeforeAfterTemplateProps {
+      +string topImageSrc
+      +string bottomImageSrc
+      +boolean showArrow
+      +string serviceTitle
+    }
+
+    class SingleImageTemplateProps {
+      +string imageSrc
+      +string serviceTitle
+    }
+
+    class CarouselTemplateProps {
+      +CarouselSlide[] slides
+    }
+
+    class CarouselSlide {
+      +string imageSrc
+      +string title
+    }
+
+    class CarouselSlideDraft {
+      +string id
+      +File? file
+      +string? url
+      +string title
+    }
+
+    class MediaAsset {
+      +string id
+      +string label
+      +string publicPath
+    }
+
+    class RenderProgressSnapshot {
+      +number progress
+      +string label
+    }
+
+    class DashboardClient {
+      <<client component>>
+      +TemplateModeId templateMode
+      +string activeBrandId
+      +File? beforeFile
+      +File? afterFile
+      +File? singleFile
+      +CarouselSlideDraft[] carouselSlides
+      +string? logoFile
+      +number textSizeScale
+      +number logoOffsetXPx
+      +number logoOffsetYPx
+      +number durationSeconds
+      +render()
+    }
+
+    class VideoPreview {
+      <<client component>>
+      +TemplateModeId mode
+      +BeforeAfterTemplateProps beforeAfterProps
+      +SingleImageTemplateProps singleImageProps
+      +CarouselTemplateProps carouselProps
+    }
+
+    class RenderAndDownload {
+      <<client component>>
+      +RemotionCompositionId compositionId
+      +getInputProps() Promise
+      +POST /api/render
+      +poll /api/render/progress
+    }
+
+    class RemotionRoot {
+      <<remotion entry>>
+      +Composition BeforeAfter
+      +Composition SingleImage
+      +Composition Carousel
+    }
+
+    class RenderApi {
+      <<POST /api/render>>
+      +normalizeRenderInputProps(props)
+      +bundle(src/remotion/index.ts)
+      +selectComposition(id)
+      +renderMedia(onProgress)
+      +returns video/mp4
+    }
+
+    class RenderProgressApi {
+      <<GET /api/render/progress>>
+      +getRenderProgress(sessionId)
+    }
+
+    class BrandLogosApi {
+      <<GET /api/brand-logos/:brandId>>
+      +lists public/assets/logos/:brandId
+    }
+
+    class PublicMediaApi {
+      <<GET /api/public-media>>
+      +scanPublicMedia()
+      +returns music + backgrounds
+    }
+
+    BaseTemplateProps <|-- BeforeAfterTemplateProps
+    BaseTemplateProps <|-- SingleImageTemplateProps
+    BaseTemplateProps <|-- CarouselTemplateProps
+    CarouselTemplateProps o-- CarouselSlide : slides
+    CarouselSlideDraft ..> CarouselSlide : converted on export
+
+    DashboardClient --> Brand : selects
+    DashboardClient --> TemplateModeId : selects
+    DashboardClient --> ServiceFontId : brandTitleFontId / serviceFontId
+    DashboardClient --> CarouselSlideDraft : manages
+    DashboardClient --> VideoPreview : renders (live)
+    DashboardClient --> RenderAndDownload : renders (export)
+
+    VideoPreview ..> BeforeAfterTemplateProps
+    VideoPreview ..> SingleImageTemplateProps
+    VideoPreview ..> CarouselTemplateProps
+
+    RenderAndDownload --> RenderApi : POST
+    RenderAndDownload --> RenderProgressApi : poll
+    RenderAndDownload --> RemotionCompositionId
+
+    TemplateModeId ..> RemotionCompositionId : templateModeToCompositionId
+    RemotionRoot --> BeforeAfterTemplateProps : defaultProps
+    RemotionRoot --> SingleImageTemplateProps : defaultProps
+    RemotionRoot --> CarouselTemplateProps : defaultProps
+    RenderApi --> RemotionRoot : bundles + selects
+    RenderApi --> RenderProgressSnapshot : writes
+    RenderProgressApi --> RenderProgressSnapshot : reads
+
+    DashboardClient --> PublicMediaApi : GET
+    DashboardClient --> BrandLogosApi : GET (via LogoPicker)
+    PublicMediaApi --> MediaAsset : returns

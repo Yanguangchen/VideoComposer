@@ -1,0 +1,10 @@
+src/components/VideoPreview.tsx:4:import { Player } from "@remotion/player";
+src/remotion/Root.tsx:1:import { Composition } from "remotion";
+src/remotion/background-layer.tsx:2:import { Img, Video } from "remotion";
+src/remotion/before-after-template.tsx:13:} from "remotion";
+src/remotion/carousel-template.tsx:13:} from "remotion";
+src/remotion/index.ts:1:import { registerRoot } from "remotion";
+src/remotion/media-utils.ts:1:import { staticFile } from "remotion";
+src/remotion/single-image-template.tsx:12:} from "remotion";
+src/remotion/ui-motion.ts:1:import { Easing, interpolate } from "remotion";
+src/remotion/webpack-override.ts:2:import type { WebpackOverrideFn } from "@remotion/bundler";

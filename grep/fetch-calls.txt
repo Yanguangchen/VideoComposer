@@ -1,0 +1,4 @@
+src/app/dashboard-client.tsx:190:    fetch("/api/public-media")
+src/components/LogoPicker.tsx:26:    fetch(`/api/brand-logos/${encodeURIComponent(brand.id)}`)
+src/components/RenderAndDownload.tsx:53:        const r = await fetch(
+src/components/RenderAndDownload.tsx:78:      const res = await fetch("/api/render", {
