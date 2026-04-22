@@ -1,0 +1,4 @@
+src/app/api/brand-logos/[brandId]/route.ts:8:export async function GET(
+src/app/api/public-media/route.ts:5:export async function GET() {
+src/app/api/render/progress/route.ts:5:export async function GET(req: Request) {
+src/app/api/render/route.ts:93:export async function POST(req: Request) {

@@ -135,3 +135,167 @@ After upload, **Crop & position** opens **`ImageCropModal`**: pan/zoom, aspect p
 ## Related config
 
 - `next.config.ts` — `transpilePackages` for Remotion; `serverExternalPackages` for bundler/renderer tooling; `output: "standalone"`.
+
+---
+
+## Quick navigation
+
+- **Architecture diagram** (Mermaid): [`docs/architecture.mmd`](docs/architecture.mmd) — classes, composition IDs, and data flow.
+- **Code index** (grep-friendly): [`grep/`](grep/) — pre-built `file:line` indexes of exports, types, components, API routes, fetch calls, client boundaries, and a cheatsheet.
+
+## Dashboard state (source of truth: `src/app/dashboard-client.tsx`)
+
+The dashboard is the single stateful client component. Every other component below `dashboard-client.tsx` is controlled — it takes current values as props and calls setter callbacks. High-level state groups:
+
+- **Template & brand** — `templateMode` (`TemplateModeId`), `activeBrandId`, `openLeftStepId` (which accordion is expanded).
+- **Uploaded media** — `beforeFile`/`beforeUrl`, `afterFile`/`afterUrl`, `singleFile`/`singleUrl`, `carouselSlides` (`CarouselSlideDraft[]`), `logoFile`.
+- **Visual toggles & position** — `showLogo`, `showBeforeAfterArrow`, `logoOffsetXPx`, `logoOffsetYPx`.
+- **Typography & text** — `headlineColorHex`, `captionColorHex`, `serviceTitle`, `subtitleText`, `showPriceTag`, `priceTagText`, `brandTitleFontId`, `serviceFontId`, `textSizeScale`.
+- **Timing & media paths** — `durationSeconds`, `backgroundPath`, `musicPath`.
+- **Runtime / UI** — `mediaLoading`, `scannedMedia`, `isRendering`, `previewAccordionOpen`, `simulatedAuthReady`, `simulatedSignedIn`.
+
+Template input props (`beforeAfterProps`, `singleImageProps`, `carouselProps`) are derived via `useMemo`. Those same objects feed the live `<Player>` and the `POST /api/render` payload — guaranteeing preview parity.
+
+## Step accordion
+
+Steps rendered via `DashboardStepAccordion` (numbered cards with accent colors). Step ids and the components they host:
+
+| # | Step | Component(s) |
+|---|------|--------------|
+| 1 | Layout | `TemplateModeToggle` |
+| 2 | Brand | `BrandSelector` |
+| 3 | Logo | `LogoPicker` + `LogoPositionControls` (+ show/hide) |
+| 4 | Video text colors | `VideoTextColors` |
+| 5 | Background & music | `BackgroundMusicControls` |
+| 6 | Text & fonts | `ServiceFontPicker`, subtitle/price inputs, `VideoTextSizeSlider` |
+| 7 | Video length | `VideoDurationControl` |
+| 8 | Photos | `MediaUploader` ×N (or `CarouselSlidesEditor` for carousel) |
+| — | Export | `RenderAndDownload` |
+| — | Preview | `VideoPreview` |
+
+## Component catalog
+
+| Component | Props (summary) | Role |
+|-----------|-----------------|------|
+| `DashboardStepAccordion` | `{ id, title, accent, openId, onOpenChange, children }` | Collapsible step card; 9 accent palettes. |
+| `BrandSelector` | `{ brands, activeBrandId, onSelect }` | Grid of brand buttons; active is highlighted. |
+| `TemplateModeToggle` | `{ value, onChange }` | 3-way mode switch. |
+| `LogoPicker` | `{ brand, value, onChange }` | Fetches `/api/brand-logos/[brandId]`, shows dropdown + preview, persists per-brand selection in `localStorage` (`LOGO_STORAGE_PREFIX`). |
+| `LogoPositionControls` | `{ offsetXPx, offsetYPx, onOffsetXChange, onOffsetYChange, disabled? }` | X/Y sliders, reset button. |
+| `MediaUploader` | `{ label, description, imageSrc, onFile, sourceFile?, enableCrop?, cropAspect? }` | Dropzone + preview + "Crop & position" button. |
+| `ImageCropModal` | `{ open, imageSrc, onClose, onApply, fileNameHint?, defaultAspect? }` | `react-easy-crop` → `getCroppedImageBlob` → JPEG. |
+| `CarouselSlidesEditor` | `{ slides, onChange }` | Up to `MAX_CAROUSEL_SLIDES` rows; each has title + `MediaUploader`. |
+| `BackgroundMusicControls` | `{ backgroundOptions, musicOptions, backgroundPath, musicPath, onBackgroundChange, onMusicChange, mediaLoading }` | Two selects for public-asset paths. |
+| `ServiceFontPicker` | `{ value, onChange, label?, description? }` | Service/headline font id picker. |
+| `VideoTextColors` | `{ headlineColorHex, captionColorHex, defaultHeadlineHex, onHeadlineChange, onCaptionChange }` | Native color inputs + hex fields + reset. |
+| `VideoDurationControl` | `{ durationSeconds, onChange }` | Clamped seconds slider. |
+| `VideoTextSizeSlider` | `{ value, onChange }` | Unified scale (65–165 %). |
+| `VideoPreview` | `{ mode, beforeAfterProps, singleImageProps, carouselProps }` | `<Player>` from `@remotion/player`; `key` includes fonts/scale/offsets to force remount. |
+| `RenderAndDownload` | `{ disabled, isRendering, compositionId, getInputProps, onBusyChange }` | Orchestrates sessionId, progress polling, `POST /api/render`, MP4 download. |
+| `SignInModal` | `{ onSuccess }` | Simulated auth gate. |
+| `AiAgentsInstructionFab` | — | Floating button → opens `/VideoComposerInstruction.json`. |
+| `ThemeProvider` / `ThemeToggle` | — | `next-themes` wrapper + toggle. |
+
+## Remotion templates — input props
+
+All three share the **common block**:
+
+```
+brandId, titleText, subtitleText,
+showPriceTag, priceTagText,
+bgSrc, musicSrc,
+logoSrc, showLogo,
+headlineColorHex, captionColorHex,
+brandTitleFontId, serviceFontId,
+durationInFrames, textSizeScale,
+logoOffsetXPx, logoOffsetYPx
+```
+
+Mode-specific additions:
+
+| Composition (id) | Extra input props |
+|------------------|-------------------|
+| `BeforeAfter` | `topImageSrc`, `bottomImageSrc`, `showArrow`, `serviceTitle` |
+| `SingleImage` | `imageSrc`, `serviceTitle` |
+| `Carousel` | `slides: CarouselSlide[]` (`{ imageSrc, title }`) — duration scales with `CAROUSEL_FRAMES_PER_SLIDE` (45 @ 30 fps) |
+
+Image sources are normally **data URLs** (from `fileToDataUrl` / crop blob) for dashboard renders; `resolveMediaSrc` in `src/remotion/media-utils.ts` passes `data:` / `blob:` / `http(s)` through and routes plain paths to `staticFile()` for `public/` assets.
+
+## API surface
+
+| Method & path | Request | Response | Notes |
+|---------------|---------|----------|-------|
+| `POST /api/render` | `{ compositionId, inputProps, sessionId? }` | `video/mp4` binary or `{ error }` | Validates inputs; runs `bundle()` (cached) + `selectComposition` + `renderMedia`; low-RAM tuning (see below). |
+| `GET /api/render/progress?sessionId=` | — | `{ progress, label, active }` | In-memory store; single Node process. |
+| `GET /api/public-media` | — | `{ music: MediaAsset[], backgrounds: MediaAsset[] }` | Calls `scanPublicMedia()` + merges static config. |
+| `GET /api/brand-logos/[brandId]` | — | `{ files, folder }` | Reads `public/assets/logos/<brandId>/` and filters image extensions. |
+
+## End-to-end data flow
+
+```
+User input (form controls)
+   │
+   ▼
+DashboardClient state ── useMemo ──▶ {beforeAfterProps, singleImageProps, carouselProps}
+   │                                           │
+   │ (live)                                    │ (export)
+   ▼                                           ▼
+VideoPreview <Player>         RenderAndDownload
+                                │
+                                │  getInputProps()  ── File → data URL
+                                ▼
+                             POST /api/render  {compositionId, inputProps, sessionId}
+                                │                       ▲
+                                │                       │  polling (every 400 ms)
+                                │                       │
+                                ▼                 GET /api/render/progress
+                          normalizeRenderInputProps
+                                │   (clamps textSizeScale + logoOffsets)
+                                ▼
+                          bundle(src/remotion/index.ts)   — cached
+                                │
+                                ▼
+                          selectComposition(compositionId)
+                                │
+                                ▼
+                          renderMedia(
+                            onProgress → setRenderProgress(sessionId, ...)
+                            concurrency: 1,
+                            disallowParallelEncoding: true,
+                            ffmpegOverride: -threads 4,
+                            chromiumOptions: { disableWebSecurity, enableMultiProcessOnLinux: false }
+                          )
+                                │
+                                ▼
+                          MP4 bytes ── Response (video/mp4) ── browser download
+```
+
+## Key type catalog
+
+| Type | File | Used by |
+|------|------|---------|
+| `Brand` | `src/config/brands.ts` | `BrandSelector`, `LogoPicker`, `brandLogoPublicUrl` |
+| `TemplateModeId` | `src/config/template-modes.ts` | dashboard, `TemplateModeToggle`, `templateModeToCompositionId` |
+| `RemotionCompositionId` | `src/remotion/composition-ids.ts` | `Root.tsx`, `/api/render` (`selectComposition`) |
+| `ServiceFontId` | `src/config/service-fonts.ts` | `ServiceFontPicker`, `SERVICE_FONT_CSS`, template text styles |
+| `BeforeAfterTemplateProps` | `src/remotion/before-after-template.tsx` | `Root.tsx` defaults, `VideoPreview`, `/api/render` |
+| `SingleImageTemplateProps` | `src/remotion/single-image-template.tsx` | same |
+| `CarouselTemplateProps` | `src/remotion/carousel-template.tsx` | same |
+| `CarouselSlide` / `CarouselSlideDraft` | `carousel-template.tsx` / `src/lib/carousel-slides.ts` | `CarouselSlidesEditor` (draft) → render props (slide) |
+| `MediaAsset` | `src/config/background-music.ts` | `BackgroundMusicControls`, `/api/public-media` |
+| `RenderProgressSnapshot` | `src/lib/render-progress-store.ts` | `/api/render` (write), `/api/render/progress` (read), `RenderAndDownload` (display) |
+| `UiLayerMotion` | `src/remotion/ui-motion.ts` | Templates' staggered enter/exit animations |
+| `AccordionAccent` | `src/components/DashboardStepAccordion.tsx` | All step cards |
+| `CroppedImageOptions` | `src/lib/get-cropped-image.ts` | `ImageCropModal` JPEG export |
+
+## Environment & persistence
+
+- **Serverless gate** — `src/lib/render-environment.ts` returns a block message on `VERCEL` or `NETLIFY`; escape hatch `REMOTION_ALLOW_EXPORT_ON_SERVERLESS=1`.
+- **Bundle cache** — `/api/render` keeps a single `bundle()` result alive per process.
+- **Progress store** — in-memory `Map<sessionId, RenderProgressSnapshot>`; works only when the same Node process serves both `/api/render` and `/api/render/progress` (so: `next dev`, `next start`, or a single Docker container — not multi-instance serverless).
+- **Browser localStorage** — `video-composer-simulated-auth` (auth gate), `video-composer-logo:<brandId>` (last-picked logo).
+- **Assets on disk** — `public/assets/logos/<brandId>/…`, `public/music/…`, `public/background-videos/…`; scanned dirs listed in `MUSIC_SCAN_DIRS` / `BACKGROUND_SCAN_DIRS`.
+
+## Production render tuning (`src/app/api/render/route.ts`)
+
+Already called out above; one-line reminder: `concurrency: 1`, `disallowParallelEncoding: true`, `ffmpegOverride` appends `-threads 4`, `chromiumOptions.enableMultiProcessOnLinux: false`. Do **not** pass arbitrary Chrome `args` via `ChromiumOptions` — unsupported by Remotion's types.
