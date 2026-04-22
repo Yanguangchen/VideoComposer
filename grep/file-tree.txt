@@ -14,6 +14,8 @@ src/
 ├─ components/                                     # All "use client" React components
 │  ├─ DashboardStepAccordion.tsx                   # Numbered step card wrapper (accent + expand/collapse)
 │  ├─ BrandSelector.tsx                            # Brand picker (uses config/brands.ts)
+│  ├─ BrandMediaLibrary.tsx                        # Firebase-backed library panel (bulk upload + grid + delete)
+│  ├─ MediaLibraryPicker.tsx                       # Modal to pick one/many library assets → File[]
 │  ├─ LogoPicker.tsx                               # Fetches brand logos, picks one, toggles visibility
 │  ├─ LogoPositionControls.tsx                     # Horizontal/vertical px sliders (disabled when hidden)
 │  ├─ TemplateModeToggle.tsx                       # before-after / single-image / carousel toggle
@@ -43,6 +45,8 @@ src/
 │  └─ background-music.ts                          # MediaAsset, mergeMediaAssets, URL helpers
 │
 ├─ lib/                                            # Pure helpers, no JSX
+│  ├─ firebase.ts                                  # Lazy browser Firebase singletons (app, db, storage) + isFirebaseConfigured()
+│  ├─ media-library.ts                             # subscribeLibraryMedia, uploadLibraryMedia, deleteLibraryAsset, libraryAssetToFile
 │  ├─ brand-logos.ts                               # pickDefaultLogoFile, filterLogoFilenames, LOGO_STORAGE_PREFIX
 │  ├─ carousel-slides.ts                           # CarouselSlideDraft + factories, MAX_CAROUSEL_SLIDES
 │  ├─ files.ts                                     # fileToDataUrl

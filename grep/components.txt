@@ -1,12 +1,14 @@
 src/components/AiAgentsInstructionFab.tsx:5:export function AiAgentsInstructionFab() {
 src/components/BackgroundMusicControls.tsx:15:export function BackgroundMusicControls({
+src/components/BrandMediaLibrary.tsx:26:export function BrandMediaLibrary({ brandId, brandLabel }: Props) {
 src/components/BrandSelector.tsx:11:export function BrandSelector({ brands, activeBrandId, onSelect }: Props) {
-src/components/CarouselSlidesEditor.tsx:16:export function CarouselSlidesEditor({ slides, onChange }: Props) {
+src/components/CarouselSlidesEditor.tsx:23:export function CarouselSlidesEditor({
 src/components/DashboardStepAccordion.tsx:108:export function DashboardStepAccordion({
 src/components/ImageCropModal.tsx:39:export function ImageCropModal({
 src/components/LogoPicker.tsx:17:export function LogoPicker({ brand, value, onChange }: Props) {
 src/components/LogoPositionControls.tsx:20:export function LogoPositionControls({
-src/components/MediaUploader.tsx:20:export function MediaUploader({
+src/components/MediaLibraryPicker.tsx:20:export function MediaLibraryPicker({
+src/components/MediaUploader.tsx:22:export function MediaUploader({
 src/components/RenderAndDownload.tsx:20:export function RenderAndDownload({
 src/components/ServiceFontPicker.tsx:17:export function ServiceFontPicker({
 src/components/SignInModal.tsx:17:export function SignInModal({ onSuccess }: Props) {
@@ -17,10 +19,9 @@ src/components/VideoTextColors.tsx:18:export function VideoTextColors({
 src/components/VideoTextSizeSlider.tsx:16:export function VideoTextSizeSlider({ value, onChange }: Props) {
 src/components/theme-provider.tsx:6:export function ThemeProvider({ children }: { children: ReactNode }) {
 src/components/theme-toggle.tsx:6:export function ThemeToggle() {
-src/remotion/Root.tsx:95:export const RemotionRoot = () => {
+src/remotion/Root.tsx:94:export const RemotionRoot = () => {
 src/remotion/background-layer.tsx:21:export const BackgroundLayer: FC<Props> = ({ bgSrc }) => {
 src/remotion/before-after-template.tsx:65:export const BeforeAfterTemplate: FC<BeforeAfterTemplateProps> = ({
-src/remotion/carousel-template.tsx:252:export const CarouselTemplate: FC<CarouselTemplateProps> = ({
-src/remotion/carousel-template.tsx:30:export const CAROUSEL_FRAMES_PER_SLIDE = 45;
+src/remotion/carousel-template.tsx:251:export const CarouselTemplate: FC<CarouselTemplateProps> = ({
 src/remotion/price-tag-badge.tsx:13:export const PriceTagBadge: FC<Props> = ({
 src/remotion/single-image-template.tsx:53:export const SingleImageTemplate: FC<SingleImageTemplateProps> = ({

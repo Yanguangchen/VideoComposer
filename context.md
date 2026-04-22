@@ -142,6 +142,17 @@ After upload, **Crop & position** opens **`ImageCropModal`**: pan/zoom, aspect p
 
 - **Architecture diagram** (Mermaid): [`docs/architecture.mmd`](docs/architecture.mmd) — classes, composition IDs, and data flow.
 - **Code index** (grep-friendly): [`grep/`](grep/) — pre-built `file:line` indexes of exports, types, components, API routes, fetch calls, client boundaries, and a cheatsheet.
+- **Shared media library (Firebase)**: [`docs/media-library-setup.md`](docs/media-library-setup.md) — env vars, Firestore/Storage rules, schema, and operational notes.
+
+## Shared media library (Firebase)
+
+Optional feature enabled by setting `NEXT_PUBLIC_FIREBASE_*` env vars (see `.env.example`). Adds a new accordion step (**2. Brand media library**) where photos can be bulk-uploaded once to a Firestore-backed library keyed by `brandId`; every `MediaUploader` then gets a **Pick from library** button and the carousel editor gets **+ Bulk add from library**.
+
+- **Data plane:** browser-direct — `firebase/firestore` + `firebase/storage`, no server route. Firestore collection `media/{mediaId}` partitioned by `brandId`; Storage objects at `brands/{brandId}/{mediaId}.{ext}`.
+- **Key modules:** `src/lib/firebase.ts` (lazy singletons, `isFirebaseConfigured()`), `src/lib/media-library.ts` (`subscribeLibraryMedia`, `uploadLibraryMedia`, `deleteLibraryAsset`, `libraryAssetToFile`).
+- **UI:** `BrandMediaLibrary` (dropzone + grid + delete), `MediaLibraryPicker` (single/multi-select modal).
+- **Pipeline:** picks are `fetch`-ed to a `Blob` and wrapped as a `File`, feeding the **existing** `onFile → fileToDataUrl → Remotion` path — no changes to `/api/render`.
+- **Opt-out:** if env vars are missing, `isFirebaseConfigured()` is false, the library step shows a configuration notice, and the picker buttons are hidden.
 
 ## Dashboard state (source of truth: `src/app/dashboard-client.tsx`)
 

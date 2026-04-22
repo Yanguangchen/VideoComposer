@@ -11,10 +11,12 @@ type Props = {
   onFile: (file: File | null) => void;
   /** Original file (used for naming cropped exports). */
   sourceFile?: File | null;
-  /** Show “Crop & position” when an image is loaded (default true). */
+  /** Show "Crop & position" when an image is loaded (default true). */
   enableCrop?: boolean;
   /** Default crop frame width ÷ height (default 9:16 for vertical video). */
   cropAspect?: number;
+  /** When set, shows a "Pick from library" button that resolves to a File. */
+  onPickFromLibrary?: () => Promise<File | null>;
 };
 
 export function MediaUploader({
@@ -25,8 +27,10 @@ export function MediaUploader({
   sourceFile = null,
   enableCrop = true,
   cropAspect = 9 / 16,
+  onPickFromLibrary,
 }: Props) {
   const [cropOpen, setCropOpen] = useState(false);
+  const [pickBusy, setPickBusy] = useState(false);
 
   const onDrop = useCallback(
     (accepted: File[]) => {
@@ -74,6 +78,24 @@ export function MediaUploader({
           Drag &amp; drop or click to browse
         </p>
       </div>
+      {onPickFromLibrary ? (
+        <button
+          type="button"
+          disabled={pickBusy}
+          onClick={async () => {
+            setPickBusy(true);
+            try {
+              const picked = await onPickFromLibrary();
+              if (picked) onFile(picked);
+            } finally {
+              setPickBusy(false);
+            }
+          }}
+          className="rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-800 transition hover:bg-emerald-100 disabled:opacity-60 dark:border-emerald-700/60 dark:bg-emerald-950/30 dark:text-emerald-200 dark:hover:bg-emerald-900/40"
+        >
+          {pickBusy ? "Loading…" : "Pick from library"}
+        </button>
+      ) : null}
       {imageSrc ? (
         <>
           {/* eslint-disable-next-line @next/next/no-img-element */}
