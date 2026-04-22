@@ -14,6 +14,7 @@ import {
 } from "firebase/firestore";
 import {
   deleteObject,
+  getBytes,
   getDownloadURL,
   ref as storageRef,
   uploadBytesResumable,
@@ -227,18 +228,13 @@ export async function deleteLibraryAsset(asset: LibraryAsset): Promise<void> {
 }
 
 /**
- * Fetch an asset's bytes and wrap them as a `File` so it can feed the
- * existing upload pipeline (`MediaUploader.onFile`, `fileToDataUrl`, …).
+ * Download an asset via the Firebase Storage SDK and wrap it as a File.
+ * Using getBytes() avoids CORS — the SDK handles auth headers internally,
+ * unlike a plain fetch() to the download URL which the browser would block.
  */
 export async function libraryAssetToFile(asset: LibraryAsset): Promise<File> {
-  const res = await fetch(asset.downloadUrl);
-  if (!res.ok) {
-    throw new Error(
-      `Failed to download ${asset.filename} (${res.status} ${res.statusText})`,
-    );
-  }
-  const blob = await res.blob();
-  return new File([blob], asset.filename, {
-    type: blob.type || asset.contentType,
-  });
+  const bucket = getStorageBucket();
+  const objectRef = storageRef(bucket, asset.storagePath);
+  const buffer = await getBytes(objectRef);
+  return new File([buffer], asset.filename, { type: asset.contentType });
 }
