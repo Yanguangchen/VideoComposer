@@ -21,7 +21,7 @@ import { DashboardStepAccordion } from "@/components/DashboardStepAccordion";
 import { SignInModal } from "@/components/SignInModal";
 import { AiAgentsInstructionFab } from "@/components/AiAgentsInstructionFab";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { readSimulatedSignedIn, writeSimulatedSignedIn } from "@/lib/simulated-auth";
+import { onAuthChange, signOut, type User } from "@/lib/auth";
 
 const VideoPreview = dynamic(
   () =>
@@ -128,8 +128,8 @@ export function DashboardClient() {
   const [openLeftStepId, setOpenLeftStepId] = useState<string | null>(null);
   const [previewAccordionOpen, setPreviewAccordionOpen] = useState(true);
   const [showBeforeAfterArrow, setShowBeforeAfterArrow] = useState(true);
-  const [simulatedAuthReady, setSimulatedAuthReady] = useState(false);
-  const [simulatedSignedIn, setSimulatedSignedIn] = useState(false);
+  const [authReady, setAuthReady] = useState(false);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
 
   // Library picker — one modal at the dashboard level. Callers await a
   // promise resolved when the user taps "Use selection" or "Close".
@@ -142,8 +142,10 @@ export function DashboardClient() {
   carouselSlidesRef.current = carouselSlides;
 
   useEffect(() => {
-    setSimulatedSignedIn(readSimulatedSignedIn());
-    setSimulatedAuthReady(true);
+    return onAuthChange((user) => {
+      setCurrentUser(user);
+      setAuthReady(true);
+    });
   }, []);
 
   useEffect(() => {
@@ -597,20 +599,16 @@ export function DashboardClient() {
         ? "8. Carousel slides"
         : "8. Before / After photos";
 
-  if (!simulatedAuthReady) {
+  if (!authReady) {
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-slate-950" aria-hidden />
     );
   }
 
-  if (!simulatedSignedIn) {
+  if (!currentUser) {
     return (
       <>
-        <SignInModal
-          onSuccess={() => {
-            setSimulatedSignedIn(true);
-          }}
-        />
+        <SignInModal onSuccess={() => {}} />
         <AiAgentsInstructionFab />
       </>
     );
@@ -629,12 +627,18 @@ export function DashboardClient() {
             select a logo, add copy, upload media, preview, then export MP4.
           </p>
           <div className="flex shrink-0 items-center gap-2">
+            {currentUser.photoURL ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={currentUser.photoURL}
+                alt={currentUser.displayName ?? "User"}
+                className="h-8 w-8 rounded-full border border-slate-200 dark:border-slate-600"
+                referrerPolicy="no-referrer"
+              />
+            ) : null}
             <button
               type="button"
-              onClick={() => {
-                writeSimulatedSignedIn(false);
-                setSimulatedSignedIn(false);
-              }}
+              onClick={() => signOut()}
               className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
             >
               Sign out
