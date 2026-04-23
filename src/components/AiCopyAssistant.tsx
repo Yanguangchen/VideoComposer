@@ -181,7 +181,7 @@ export function AiCopyAssistant({ brandId, brandLabel }: Props) {
       {/* Brand context editor */}
       <div className="flex flex-col gap-2">
         <div className="flex items-center justify-between gap-2">
-          <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+          <span className="text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">
             Brand context
           </span>
           <span className="text-[11px] text-slate-500">
@@ -200,7 +200,7 @@ export function AiCopyAssistant({ brandId, brandLabel }: Props) {
               ? "Loading…"
               : "Signature services, target audience, brand voice, seasonal offers, location, etc."
           }
-          className="w-full resize-y rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-accent/60 focus:outline-none focus:ring-2 focus:ring-accent/25 disabled:opacity-60"
+          className="w-full resize-y rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-accent/60 focus:outline-none focus:ring-2 focus:ring-accent/25 disabled:opacity-60 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-100 dark:placeholder:text-slate-500"
         />
         {contextError ? (
           <p className="text-xs text-red-400">{contextError}</p>
@@ -222,7 +222,7 @@ export function AiCopyAssistant({ brandId, brandLabel }: Props) {
 
       {/* Prompt + generate */}
       <div className="flex flex-col gap-2">
-        <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+        <span className="text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">
           Your prompt
         </span>
         <textarea
@@ -252,18 +252,18 @@ export function AiCopyAssistant({ brandId, brandLabel }: Props) {
       {output ? (
         <div className="flex flex-col gap-2">
           <div className="flex items-center justify-between gap-2">
-            <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+            <span className="text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">
               Caption
             </span>
             <button
               type="button"
               onClick={handleCopy}
-              className="rounded-lg border border-white/10 bg-white/[0.04] px-2.5 py-1 text-[11px] font-semibold text-slate-200 transition hover:bg-white/[0.08]"
+              className="rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-700 transition hover:bg-slate-100 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-200 dark:hover:bg-white/[0.08]"
             >
               {copied ? "Copied" : "Copy"}
             </button>
           </div>
-          <pre className="scrollbar-soft max-h-80 overflow-auto whitespace-pre-wrap rounded-lg border border-white/10 bg-white/[0.02] px-3 py-2 font-sans text-sm text-slate-100">
+          <pre className="scrollbar-soft max-h-80 overflow-auto whitespace-pre-wrap rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 font-sans text-sm text-slate-900 dark:border-white/10 dark:bg-white/[0.02] dark:text-slate-100">
             {output}
           </pre>
         </div>

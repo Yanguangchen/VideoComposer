@@ -55,7 +55,7 @@ export function GlassCard({
       <section className={`glass-card ${strongBorder ? "glass-card--strong" : ""}`}>
         <header className="flex items-center justify-between gap-3 px-4 pt-3 pb-2">
           <div className="flex items-center gap-2">
-            <h3 className="text-sm font-semibold tracking-wide text-slate-100 dark:text-slate-100">
+            <h3 className="text-sm font-semibold tracking-wide text-slate-800 dark:text-slate-100">
               {title}
             </h3>
           </div>
@@ -80,13 +80,13 @@ export function GlassCard({
       >
         <div className="flex min-w-0 flex-col gap-0.5">
           <span className="flex items-center gap-2">
-            <span className="text-sm font-semibold tracking-wide text-slate-100 dark:text-slate-100">
+            <span className="text-sm font-semibold tracking-wide text-slate-800 dark:text-slate-100">
               {title}
             </span>
             {badge ? <Badge kind={badge} /> : null}
           </span>
           {hint && !open ? (
-            <span className="truncate text-xs text-slate-400 dark:text-slate-400">
+            <span className="truncate text-xs text-slate-500 dark:text-slate-400">
               {hint}
             </span>
           ) : null}
@@ -95,7 +95,7 @@ export function GlassCard({
           width="18"
           height="18"
           viewBox="0 0 20 20"
-          className={`shrink-0 text-slate-400 transition-transform duration-300 ${open ? "rotate-180" : ""}`}
+          className={`shrink-0 text-slate-500 dark:text-slate-400 transition-transform duration-300 ${open ? "rotate-180" : ""}`}
           fill="currentColor"
           aria-hidden
         >
@@ -114,7 +114,7 @@ export function GlassCard({
             id={panelId}
             role="region"
             aria-hidden={!open}
-            className={`border-t border-white/[0.06] px-4 pb-4 pt-3 ${!open ? "pointer-events-none" : ""}`}
+            className={`border-t border-slate-100 px-4 pb-4 pt-3 dark:border-white/[0.06] ${!open ? "pointer-events-none" : ""}`}
           >
             {children}
           </div>

@@ -653,7 +653,7 @@ function DashboardInner() {
   return (
     <>
       <BackgroundScene />
-      <div className="flex min-h-dvh flex-col text-slate-100">
+      <div className="flex min-h-dvh flex-col text-slate-900 dark:text-slate-100">
         {/* ------------- Header ------------- */}
         <header className="glass-bar sticky top-0 z-40 border-b">
           <div className="mx-auto flex h-[52px] w-full max-w-[1600px] items-center gap-3 px-4">
@@ -661,7 +661,7 @@ function DashboardInner() {
               Video
               <span className="text-accent">Composer</span>
             </h1>
-            <p className="hidden flex-1 truncate text-xs text-slate-400 md:block">
+            <p className="hidden flex-1 truncate text-xs text-slate-500 dark:text-slate-400 md:block">
               Multi-brand marketing videos — choose a layout, pick a client,
               select a logo, add copy, upload media, preview, then export MP4.
             </p>
@@ -707,7 +707,7 @@ function DashboardInner() {
                 className={`flex-1 rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
                   mobileTab === tab
                     ? "bg-accent-dim text-accent"
-                    : "text-slate-400 hover:bg-white/[0.04]"
+                    : "text-slate-600 hover:bg-black/[0.04] dark:text-slate-400 dark:hover:bg-white/[0.04]"
                 }`}
               >
                 {tab === "configure" ? "Configure" : "Preview"}
@@ -725,7 +725,7 @@ function DashboardInner() {
         >
           {/* Left column */}
           <aside
-            className={`${mobileTab === "configure" ? "flex" : "hidden"} relative min-h-0 w-full flex-col lg:flex lg:w-[var(--left-w)] lg:shrink-0 lg:border-r lg:border-white/[0.06]`}
+            className={`${mobileTab === "configure" ? "flex" : "hidden"} relative min-h-0 w-full flex-col lg:flex lg:w-[var(--left-w)] lg:shrink-0 lg:border-r lg:border-slate-200 dark:lg:border-white/[0.06]`}
           >
             {/* Scrollable config area */}
             <div className="scrollbar-soft flex-1 overflow-y-auto px-4 pb-24 pt-4 lg:pb-6">
@@ -749,7 +749,7 @@ function DashboardInner() {
                 >
                   <div className="flex flex-col gap-4">
                     <div>
-                      <span className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-400">
+                      <span className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">
                         Brand
                       </span>
                       <BrandSelector
@@ -761,10 +761,10 @@ function DashboardInner() {
 
                     <div>
                       <div className="mb-2 flex items-center justify-between gap-2">
-                        <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                        <span className="text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">
                           Logo
                         </span>
-                        <label className="flex cursor-pointer items-center gap-1.5 text-xs text-slate-300">
+                        <label className="flex cursor-pointer items-center gap-1.5 text-xs text-slate-700 dark:text-slate-300">
                           <input
                             type="checkbox"
                             checked={showLogo}
@@ -796,14 +796,14 @@ function DashboardInner() {
                       </div>
                     </div>
 
-                    <details className="group rounded-lg border border-white/10 bg-white/[0.02]">
-                      <summary className="cursor-pointer list-none px-3 py-2 text-xs font-semibold text-slate-300 transition hover:text-slate-100">
+                    <details className="group rounded-lg border border-slate-200 bg-black/[0.02] dark:border-white/10 dark:bg-white/[0.02]">
+                      <summary className="cursor-pointer list-none px-3 py-2 text-xs font-semibold text-slate-600 transition hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-100">
                         <span className="mr-1 inline-block transition group-open:rotate-90">
                           ›
                         </span>
                         Brand media library
                       </summary>
-                      <div className="border-t border-white/10 p-3">
+                      <div className="border-t border-slate-100 p-3 dark:border-white/10">
                         <BrandMediaLibrary
                           key={brand.id}
                           brandId={brand.id}
@@ -892,7 +892,7 @@ function DashboardInner() {
                   <div className="flex flex-col gap-5">
                     {/* Colors */}
                     <div>
-                      <span className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-400">
+                      <span className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">
                         Text colors
                       </span>
                       <VideoTextColors
@@ -906,33 +906,33 @@ function DashboardInner() {
 
                     {/* Copy */}
                     <div className="flex flex-col gap-3">
-                      <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                      <span className="text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">
                         Copy
                       </span>
                       {templateMode !== "carousel" ? (
-                        <label className="flex flex-col gap-1 text-xs text-slate-300">
+                        <label className="flex flex-col gap-1 text-xs text-slate-700 dark:text-slate-300">
                           Service title
                           <input
                             type="text"
                             value={serviceTitle}
                             onChange={(e) => setServiceTitle(e.target.value)}
                             placeholder="e.g. Signature Hydra Facial"
-                            className="rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-accent/60 focus:outline-none focus:ring-2 focus:ring-accent/25"
+                            className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-accent/60 focus:outline-none focus:ring-2 focus:ring-accent/25 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-100 dark:placeholder:text-slate-500"
                           />
                         </label>
                       ) : null}
-                      <label className="flex flex-col gap-1 text-xs text-slate-300">
+                      <label className="flex flex-col gap-1 text-xs text-slate-700 dark:text-slate-300">
                         Subtitle
                         <input
                           type="text"
                           value={subtitleText}
                           onChange={(e) => setSubtitleText(e.target.value)}
                           placeholder="e.g. Beauty & Wellness"
-                          className="rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-accent/60 focus:outline-none focus:ring-2 focus:ring-accent/25"
+                          className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-accent/60 focus:outline-none focus:ring-2 focus:ring-accent/25 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-100 dark:placeholder:text-slate-500"
                         />
                       </label>
                       <div>
-                        <label className="flex cursor-pointer items-center gap-2 text-xs text-slate-300">
+                        <label className="flex cursor-pointer items-center gap-2 text-xs text-slate-700 dark:text-slate-300">
                           <input
                             type="checkbox"
                             checked={showPriceTag}
@@ -951,7 +951,7 @@ function DashboardInner() {
                               setPriceTagText(e.target.value)
                             }
                             placeholder="e.g. $99 · From $129"
-                            className="mt-2 w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-accent/60 focus:outline-none focus:ring-2 focus:ring-accent/25"
+                            className="mt-2 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-accent/60 focus:outline-none focus:ring-2 focus:ring-accent/25 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-100 dark:placeholder:text-slate-500"
                           />
                         ) : null}
                       </div>
@@ -959,7 +959,7 @@ function DashboardInner() {
 
                     {/* Fonts */}
                     <div className="flex flex-col gap-3">
-                      <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                      <span className="text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">
                         Fonts
                       </span>
                       <ServiceFontPicker
@@ -990,7 +990,7 @@ function DashboardInner() {
 
                     {/* Background & music */}
                     <div>
-                      <span className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-400">
+                      <span className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">
                         Background & music
                       </span>
                       <BackgroundMusicControls
@@ -1006,7 +1006,7 @@ function DashboardInner() {
 
                     {/* Duration */}
                     <div>
-                      <span className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-400">
+                      <span className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">
                         Video length
                       </span>
                       <VideoDurationControl
@@ -1055,7 +1055,7 @@ function DashboardInner() {
             <div className="relative flex w-full flex-1 flex-col items-center justify-start px-4 py-6 lg:justify-center lg:px-8">
               <div className="flex w-full flex-col items-center gap-3 lg:sticky lg:top-4">
                 <div
-                  className="aspect-[9/16] overflow-hidden rounded-2xl border border-white/10 bg-black shadow-[0_24px_80px_-20px_rgba(0,0,0,0.7)]"
+                  className="aspect-[9/16] overflow-hidden rounded-2xl border border-slate-200 bg-black shadow-[0_24px_80px_-20px_rgba(0,0,0,0.3)] dark:border-white/10 dark:shadow-[0_24px_80px_-20px_rgba(0,0,0,0.7)]"
                   style={{
                     /* Width-driven: never exceeds parent width, and never large
                      * enough to push height past the viewport (aspect-ratio

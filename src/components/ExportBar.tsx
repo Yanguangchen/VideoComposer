@@ -36,7 +36,7 @@ function ProgressDot({ done, label }: Dot) {
       />
       <span
         className={`text-[11px] font-medium tracking-wide transition-colors ${
-          done ? "text-slate-200" : "text-slate-500"
+          done ? "text-slate-700 dark:text-slate-200" : "text-slate-500"
         }`}
       >
         {label}
@@ -94,7 +94,7 @@ export function ExportBar({
                 style={{ width: `${render.progress}%` }}
               />
             </div>
-            <p className="mt-1 truncate text-[11px] text-slate-400">
+            <p className="mt-1 truncate text-[11px] text-slate-600 dark:text-slate-400">
               {render.phaseLabel || "Working…"}
               {render.progress > 0 ? (
                 <span className="text-slate-500"> · {render.progress}%</span>
