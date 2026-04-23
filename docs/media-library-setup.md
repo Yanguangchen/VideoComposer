@@ -61,22 +61,28 @@ to auto-create the composite index. The manual definition is:
 
 ### Security rules (`firestore.rules`)
 
-For a single-operator setup where the app's simulated-auth password is the
-only gate, allow reads/writes on `media` from any client. Lock it down to
-signed-in users once you wire Firebase Auth.
+Access is gated to specific Firebase Auth UIDs — replace the array values with your own UID(s) from the Firebase console (**Authentication → Users → UID column**).
 
 ```js
 rules_version = "2";
 service cloud.firestore {
   match /databases/{database}/documents {
+    function isAllowed() {
+      return request.auth != null && request.auth.uid in [
+        "YOUR_UID_HERE"
+        // add more UIDs as needed
+      ];
+    }
+
     match /media/{mediaId} {
-      allow read, create, delete: if true;
+      allow read, create, delete: if isAllowed();
       // Metadata is append-only; updating would desync Storage.
       allow update: if false;
     }
+
     // Per-brand AI context — editable plaintext used by the Gemini assistant.
     match /brandContexts/{brandId} {
-      allow read, write: if true;
+      allow read, write: if isAllowed();
     }
   }
 }

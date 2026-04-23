@@ -34,65 +34,43 @@
   "dashboardLayout": {
     "header": {
       "sticky": true,
-      "contains": ["App title", "Short description", "Sign out", "Light/dark theme toggle"]
+      "contains": ["App title", "Short description", "Tweaks button", "User avatar", "Sign out", "Light/dark theme toggle"]
     },
     "main": {
-      "maxWidth": "max-w-7xl",
-      "largeScreens": "Two-column grid (lg:grid-cols-2): left = workflow steps + export; right = preview."
+      "layout": "Sidebar + preview panel (desktop); mobile tab bar switches between Configure and Preview.",
+      "leftColumn": "Scrollable config area with GlassCard collapsible sections.",
+      "rightColumn": "Sticky Remotion Player (VideoPreview); ssr:false dynamic import."
     },
     "leftColumn": {
-      "pattern": "Accordion steps (DashboardStepAccordion); only one left step open at a time (openLeftStepId).",
+      "pattern": "GlassCard collapsible sections (open/close state per card). Template mode selected via TemplateModePills at the top, sticky.",
       "sectionsInOrder": [
         {
-          "id": "layout",
-          "title": "Layout",
-          "action": "Choose video layout via TemplateModeToggle."
+          "id": "identity",
+          "title": "Identity",
+          "action": "Brand selector (BrandSelector). Logo picker (LogoPicker), show/hide toggle, position nudge (LogoPositionControls). Expandable 'Brand media library' (BrandMediaLibrary) — bulk photo upload to Firestore-backed library, requires Firebase config."
         },
         {
-          "id": "brand",
-          "title": "1. Brand",
-          "action": "Select brand (BrandSelector). Changing brand clears the selected logo file."
+          "id": "content",
+          "title": "Content",
+          "action": "Upload media for the selected template: single hero image (MediaUploader), before+after pair, or carousel slides (CarouselSlidesEditor). Each uploader has an optional 'Pick from library' button when Firebase is configured."
         },
         {
-          "id": "logo",
-          "title": "2. Logo (from disk)",
-          "action": "Pick logo from brand folder (LogoPicker). Toggle 'Show logo in video'. Logo position: horizontal/vertical pixel nudge (LogoPositionControls), disabled when logo is hidden; passes logoOffsetXPx/logoOffsetYPx to Remotion. If logo is hidden, export does not require a logo file."
+          "id": "style",
+          "title": "Style",
+          "action": "Text colors (VideoTextColors), copy fields (service title, subtitle, price tag), fonts (ServiceFontPicker x2), text size scale (VideoTextSizeSlider), background video + music (BackgroundMusicControls), video length (VideoDurationControl)."
         },
         {
-          "id": "colors",
-          "title": "3. Video text colors",
-          "action": "Set headline and caption hex colors (VideoTextColors)."
-        },
-        {
-          "id": "background",
-          "title": "4. Background video & music",
-          "action": "Select optional background and music from scanned public assets (BackgroundMusicControls)."
-        },
-        {
-          "id": "text",
-          "title": "5. Text & fonts",
-          "action": "Brand title font, VideoTextSizeSlider (scales all on-video text via textSizeScale), optional subtitle, optional price tag. Non-carousel: service title + service font. Carousel: slide caption font instead of service title block."
-        },
-        {
-          "id": "duration",
-          "title": "6. Video length",
-          "action": "Duration in seconds clamped between min and max (VideoDurationControl)."
-        },
-        {
-          "id": "photos",
-          "title": "7. Photos (label changes by mode)",
-          "action": "Upload media appropriate to the selected template mode (MediaUploader, CarouselSlidesEditor, or before/after pair)."
-        },
-        {
-          "id": "exportCard",
-          "title": "Export",
-          "action": "RenderAndDownload — not inside the accordion list; separate card below step 7."
+          "id": "ai-copy",
+          "title": "AI copy",
+          "badge": "optional",
+          "action": "Gemini 2.5 Flash caption generator. Brand context textarea (saved to Firestore brandContexts/{brandId}). Prompt input + Generate button calls POST /api/gemini. Output shown as plain text with a Copy button. Requires GEMINI_API_KEY server env var and Firebase config for brand context persistence."
         }
-      ]
+      ],
+      "exportBar": "Sticky bottom bar (ExportBar) — enabled only when brand, logo (if shown), and content are all ready. Triggers RenderAndDownload flow."
     },
     "rightColumn": {
-      "title": "8. Preview",
-      "note": "Separate accordion state from left column. Remotion Player (VideoPreview) shows live preview; loaded with ssr:false."
+      "title": "Preview",
+      "note": "Remotion Player (VideoPreview); live preview; loaded with ssr:false. Mobile: shown in the Preview tab."
     }
   },
   "templateModes": {
@@ -196,6 +174,14 @@
       "method": "GET",
       "path": "/api/brand-logos/[brandId]",
       "role": "Lists logo files for a brand folder under public/assets/logos/."
+    },
+    {
+      "method": "POST",
+      "path": "/api/gemini",
+      "requestBody": "{ brandName, brandContext, userPrompt }",
+      "response": "{ text } on success, { error } on failure",
+      "role": "Proxies to Gemini 2.5 Flash to generate a Facebook/Instagram caption. Injects a system-style preamble, the brand context, and the user prompt. Reads GEMINI_API_KEY from server env (never NEXT_PUBLIC_*). Returns 503 if key is not set, 429 on quota exceeded.",
+      "implementationFile": "src/app/api/gemini/route.ts"
     }
   ],
   "staticAssets": {
@@ -236,9 +222,68 @@
     ],
     "bundlerAlias": "src/remotion/webpack-override.ts maps @ to src (must match tsconfig paths)."
   },
+  "firebaseIntegration": {
+    "optional": true,
+    "enabledWhen": "All NEXT_PUBLIC_FIREBASE_* env vars are set. isFirebaseConfigured() in src/lib/firebase.ts gates all Firebase features.",
+    "firestoreCollections": [
+      {
+        "collection": "media",
+        "docId": "auto (UUID)",
+        "fields": ["brandId", "storagePath", "downloadUrl", "filename", "contentType", "sizeBytes", "uploadedAt"],
+        "usedBy": "Shared brand media library (BrandMediaLibrary, MediaLibraryPicker)"
+      },
+      {
+        "collection": "brandContexts",
+        "docId": "brandId",
+        "fields": ["brandId", "text", "updatedAt"],
+        "usedBy": "AI copy assistant (AiCopyAssistant) — per-brand plaintext context fed to Gemini",
+        "maxTextChars": 8000
+      }
+    ],
+    "storageLayout": "brands/{brandId}/{mediaId}.{ext}",
+    "requiredFirestoreRules": "Both collections must be readable/writable by authenticated users. See docs/media-library-setup.md.",
+    "requiredStorageCors": "cors.json at repo root — apply with gcloud storage buckets update. Required for Pick from library to work.",
+    "implementationFiles": [
+      "src/lib/firebase.ts",
+      "src/lib/media-library.ts",
+      "src/lib/brand-context.ts"
+    ]
+  },
+  "aiCopyAssistant": {
+    "purpose": "Generate Facebook and Instagram post captions per brand using Gemini 2.5 Flash.",
+    "uiSection": "AI copy GlassCard — last section in the left column (id: ai-copy).",
+    "component": "src/components/AiCopyAssistant.tsx",
+    "brandContextStorage": {
+      "firestoreDoc": "brandContexts/{brandId}",
+      "field": "text",
+      "maxChars": 8000,
+      "lib": "src/lib/brand-context.ts",
+      "functions": ["getBrandContext", "saveBrandContext", "subscribeBrandContext"]
+    },
+    "generationFlow": [
+      "User edits brand context textarea → clicks Save (writes to Firestore brandContexts/{brandId}).",
+      "User writes a prompt (e.g. 'Promote our Mother's Day offer, 20% off').",
+      "Click Generate caption → POST /api/gemini with { brandName, brandContext, userPrompt }.",
+      "Server builds a system-style prompt with the brand context prepended, calls Gemini 2.5 Flash.",
+      "Response { text } shown in a plain-text output panel.",
+      "Copy button writes the caption to the clipboard via navigator.clipboard.writeText."
+    ],
+    "outputFormat": "Plain text — hook, main message, call to action, hashtags on last line. No markdown.",
+    "serverEnvRequired": "GEMINI_API_KEY — runtime only, never NEXT_PUBLIC_*. Set in Railway Variables; no Dockerfile ARG needed.",
+    "errorHandling": {
+      "missingKey": "503 with 'Gemini is not configured' message",
+      "quotaExceeded": "429 forwarded from Gemini",
+      "blocked": "422 with block reason from Gemini promptFeedback",
+      "networkError": "502"
+    }
+  },
   "deploymentNotesForAgents": {
     "summary": "Server-side render needs FFmpeg and a Chromium bundle; production uses Docker with Next standalone plus full node_modules and src/ for the bundler. See Dockerfile and docs/deployment.md.",
     "renderEnvironment": "src/lib/render-environment.ts may block export on certain serverless hosts unless env escape hatches are set.",
+    "envVarNotes": {
+      "NEXT_PUBLIC_FIREBASE_*": "Must be present at next build time (compile-time inlining). In Docker/Railway, declared as ARG + ENV in the builder stage.",
+      "GEMINI_API_KEY": "Runtime only — read by the Node server process. No Dockerfile ARG needed. Set in Railway Variables and .env.local."
+    },
     "verification": [
       "npm run verify:remotion — compile Remotion bundle without full Next build",
       "npm run verify — verify:remotion + lint + build"
@@ -249,8 +294,12 @@
     "previewPlayer": "src/components/VideoPreview.tsx",
     "exportUi": "src/components/RenderAndDownload.tsx",
     "renderApi": "src/app/api/render/route.ts",
+    "geminiApi": "src/app/api/gemini/route.ts",
+    "aiCopyComponent": "src/components/AiCopyAssistant.tsx",
+    "brandContextLib": "src/lib/brand-context.ts",
     "humanReadableContext": "context.md",
     "readme": "README.md",
-    "deploymentDoc": "docs/deployment.md"
+    "deploymentDoc": "docs/deployment.md",
+    "mediaLibrarySetupDoc": "docs/media-library-setup.md"
   }
 }
