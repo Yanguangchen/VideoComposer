@@ -24,6 +24,7 @@ A **Next.js** dashboard to build **multi-brand marketing videos**: pick a templa
 | `src/app/api/render/progress/route.ts` | `GET` — polling progress by `sessionId` (in-memory store) |
 | `src/app/api/public-media/route.ts` | Lists scanned `public/` music & backgrounds |
 | `src/app/api/brand-logos/[brandId]/route.ts` | Lists logo files per brand folder |
+| `src/app/api/gemini/route.ts` | `POST` — proxies a prompt + brand context to **Gemini 2.5 Flash**; reads `GEMINI_API_KEY` **server-side only** (never `NEXT_PUBLIC_*`) |
 | `src/remotion/index.ts` | Remotion bundle **entry** — `registerRoot(RemotionRoot)` |
 | `src/remotion/Root.tsx` | Three `<Composition>` definitions + default props |
 | `src/remotion/*-template.tsx` | **BeforeAfter**, **SingleImage**, **Carousel** scene components |
@@ -41,6 +42,8 @@ A **Next.js** dashboard to build **multi-brand marketing videos**: pick a templa
 | `src/components/LogoPositionControls.tsx` | Horizontal/vertical sliders in step 2 — disabled when logo hidden |
 | `src/components/RenderAndDownload.tsx` | Export button, progress bar, errors, link to Facebook Pages dashboard |
 | `src/components/MediaUploader.tsx` | Dropzone + preview + **Crop & position** (opens `ImageCropModal`) |
+| `src/components/AiCopyAssistant.tsx` | **AI copy** section — editable `brand_context` textarea + prompt + generate (Gemini) + **Copy** button |
+| `src/lib/brand-context.ts` | Firestore helpers for `brandContexts/{brandId}` (`getBrandContext`, `saveBrandContext`, `subscribeBrandContext`) |
 | `src/components/ImageCropModal.tsx` | `react-easy-crop` modal; outputs JPEG via `getCroppedImageBlob` |
 | `src/components/CarouselSlidesEditor.tsx` | Per-slide image + title; uses `MediaUploader` |
 | `src/lib/get-cropped-image.ts` | Canvas export from crop pixels (max dimension 1920) |
@@ -144,6 +147,16 @@ After upload, **Crop & position** opens **`ImageCropModal`**: pan/zoom, aspect p
 - **Code index** (grep-friendly): [`grep/`](grep/) — pre-built `file:line` indexes of exports, types, components, API routes, fetch calls, client boundaries, and a cheatsheet.
 - **Shared media library (Firebase)**: [`docs/media-library-setup.md`](docs/media-library-setup.md) — env vars, Firestore/Storage rules, schema, and operational notes.
 
+## AI copy assistant (Gemini + Firebase)
+
+The last left-column section — **AI copy** — generates Facebook / Instagram captions per brand.
+
+- **Brand context** — free-form plaintext stored at Firestore `brandContexts/{brandId}` (`{ brandId, text, updatedAt }`). Edited in-app, live-synced via `onSnapshot`, clamped to **8 000 chars** (`BRAND_CONTEXT_MAX_CHARS` in `src/lib/brand-context.ts`).
+- **Prompt + Generate** — posts `{ brandName, brandContext, userPrompt }` to `POST /api/gemini`, which calls **Gemini 2.5 Flash** (`generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent`). The server injects a system-style preamble instructing Gemini to output plain-text captions with a hook, message, CTA, and hashtags.
+- **Copy button** — writes the output to the clipboard via `navigator.clipboard.writeText`. No dashboard state is mutated (the caption is copy-paste-only; videos are rendered separately).
+- **Key is server-only** — `GEMINI_API_KEY` is read inside the API route and **must not** be prefixed `NEXT_PUBLIC_*`. Setting it as a `NEXT_PUBLIC_*` var would inline it into every visitor's browser bundle.
+- **Opt-out** — missing `GEMINI_API_KEY` → `/api/gemini` returns **503** with a configuration error; missing Firebase → the panel shows the "Firebase not configured" notice (same as the media library).
+
 ## Shared media library (Firebase)
 
 Optional feature enabled by setting `NEXT_PUBLIC_FIREBASE_*` env vars (see `.env.example`). Adds a new accordion step (**2. Brand media library**) where photos can be bulk-uploaded once to a Firestore-backed library keyed by `brandId`; every `MediaUploader` then gets a **Pick from library** button and the carousel editor gets **+ Bulk add from library**.
@@ -240,6 +253,7 @@ Image sources are normally **data URLs** (from `fileToDataUrl` / crop blob) for 
 | `GET /api/render/progress?sessionId=` | — | `{ progress, label, active }` | In-memory store; single Node process. |
 | `GET /api/public-media` | — | `{ music: MediaAsset[], backgrounds: MediaAsset[] }` | Calls `scanPublicMedia()` + merges static config. |
 | `GET /api/brand-logos/[brandId]` | — | `{ files, folder }` | Reads `public/assets/logos/<brandId>/` and filters image extensions. |
+| `POST /api/gemini` | `{ brandName, brandContext, userPrompt }` | `{ text }` or `{ error }` | Calls **Gemini 2.5 Flash** (`generativelanguage.googleapis.com`). Reads `GEMINI_API_KEY` from server env — never exposed to the browser. |
 
 ## End-to-end data flow
 

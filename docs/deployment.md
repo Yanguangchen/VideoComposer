@@ -32,7 +32,7 @@ The `Dockerfile` in this repo encodes that layout. **Do not** deploy with Railpa
 1. **Variables tab:** define the same names as locally (`NEXT_PUBLIC_FIREBASE_API_KEY`, `NEXT_PUBLIC_FIREBASE_PROJECT_ID`, …). Railway makes service variables available to the build by default.
 2. **Redeploy** after adding or changing them so `npm run build` runs again. If the site still shows “Firebase not configured”, trigger a **redeploy without build cache** so an old layer is not reused from a build that ran with empty values.
 
-Variables **without** the `NEXT_PUBLIC_` prefix are read at **runtime** by `node server.js` only; they do not need to be in the `builder` stage unless something in `next build` reads them (rare).
+Variables **without** the `NEXT_PUBLIC_` prefix are read at **runtime** by `node server.js` only; they do not need to be in the `builder` stage unless something in `next build` reads them (rare). **`GEMINI_API_KEY`** (used by `src/app/api/gemini/route.ts`) is one of these — set it in Railway **Variables** only; no Dockerfile `ARG` is required. Do **not** rename it to `NEXT_PUBLIC_GEMINI_API_KEY` or the key will ship to every browser.
 
 ### Builder
 
