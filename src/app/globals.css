@@ -210,13 +210,19 @@
   /* Hide scrollbars but keep the ability to scroll (left sidebar) */
   .scrollbar-soft {
     scrollbar-width: thin;
-    scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+    scrollbar-color: rgba(0, 0, 0, 0.12) transparent;
   }
   .scrollbar-soft::-webkit-scrollbar {
     width: 6px;
   }
   .scrollbar-soft::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.15);
+    background: rgba(0, 0, 0, 0.12);
     border-radius: 3px;
+  }
+  .dark .scrollbar-soft {
+    scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+  }
+  .dark .scrollbar-soft::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
   }
 }

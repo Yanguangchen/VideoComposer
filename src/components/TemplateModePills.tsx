@@ -51,7 +51,7 @@ function ModeIcon({ mode }: { mode: TemplateModeId }) {
 export function TemplateModePills({ value, onChange }: Props) {
   return (
     <div
-      className="grid grid-cols-3 gap-2 rounded-2xl border border-white/10 bg-white/[0.04] p-1.5 backdrop-blur-md dark:border-white/10"
+      className="grid grid-cols-3 gap-2 rounded-2xl border border-slate-200 bg-slate-100/60 p-1.5 backdrop-blur-md dark:border-white/10 dark:bg-white/[0.04]"
       role="radiogroup"
       aria-label="Video layout"
     >
@@ -67,7 +67,7 @@ export function TemplateModePills({ value, onChange }: Props) {
             className={`group flex min-w-0 flex-col items-center gap-1 rounded-xl px-2 py-2.5 text-center transition ${
               active
                 ? "bg-accent-dim text-accent shadow-accent-glow"
-                : "text-slate-300 hover:bg-white/[0.05] dark:text-slate-200"
+                : "text-slate-600 hover:bg-slate-200/60 dark:text-slate-300 dark:hover:bg-white/[0.05]"
             }`}
             title={m.description}
           >
