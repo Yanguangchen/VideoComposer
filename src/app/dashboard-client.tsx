@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { AiCopyAssistant } from "@/components/AiCopyAssistant";
 import { BrandMediaLibrary } from "@/components/BrandMediaLibrary";
 import { BrandSelector } from "@/components/BrandSelector";
 import { isFirebaseConfigured } from "@/lib/firebase";
@@ -156,6 +157,7 @@ function DashboardInner() {
   const [openIdentity, setOpenIdentity] = useState(true);
   const [openContent, setOpenContent] = useState(true);
   const [openStyle, setOpenStyle] = useState(false);
+  const [openAiCopy, setOpenAiCopy] = useState(false);
 
   // --- Mobile tab state ---
   const [mobileTab, setMobileTab] = useState<"configure" | "preview">(
@@ -1013,6 +1015,22 @@ function DashboardInner() {
                       />
                     </div>
                   </div>
+                </GlassCard>
+
+                {/* --------- Section 4 · AI copy assistant --------- */}
+                <GlassCard
+                  id="ai-copy"
+                  title="AI copy"
+                  badge="optional"
+                  hint="Generate Facebook / Instagram captions"
+                  open={openAiCopy}
+                  onToggle={() => setOpenAiCopy((v) => !v)}
+                >
+                  <AiCopyAssistant
+                    key={brand.id}
+                    brandId={brand.id}
+                    brandLabel={brand.displayName}
+                  />
                 </GlassCard>
               </div>
             </div>

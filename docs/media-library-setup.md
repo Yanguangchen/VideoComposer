@@ -74,6 +74,10 @@ service cloud.firestore {
       // Metadata is append-only; updating would desync Storage.
       allow update: if false;
     }
+    // Per-brand AI context — editable plaintext used by the Gemini assistant.
+    match /brandContexts/{brandId} {
+      allow read, write: if true;
+    }
   }
 }
 ```
