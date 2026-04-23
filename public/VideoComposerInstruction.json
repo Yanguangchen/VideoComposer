@@ -1,7 +1,99 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "documentType": "aiAgentInstructions",
+  "agentRuntime": {
+    "primary": "claudeComputerUse",
+    "description": "This document is primarily written for a Claude Computer Use agent driving a real desktop session (screenshots + mouse/keyboard actions + a bash shell). DOM-based guidance is provided as a SECONDARY track for browser-automation stacks (Playwright, Puppeteer, Selenium) — ignore those blocks if you are Computer Use.",
+    "supportedRuntimes": {
+      "claudeComputerUse": {
+        "capabilities": [
+          "Screenshots of the current desktop (the agent SEES pixels, not a DOM).",
+          "Mouse: left_click / right_click / double_click / drag / scroll at (x, y) coordinates.",
+          "Keyboard: type text, send key combos (ctrl+v, enter, escape, tab).",
+          "Bash shell: run arbitrary commands (ls, cat, xdotool, wl-copy, etc.) inside the same VM as the browser.",
+          "File system: read/write files in the VM's filesystem."
+        ],
+        "doesNotHave": [
+          "Direct DOM access (no querySelector, no role selectors, no setInputFiles()).",
+          "Network interception (no way to capture a blob URL mid-download).",
+          "Programmatic access to clipboard contents unless it runs a shell command (xclip, wl-paste)."
+        ],
+        "implicationsForThisDoc": [
+          "Target elements by their VISUAL appearance (position, color, label text visible on screen) — see facebookPublishingFlow.selectorStrategy.visualFirst.",
+          "For file uploads, CLICK the visible 'Photo/video' button and interact with the OS file picker. This is NATIVE to Computer Use and is the preferred path (not a constraint to bypass).",
+          "For download paths, the agent can open a terminal and `ls -lt ~/Downloads | head` to find the most recently written MP4 — no path-expansion pitfalls.",
+          "DOM-based selector examples in this doc (role=button[name=...], input[type='file']) are informational fallbacks for non-Computer-Use agents and can be ignored."
+        ]
+      },
+      "headlessBrowserAutomation": {
+        "examples": ["Playwright", "Puppeteer", "Selenium"],
+        "notes": "DOM selectors, setInputFiles(), and blob-URL interception apply here. These are the techniques labelled 'headless' or 'DOM-based' throughout this doc."
+      }
+    },
+    "howToInterpretDualGuidance": "Where a step lists both 'visual' and 'dom' instructions, the Computer Use agent should ALWAYS pick the visual path. The two paths are functionally equivalent — they just speak to different agent runtimes."
+  },
+  "agentInvariants": {
+    "purpose": "Hard rules the agent must respect across the entire pipeline (composer → export → Facebook publishing). Violating any of these is considered a failure even if the task otherwise completes.",
+    "rules": [
+      {
+        "id": "never-enable-boost",
+        "description": "Never leave 'Boost this post' enabled on Facebook. Must be explicitly OFF before clicking the final Post button. This risks real ad spend on the user's account.",
+        "severity": "critical"
+      },
+      {
+        "id": "verify-page-switch",
+        "description": "Before posting anything on Facebook, confirm the active profile is the brand Page (not a personal profile). See facebookPublishingFlow.verifyPageMode.",
+        "severity": "critical"
+      },
+      {
+        "id": "caption-before-post",
+        "description": "A Gemini-generated caption must exist in agent memory (or on clipboard) before starting the Facebook publishing flow. The caption text is the source of truth for Step 5 of the Facebook flow.",
+        "severity": "critical"
+      },
+      {
+        "id": "export-before-post",
+        "description": "The MP4 must be fully exported and the local file path known before starting the Facebook publishing flow. Do not open the Facebook Quick Links page until the download is complete.",
+        "severity": "critical"
+      },
+      {
+        "id": "brand-consistency",
+        "description": "The brand used in the composer (activeBrandId) must match the Facebook Page opened in Step 1. Use the brandCatalog.facebookQuickLinkLabel field as the mapping source of truth.",
+        "severity": "critical"
+      },
+      {
+        "id": "no-license-violation",
+        "description": "Do not use copyrighted material the user does not have rights to. Prefer CC0 / royalty-free sources. See mediaSourcingForAgents.legalNote.",
+        "severity": "high"
+      },
+      {
+        "id": "no-silent-state-loss",
+        "description": "Changing template mode clears uploaded images. The agent must upload media AFTER selecting the final template mode, not before.",
+        "severity": "high"
+      },
+      {
+        "id": "desktop-viewport",
+        "description": "Drive the app in a desktop viewport (≥1024px width). The mobile layout has a tab bar that changes layout. For Computer Use, ensure the browser window is maximized or at least 1280×800 before starting.",
+        "severity": "medium"
+      },
+      {
+        "id": "fresh-screenshot-per-action",
+        "description": "For Computer Use: take a new screenshot before every click/type action. Do not chain multiple actions on a stale screenshot — Facebook's dialogs reflow frequently.",
+        "severity": "high",
+        "appliesToRuntimes": ["claudeComputerUse"]
+      }
+    ],
+    "retryPolicy": {
+      "perStepMaxAttempts": 3,
+      "onRepeatedFailure": "Stop, take a fresh screenshot (Computer Use) or browser_snapshot (headless), report what was observed and the best next step. Do NOT improvise destructive actions (posting, paying, enabling boosts).",
+      "askUserWhen": [
+        "Login or 2FA prompt appears on Facebook",
+        "Captcha or manual verification appears",
+        "Brand button is missing from Facebook Quick Links",
+        "Download location cannot be determined"
+      ]
+    }
+  },
   "app": {
     "name": "Video Composer",
     "purpose": "Web dashboard to configure multi-brand marketing videos (Remotion templates), preview in-browser, and export MP4 via a server-side render API.",
@@ -25,11 +117,36 @@
     "storageFormat": "localStorage value '1' means signed in",
     "implementationFile": "src/lib/simulated-auth.ts",
     "note": "Password is defined in code (SIMULATED_AUTH_PASSWORD). Not production-grade auth.",
+    "agentPassword": {
+      "value": "webwizards@01",
+      "source": "src/lib/simulated-auth.ts (exported constant SIMULATED_AUTH_PASSWORD)",
+      "agentGuidance": "On a fresh session, if the SignInModal is shown the agent should type this password into the password input and submit. If an alternative password has been set in code, re-read simulated-auth.ts to confirm before failing."
+    },
     "userFlow": [
       "On load, if not signed in, only the SignInModal is shown.",
       "Successful password sets localStorage and reveals the dashboard.",
       "Sign out in the header clears storage and returns to the sign-in modal."
-    ]
+    ],
+    "agentBypass": "For headless tests the agent may set localStorage['video-composer-simulated-auth'] = '1' before loading the page, which skips the modal entirely."
+  },
+  "brandCatalog": {
+    "source": "src/config/brands.ts (authoritative). If this list and brands.ts disagree, brands.ts wins — re-read it.",
+    "lookupOrder": ["id", "displayName", "facebookQuickLinkLabel"],
+    "brands": [
+      { "id": "le-motor", "displayName": "Le Motor Enterprise", "primaryHex": "#2563eb", "logoFolder": "assets/logos/le-motor", "facebookQuickLinkLabel": "LE MOTOR", "facebookQuickLinkSection": "Automobile Companies" },
+      { "id": "vskin", "displayName": "VSKIN Beauty & Slimming", "primaryHex": "#0d9488", "logoFolder": "assets/logos/vskin", "facebookQuickLinkLabel": "VSKIN", "facebookQuickLinkSection": "Beauty Salons" },
+      { "id": "shebella-jurong", "displayName": "Shebella Beauty", "primaryHex": "#ec4899", "logoFolder": "assets/logos/shebella-jurong", "facebookQuickLinkLabel": "SHEBELLA", "facebookQuickLinkSection": "Beauty Salons" },
+      { "id": "rains-coco", "displayName": "RAINS & COCO", "primaryHex": "#d97706", "logoFolder": "assets/logos/rains-coco", "facebookQuickLinkLabel": "RAINS & COCO", "facebookQuickLinkSection": "Beauty Salons" },
+      { "id": "angel-nails", "displayName": "ANGEL NAILS", "primaryHex": "#9333ea", "logoFolder": "assets/logos/angel-nails", "facebookQuickLinkLabel": "ANGEL NAILS", "facebookQuickLinkSection": "Beauty Salons" },
+      { "id": "kuts-kurls", "displayName": "KUTS AND KURLS", "primaryHex": "#059669", "logoFolder": "assets/logos/kuts-kurls", "facebookQuickLinkLabel": "KUTS AND KURLS", "facebookQuickLinkSection": "Beauty Salons" },
+      { "id": "oscar-leasing", "displayName": "OSCAR LEASING", "primaryHex": "#4f46e5", "logoFolder": "assets/logos/oscar-leasing", "facebookQuickLinkLabel": "OSCAR LEASING", "facebookQuickLinkSection": "Automobile Companies" },
+      { "id": "e-perfect-eyebrow", "displayName": "E-PERFECT EYEBROW", "primaryHex": "#f43f5e", "logoFolder": "assets/logos/e-perfect-eyebrow", "facebookQuickLinkLabel": "E-PERFECT EYEBROW", "facebookQuickLinkSection": "Beauty Salons" },
+      { "id": "vibrant-employment", "displayName": "VIBRANT EMPLOYMENT", "primaryHex": "#65a30d", "logoFolder": "assets/logos/vibrant-employment", "facebookQuickLinkLabel": "VIBRANT EMPLOYMENT", "facebookQuickLinkSection": "Maid Agencies" },
+      { "id": "kare-skin", "displayName": "Kare Skin", "primaryHex": "#e11d48", "logoFolder": "assets/logos/kare-skin", "facebookQuickLinkLabel": "KARE SKIN", "facebookQuickLinkSection": "Beauty Salons" },
+      { "id": "tabernacle-beauty", "displayName": "Tabernacle Beauty", "primaryHex": "#7c3aed", "logoFolder": "assets/logos/tabernacle-beauty", "facebookQuickLinkLabel": "TABERNACLE BEAUTY", "facebookQuickLinkSection": "Beauty Salons" }
+    ],
+    "facebookQuickLinkMappingNote": "facebookQuickLinkLabel is the TEXT the agent should match when clicking on https://wizards-dashboard.vercel.app/facebook.html. Labels are case-insensitive; match by trimmed uppercase string. If a brand's button is missing from the page, abort posting and report to the user (do NOT improvise a Facebook URL).",
+    "agentDecisionRule": "When the user names a brand loosely (e.g. 'KSQ', 'the nail salon'), resolve it by: (1) exact id match, (2) case-insensitive displayName contains, (3) facebookQuickLinkLabel contains. If >1 match, ask the user to disambiguate."
   },
   "dashboardLayout": {
     "header": {
@@ -52,7 +169,13 @@
         {
           "id": "content",
           "title": "Content",
-          "action": "Upload media for the selected template: single hero image (MediaUploader), before+after pair, or carousel slides (CarouselSlidesEditor). Each uploader has an optional 'Pick from library' button when Firebase is configured."
+          "action": "Upload media for the selected template: single hero image (MediaUploader), before+after pair, or carousel slides (CarouselSlidesEditor). Each uploader has an optional 'Pick from library' button when Firebase is configured.",
+          "pickFromLibraryGuidance": {
+            "visibility": "The 'Pick from library' button (and the carousel editor's '+ Bulk add from library') are rendered ONLY when isFirebaseConfigured() returns true — i.e. when all NEXT_PUBLIC_FIREBASE_* env vars were present at build time. On deployments without Firebase, these controls do not exist in the DOM at all.",
+            "detection": "Before attempting to use the library, the agent MUST verify the 'Pick from library' button is present. Check for a button/element whose accessible name or text matches /pick from library/i scoped to the MediaUploader component.",
+            "fallbackIfMissing": "If the button is missing, do NOT wait or retry — Firebase is not configured on this deployment. Fall back to the normal dropzone upload path using a local file. Optionally, also confirm by checking that the 'Brand media library' accordion under Identity is likewise absent.",
+            "fallbackIfUserRequiredLibrary": "If the user explicitly required a library asset but the button is missing, stop and report: 'Firebase media library is not configured on this deployment (NEXT_PUBLIC_FIREBASE_* env vars missing at build time). Please either configure Firebase or provide a local file to upload.'"
+          }
         },
         {
           "id": "style",
@@ -75,6 +198,17 @@
   },
   "templateModes": {
     "default": "before-after",
+    "selectionHeuristic": {
+      "purpose": "Deterministic rule for agents choosing a template mode when the user has not explicitly picked one.",
+      "rules": [
+        "If the user explicitly names a mode (before/after, single, carousel), use that.",
+        "Else if exactly 2 images are available AND they represent a transformation (e.g. before/after a service) → 'before-after'.",
+        "Else if exactly 1 image is available → 'single-image'.",
+        "Else if 2+ unrelated images are available (portfolio, showcase) → 'carousel'.",
+        "Else → 'single-image' (safest default; fewest upload requirements)."
+      ],
+      "orderOfOperations": "Pick the template mode FIRST, BEFORE uploading any media. Switching template mode clears uploads (see agentInvariants.no-silent-state-loss)."
+    },
     "modes": [
       {
         "id": "before-after",
@@ -84,6 +218,7 @@
           "images": "Both 'before' and 'after' uploads",
           "logoIfShown": "If 'Show logo in video' is on, a logo file must be selected"
         },
+        "beforeVsAfterDisambiguation": "Upload the starting state (e.g. damaged / unstyled / original) to the 'Before' slot; upload the ending state (e.g. repaired / finished / improved) to 'After'. If files are named, prefer filenames containing 'before'/'b' vs 'after'/'a'. If unclear, ask the user.",
         "stateResetOnSwitch": "Changing template mode clears uploaded images and resets carousel slides."
       },
       {
@@ -92,7 +227,8 @@
         "requires": {
           "images": "One hero image",
           "logoIfShown": "If show logo is on, a logo file must be selected"
-        }
+        },
+        "stateResetOnSwitch": "Changing template mode clears uploaded images and resets carousel slides."
       },
       {
         "id": "carousel",
@@ -100,7 +236,14 @@
         "requires": {
           "images": "At least one slide; every slide must have an image file",
           "logoIfShown": "If show logo is on, a logo file must be selected"
-        }
+        },
+        "slideCountGuidance": {
+          "recommendedMin": 3,
+          "recommendedMax": 6,
+          "framesPerSlideAt30fps": 45,
+          "note": "Each slide runs ~1.5s at 30fps (CAROUSEL_FRAMES_PER_SLIDE=45). Total duration scales automatically with slide count — the Video length control may be overridden by slide count in carousel mode."
+        },
+        "stateResetOnSwitch": "Changing template mode clears uploaded images and resets carousel slides."
       }
     ],
     "mappingFunction": "templateModeToCompositionId in src/config/template-modes.ts"
@@ -116,23 +259,65 @@
       "min": 2,
       "max": 90,
       "default": 5,
-      "configFile": "src/config/video-duration.ts"
+      "configFile": "src/config/video-duration.ts",
+      "agentGuidance": "Leave at 5s unless the user asks otherwise. For carousel mode, duration may be driven by slide count — do not over-tune. Facebook Reels caps at 90s; the dashboard already enforces this."
     },
     "textSizeScale": {
       "role": "Single multiplier for every text size in Remotion templates (headline, subtitle, price tag, service line, carousel titles).",
       "default": 1,
+      "min": 0.65,
+      "max": 1.65,
+      "step": 0.05,
       "configFile": "src/config/video-text-scale.ts",
-      "dashboardComponent": "src/components/VideoTextSizeSlider.tsx"
+      "dashboardComponent": "src/components/VideoTextSizeSlider.tsx",
+      "agentGuidance": "Keep at 1 unless the user requests larger/smaller text. Server clamps out-of-range values silently."
     },
     "logoPosition": {
       "logoOffsetXPx": "Extra horizontal translate in px (positive moves right).",
       "logoOffsetYPx": "Extra vertical translate in px (positive moves down); before/after template combines with vertical centering.",
       "default": [0, 0],
+      "min": -400,
+      "max": 400,
+      "step": 4,
       "configFile": "src/config/logo-offset.ts",
-      "dashboardComponent": "src/components/LogoPositionControls.tsx"
+      "dashboardComponent": "src/components/LogoPositionControls.tsx",
+      "agentGuidance": "Leave at [0, 0] unless the user explicitly requests a nudge."
+    },
+    "colorsAndFonts": {
+      "agentGuidance": "Unless the user overrides, leave headline/caption colors and font pickers at their dashboard defaults. Brand primaryHex (from brandCatalog) is a good fallback for the headline color if the user asks for on-brand styling.",
+      "brandPrimaryHexSource": "brandCatalog[].primaryHex"
+    },
+    "optionalInputs": {
+      "backgroundVideo": {
+        "required": false,
+        "default": "none",
+        "note": "Background clip selector in the 'Background & music' step. Listed by GET /api/public-media. Leave unset unless the user provides one."
+      },
+      "music": {
+        "required": false,
+        "default": "none",
+        "note": "Music selector in the 'Background & music' step. Listed by GET /api/public-media."
+      },
+      "subtitleText": { "required": false, "default": "" },
+      "priceTag": { "required": false, "default": { "show": false, "text": "" } }
     }
   },
+  "showLogoToggle": {
+    "location": "Step 3 (Logo) accordion in the dashboard sidebar.",
+    "stateVariable": "showLogo (src/app/dashboard-client.tsx, initialState: true)",
+    "behavior": "When ON, a logo file must be selected via LogoPicker for canExport to become true. When OFF, the LogoPicker + LogoPositionControls are disabled and logo is omitted from the composition.",
+    "agentGuidance": "Default is ON. Keep ON unless the user explicitly asks to hide the logo. If ON, always select a logo from the brand's /api/brand-logos/[brandId] list before attempting export."
+  },
   "exportFlow": {
+    "canExportCriteria": {
+      "description": "The 'Export MP4' button is disabled until ALL of the following are true (see canExport in src/app/dashboard-client.tsx).",
+      "conditions": [
+        "hasBrand: an activeBrandId is selected",
+        "hasLogo: showLogo === false OR a logoFile has been selected",
+        "hasContent: depends on template mode — before-after needs both files; single-image needs singleFile; carousel needs at least one slide and every slide has an image"
+      ],
+      "agentDebugHint": "If Export is disabled, check in order: brand picked? show-logo state vs. logo file? template-mode-specific uploads?"
+    },
     "clientSteps": [
       "User clicks 'Export MP4' in RenderAndDownload (disabled until canExport is true).",
       "Client generates a random sessionId (UUID).",
@@ -148,9 +333,62 @@
       "selectComposition + renderMedia; onProgress updates in-memory progress store keyed by sessionId."
     ],
     "progressLimitation": "Progress is in-memory in the same Node process. Multi-instance serverless may not show accurate progress.",
+    "progressAgentGuidance": "Trust the final POST /api/render response. If progress stalls but the POST eventually returns 200 with Content-Type video/mp4, the export succeeded. Do NOT abort based on stalled progress alone.",
+    "downloadArtifact": {
+      "mimeType": "video/mp4",
+      "filenamePattern": "${base}-${brandId}.mp4",
+      "filenameBaseByCompositionId": {
+        "BeforeAfter": "before-after",
+        "SingleImage": "single",
+        "Carousel": "carousel"
+      },
+      "examples": [
+        "before-after-le-motor.mp4",
+        "single-vskin.mp4",
+        "carousel-angel-nails.mp4"
+      ],
+      "downloadLocation": {
+        "mechanism": "Browser's default download directory (triggered via anchor click on blob URL — see RenderAndDownload.tsx).",
+        "defaultPathsByOS": {
+          "windows": "C:\\Users\\<username>\\Downloads\\",
+          "macos": "/Users/<username>/Downloads/",
+          "linux": "/home/<username>/Downloads/",
+          "claudeComputerUseVm": "~/Downloads/ (the VM's default; resolve with `echo $HOME` or `ls -d ~/Downloads` via bash)"
+        },
+        "computerUseGuidance": {
+          "preferred": "After clicking Export MP4 and seeing the browser's download shelf confirm completion, open a terminal and run: `ls -lt ~/Downloads/*.mp4 | head -5`. The newest file is the export. Capture its absolute path from `readlink -f <file>` or `ls -1 ~/Downloads/<filename>`.",
+          "exampleCommands": [
+            "ls -lt ~/Downloads | head -5",
+            "ls -t ~/Downloads/*.mp4 2>/dev/null | head -1",
+            "readlink -f \"$(ls -t ~/Downloads/before-after-*.mp4 | head -1)\""
+          ],
+          "alternativeVisual": "The browser's download shelf (bottom of the window) shows the filename and a 'Show in folder' option — the agent can visually confirm the filename matches filenamePattern before shelling out.",
+          "note": "Computer Use does NOT hit the tilde/percent trap — tilde is expanded natively by the shell. Just avoid passing '~' through non-shell contexts (e.g. typing it into a GUI file path field)."
+        },
+        "headlessBrowserGuidance": {
+          "warning": "Playwright/Puppeteer/Selenium APIs do NOT expand '~' or '%USERPROFILE%'. Passing those literally to setInputFiles() / fs.readFile / open() throws ENOENT.",
+          "recipes": {
+            "nodejs": "const path = require('path'); const os = require('os'); const abs = path.join(os.homedir(), 'Downloads', filename);",
+            "python": "import os; abs_path = os.path.join(os.path.expanduser('~'), 'Downloads', filename)",
+            "playwrightBrowserContext": "Best practice: create the context with `downloadsPath: '/tmp/vc-downloads'` (absolute) and read `download.suggestedFilename()` from the 'download' event, then `await download.saveAs(path.join('/tmp/vc-downloads', filename))`."
+          }
+        },
+        "collisions": "The browser may append ' (1)', ' (2)', etc. if a file of the same name already exists. List the downloads dir after export (mtime-sorted) and pick the newest matching file instead of trusting the predicted filename."
+      }
+    },
     "externalLinkAfterExport": {
       "label": "Go to Facebook Pages",
-      "url": "https://wizards-dashboard.vercel.app/facebook.html"
+      "url": "https://wizards-dashboard.vercel.app/facebook.html",
+      "componentLocation": "src/components/RenderAndDownload.tsx (<a target=\"_blank\">)",
+      "agentGuidance": "Clicking this anchor opens a NEW browser tab (target=\"_blank\"). The agent should switch focus to that new tab before starting facebookPublishingFlow. Alternatively, the agent may open the URL directly via browser_navigate in the current tab — both are acceptable."
+    },
+    "handoffToFacebook": {
+      "preconditions": [
+        "exportFlow.downloadArtifact file exists on disk AND its absolute path is known to the agent",
+        "aiCopyAssistant output (caption text) is held in agent memory",
+        "activeBrandId is known so the correct Facebook Quick Link button can be matched via brandCatalog[].facebookQuickLinkLabel"
+      ],
+      "nextStep": "facebookPublishingFlow.step 1"
     }
   },
   "apiEndpoints": [
@@ -268,7 +506,27 @@
       "Response { text } shown in a plain-text output panel.",
       "Copy button writes the caption to the clipboard via navigator.clipboard.writeText."
     ],
+    "agentOrdering": {
+      "rule": "Generate the caption BEFORE clicking Export MP4, so that by the time the MP4 finishes exporting the caption is already in memory / on clipboard. Exporting does NOT wipe the AI copy output panel, so order is flexible — but generating first avoids a second wait.",
+      "captionPersistence": "The generated caption is client-only (not written to Firestore). Agents MUST hold the caption in memory — navigating away from the dashboard loses it."
+    },
+    "promptTemplate": {
+      "description": "Canonical userPrompt structure for agents. Fill in the placeholders based on the user's request; leave any section empty if the user didn't specify it.",
+      "template": "Write a Facebook/Instagram caption for {brandName}.\nOffer / topic: {offerOrTopic}\nTone: {tone: e.g. friendly, professional, playful}\nCall to action: {cta: e.g. Book now via DM, Visit our store, Call {phone}}\nTarget audience: {audience}\nLanguage: {language, default: English}\nConstraints: single caption, plain text, hook on line 1, 3-6 relevant hashtags on the last line.",
+      "examplePrompt": "Write a Facebook/Instagram caption for Le Motor Enterprise.\nOffer / topic: New arrival — 2024 Toyota Corolla, flexible financing\nTone: confident, trustworthy\nCall to action: DM us to book a test drive\nTarget audience: Singaporean first-time car buyers\nLanguage: English\nConstraints: single caption, plain text, hook on line 1, 3-6 relevant hashtags on the last line.",
+      "minimumViablePrompt": "Caption for {brandName} about {offerOrTopic}. Plain text, with hashtags on last line."
+    },
+    "brandContextGuidance": {
+      "ifFirestoreConfigured": "Read the existing brandContext via subscribeBrandContext(brandId). If empty and the user has provided useful brand info, write it via saveBrandContext before generating.",
+      "ifFirestoreNotConfigured": "The AI copy panel shows a 'Firebase not configured' notice. The agent can still call POST /api/gemini directly with an inline brandContext string; no persistence will happen.",
+      "maxChars": 8000
+    },
     "outputFormat": "Plain text — hook, main message, call to action, hashtags on last line. No markdown.",
+    "outputHandlingByAgent": [
+      "Store the generated caption string in agent memory (do not rely on clipboard alone — browser clipboard contents can be overwritten between steps).",
+      "Click Copy to populate the clipboard as a backup.",
+      "This exact string is the source of truth for facebookPublishingFlow Step 5."
+    ],
     "serverEnvRequired": "GEMINI_API_KEY — runtime only, never NEXT_PUBLIC_*. Set in Railway Variables; no Dockerfile ARG needed.",
     "errorHandling": {
       "missingKey": "503 with 'Gemini is not configured' message",
@@ -301,5 +559,250 @@
     "readme": "README.md",
     "deploymentDoc": "docs/deployment.md",
     "mediaLibrarySetupDoc": "docs/media-library-setup.md"
+  },
+  "facebookPublishingFlow": {
+    "purpose": "Final automated step to publish the exported MP4 and Gemini-generated caption to the corresponding Facebook Page.",
+    "startingUrl": "https://wizards-dashboard.vercel.app/facebook.html",
+    "dashboardName": "Facebook Quick Links",
+    "preconditions": [
+      "exportFlow.downloadArtifact exists on disk AND absolute path is known",
+      "aiCopyAssistant output (caption string) is held in agent memory",
+      "activeBrandId resolves to a brandCatalog entry with a non-empty facebookQuickLinkLabel",
+      "The Facebook account in the current browser session is logged in as a user who has Page admin rights for the target brand Page",
+      "Desktop viewport (agentInvariants.desktop-viewport)"
+    ],
+    "selectorStrategy": {
+      "description": "Facebook's DOM is heavily obfuscated (React compiler output + A/B tests). Use the track matching your runtime.",
+      "visualFirst": {
+        "forRuntime": "claudeComputerUse",
+        "description": "Computer Use sees pixels, not a DOM. Target elements by what's on screen.",
+        "priorityOrder": [
+          "1. Read the visible label text on the button/link (e.g. 'Switch Now', 'Post', 'Public'). Find that text on the screenshot and click its bounding box center.",
+          "2. Use visual landmarks relative to known anchors — 'the blue button at the bottom-right of the composer dialog', 'the toggle to the right of the Boost this post label'.",
+          "3. Use color / shape cues for state — a FB primary button is solid blue (#1877F2 / #0866FF), a toggle ON is blue with the pill slid right, OFF is gray with the pill slid left.",
+          "4. If an element is off-screen, scroll inside the correct panel (the composer dialog has its own scroll) and re-screenshot before acting."
+        ],
+        "verificationPattern": "After every click, take a fresh screenshot before issuing the next action. Do NOT chain more than one action on a stale screenshot — FB dialogs shift layout frequently.",
+        "obfuscationNote": "Because the agent is looking at pixels, Facebook's div-instead-of-button obfuscation does not matter — any element with visible text and an apparent hit target is clickable."
+      },
+      "domFallback": {
+        "forRuntime": "headlessBrowserAutomation",
+        "description": "For Playwright/Puppeteer/Selenium only. Computer Use should IGNORE this block.",
+        "priorityOrder": [
+          "1. ARIA role + accessible name (role=button[name=/.../i]).",
+          "2. aria-label attribute match ([aria-label=/.../i]).",
+          "3. Visible text match — find the element whose innerText matches, then click its closest clickable ancestor.",
+          "4. data-testid / data-* attributes if present.",
+          "5. Last resort: structural selectors relative to a known landmark. Avoid absolute CSS paths."
+        ],
+        "fallbackRule": "If a role-based selector returns zero matches, fall back to a text-based locator using the element's visible label, then click its closest clickable ancestor (button, <a>, role='button', tabindex='0', or pointer-cursor element)."
+      },
+      "appliesTo": "All steps 1–9 of facebookPublishingFlow, the composer dialog, menus, toasts, and settings panels."
+    },
+    "verifyPageMode": {
+      "description": "Canonical definition of 'currently acting as the brand Page' that multiple steps reference. Any ONE of the indicators below is sufficient evidence.",
+      "indicators": [
+        "A 'Professional dashboard' link/button is visible in the left nav",
+        "The composer prompt reads 'What's on your mind, <Brand Display Name>?' (brand name, not personal name)",
+        "The top-right profile avatar shows the brand Page logo, not the personal user's photo",
+        "An 'Edit' button is visible on the cover area of the current profile"
+      ],
+      "negativeIndicators": [
+        "A yellow banner 'Switch into <Page Name> Page to start managing it.' is visible",
+        "The composer prompt reads 'What's on your mind, <Personal Name>?'"
+      ]
+    },
+    "steps": [
+      {
+        "step": 1,
+        "title": "Open the brand's Facebook Page",
+        "action": "Navigate to the startingUrl and click the button whose visible label matches brandCatalog[activeBrandId].facebookQuickLinkLabel (case-insensitive).",
+        "selectors": {
+          "brandButton": "role=link[name=<facebookQuickLinkLabel> i]"
+        },
+        "expectedTabBehavior": "Clicking the button opens the Facebook page in a NEW browser tab. Agents must switch focus to the new tab (browser_tabs list → select) before Step 2.",
+        "failureHandling": [
+          "Button missing from page: abort and ask the user — do NOT improvise a Facebook URL.",
+          "New tab does not open within 10s: capture a screenshot and retry once before aborting."
+        ]
+      },
+      {
+        "step": 2,
+        "title": "Switch to the Page profile (if needed)",
+        "action": "Call verifyPageMode. If any positive indicator is already true → skip to Step 3. Otherwise, locate the yellow banner 'Switch into <Page Name> Page to start managing it.' and click the blue 'Switch Now' button.",
+        "selectors": {
+          "switchBanner": "role=region containing text /Switch into .* Page to start managing it/",
+          "switchNowButton": "role=button[name=/Switch Now/i]"
+        },
+        "failureHandling": [
+          "Banner not present AND no positive indicator: the session may be logged out or on the wrong account. Report to the user and stop (agentInvariants.retryPolicy.askUserWhen).",
+          "Clicking Switch Now does not change indicators within 5s: take a fresh snapshot, retry once, then abort."
+        ]
+      },
+      {
+        "step": 3,
+        "title": "Verify page-mode switch (mandatory)",
+        "action": "Re-run verifyPageMode. At least ONE positive indicator must now be present AND no negative indicator may be present. This check is mandatory regardless of whether Step 2 was skipped — see agentInvariants.verify-page-switch.",
+        "onFailure": "Stop immediately. Do NOT proceed to Step 4. Report to the user that the Page switch could not be verified. Posting in this state would publish to the personal profile.",
+        "note": "This supersedes the older instruction that allowed skipping Step 3 when 'Professional dashboard' was already visible. Verification is always required; it is just trivial when already switched."
+      },
+      {
+        "step": 4,
+        "title": "Attach the exported MP4",
+        "action": "Open the composer's file picker and attach the exported MP4. Different runtimes use different techniques — see computerUseTrack vs headlessTrack below.",
+        "computerUseTrack": {
+          "preferredFlow": [
+            "In the composer, click the 'Photo/video' button (or the 'Add photos/videos' prompt in the empty composer). This opens the OS native file picker — EXPECTED and fine for Computer Use.",
+            "In the file picker, navigate to ~/Downloads (or wherever exportFlow.downloadArtifact.downloadLocation resolved to).",
+            "Option A (mouse): double-click the most recent MP4 matching filenamePattern.",
+            "Option B (keyboard, more reliable): press Ctrl+L (or Cmd+Shift+G on macOS) to focus the path/location bar, type or paste the absolute path from `readlink -f` and press Enter.",
+            "The picker closes, returning focus to the composer, and the video upload begins."
+          ],
+          "pathTypingTip": "Resolve the absolute path via bash FIRST (e.g. `readlink -f ~/Downloads/before-after-le-motor.mp4` → /home/user/Downloads/before-after-le-motor.mp4). Then type that fully-resolved path into the picker — not '~/Downloads/...' which some file pickers don't expand.",
+          "visualLandmarks": {
+            "photoVideoButton": "Inside the composer dialog, a button with an image+video icon and the text 'Photo/video'. Usually first in a horizontal row of composer tools.",
+            "emptyStatePrompt": "When the composer is empty, a larger 'Add photos/videos' tile is shown mid-dialog."
+          }
+        },
+        "headlessTrack": {
+          "forRuntime": "headlessBrowserAutomation",
+          "action": "Do NOT click the visible Photo/video button (OS dialog cannot be scripted). Locate the hidden file input and set its files programmatically.",
+          "selectors": {
+            "composerRoot": "role=dialog[name=/Create post/i] OR the 'What's on your mind?' composer region",
+            "fileInput": "input[type='file'][accept*='video']",
+            "fileInputDisambiguation": "If multiple matches exist (profile-picture input, message-attachment input, etc.), pick the one that is a DESCENDANT of the composer root."
+          },
+          "filePathSource": "exportFlow.downloadArtifact — absolute path, no '~' / '%USERPROFILE%' placeholders."
+        },
+        "verification": {
+          "primarySignal": "The upload progress bar DISAPPEARS from the composer AND a video thumbnail/preview appears. For Computer Use: the progress bar is a thin blue line inside the video preview area that fills left-to-right; when it vanishes and you see the first-frame thumbnail, upload+processing is done.",
+          "secondarySignal": "If no explicit progress bar is visible, observe the thumbnail appearing in the composer preview area.",
+          "timeoutMs": 120000,
+          "pollIntervalMs": 2000,
+          "computerUsePollingPattern": "Take a screenshot every 2–3 seconds. Compare to the previous one — if the progress bar position has advanced, keep waiting. If the bar has disappeared and a thumbnail is present, proceed to Step 5.",
+          "reasoning": "Facebook's video upload + server-side processing scales with file size, video duration (up to 90s in this app), and network speed. 30–90s is typical, 2 minutes is a safe upper bound."
+        },
+        "failureHandling": [
+          "File picker doesn't open: the click missed. Take a fresh screenshot and retarget the 'Photo/video' button.",
+          "Progress bar appears but never disappears within 120s: capture a screenshot and report — do NOT re-attach the file (risks duplicate upload).",
+          "No progress bar AND no thumbnail within 120s: shell out (`ls -l <path>`, `file <path>`) to verify the MP4 exists, is readable, and is valid. Then retry once.",
+          "Facebook shows 'Video failed to upload' toast: surface the message to the user and abort.",
+          "(Headless only) Multiple file inputs match and none are descendants of the composer: ask the user to take over."
+        ]
+      },
+      {
+        "step": 5,
+        "title": "Enter the caption",
+        "action": "Focus the contenteditable 'What's on your mind?' div inside the composer, then insert the caption string from aiCopyAssistant's output.",
+        "selectors": {
+          "editor": "[contenteditable='true'][aria-label^=\"What's on your mind\" i], or role=textbox[name=/What's on your mind/i]",
+          "editorTextFallback": "If the above selectors do not match (Facebook's Lexical editor sometimes renders without the expected role/aria), fall back to a text-based locator: find a contenteditable descendant of the composer root whose placeholder/aria contains 'What's on your mind'."
+        },
+        "captionSource": "agent memory (primary, authoritative). The OS clipboard is a useful relay but can be overwritten between steps — never trust it without a write-immediately-before-paste guarantee.",
+        "technique": {
+          "computerUse": [
+            "Click the editor once to focus it (visible cursor should appear inside the 'What's on your mind?' area).",
+            "Put the caption on the OS clipboard RIGHT BEFORE pasting, to ensure no other step has overwritten it. Use bash: on Linux `echo -n \"$CAPTION\" | xclip -selection clipboard` (X11) or `wl-copy < file` (Wayland); on macOS `pbcopy`; on Windows `clip.exe`. The in-browser 'Copy' button in aiCopyAssistant also works but is less reliable across tab-switches.",
+            "Paste with Ctrl+V (Linux/Windows) or Cmd+V (macOS). Lexical treats paste as a single atomic insertion, which BYPASSES the autocomplete hijack described below — this is by far the safest path for Computer Use.",
+            "Only fall back to typing if paste is impossible (e.g. clipboard is gated by a headless environment without xclip/wl-copy). Use the computer tool's type action with a delay (40–80ms per keystroke)."
+          ],
+          "headlessBrowser": [
+            "Click the editor to focus it.",
+            "Prefer keyboard.type with a delay (e.g. Playwright page.keyboard.type(text, { delay: 50 })).",
+            "Never assign innerHTML directly — it bypasses Lexical's internal model and the content is lost on the next keystroke.",
+            "Clipboard-based paste also works but requires permissions (context.grantPermissions(['clipboard-read', 'clipboard-write']))."
+          ]
+        },
+        "lexicalAutocompleteHazard": {
+          "description": "Facebook's composer uses the Lexical rich-text editor. When the agent rapidly types '#', '@', or ':' Lexical spawns an autocomplete overlay (hashtag suggestions, @-mentions, emoji). If the agent then presses Enter for a line break, Lexical HIJACKS that Enter keystroke to select the first autocomplete item, mangling the caption (e.g. '#offer\\n' becomes '#offers_and_deals'). The overlay can also intercept Tab and ArrowUp/Down.",
+          "mitigations": [
+            "Always prefer paste over typing when the OS clipboard is available — paste does not trigger autocomplete.",
+            "If typing, add a 40–80ms delay between keystrokes (most automation libraries accept a `delay` option, e.g. Playwright page.keyboard.type(text, { delay: 50 })).",
+            "After typing any '#hashtag' or '@mention' token, press Escape once to dismiss any open autocomplete popup BEFORE pressing Enter or continuing to the next line.",
+            "Alternatively, type the entire caption first on a single line, then position the caret and insert line breaks last — hashtags-at-the-end (as aiCopyAssistant mandates) make this natural.",
+            "If an autocomplete popup is still visible after typing completes, click a neutral area of the editor (not a menu item) or press Escape to dismiss before moving on."
+          ]
+        },
+        "verification": "Re-read the editor's text content (innerText or aria-valuetext). It must match the caption exactly. If it contains unexpected tokens like '#offers_and_deals' where the source had '#offer', the autocomplete hijack fired — clear the editor (Ctrl+A, Delete) and retry with paste."
+      },
+      {
+        "step": 6,
+        "title": "Confirm audience is Public",
+        "action": "Read the audience dropdown under the Page name (top-left of the composer). If it already says 'Public', do nothing. If it says anything else ('Friends', 'Only me', etc.), click the dropdown, select 'Public', and click the dialog's Done/Save button.",
+        "selectors": {
+          "audienceDropdown": "role=button near text /Public|Friends|Only me/ inside the composer header",
+          "publicOption": "role=menuitemradio[name=/Public/i] OR role=radio[name=/Public/i]",
+          "confirmAudience": "role=button[name=/Done|Save/i] in the audience dialog"
+        },
+        "note": "On many Page contexts there is no separate Save button — selecting Public auto-applies. Only click Save/Done if one is present."
+      },
+      {
+        "step": 7,
+        "title": "(Optional) WhatsApp integration",
+        "action": "Click the composer's overflow menu ('...' button in the bottom-right of the composer). If an option 'Get WhatsApp messages' is present AND enabled, click it. If missing, disabled, or it surfaces a 'Not connected' error, dismiss the menu and continue.",
+        "selectors": {
+          "composerOverflow": "role=button[name=/More options|Add to your post/i] inside the composer",
+          "whatsappItem": "role=menuitem[name=/Get WhatsApp messages/i]",
+          "nextButton": "role=button[name=/^Next$/i] at the bottom of the composer"
+        },
+        "orderOfOperations": "Handle (or dismiss) the overflow menu FIRST. THEN click 'Next' unconditionally to advance to Post settings.",
+        "failureHandling": [
+          "If 'Next' is not visible, the composer may already be on Post settings (Step 8) — check the page title before retrying.",
+          "Any error dialog about WhatsApp should be dismissed, not retried."
+        ]
+      },
+      {
+        "step": 8,
+        "title": "Ensure 'Boost this post' is OFF (financially critical)",
+        "action": "In the 'Post settings' panel, locate the 'Boost this post to discover more leads' toggle. Read its state. If ON, click it once to turn it OFF. Re-read state AFTER clicking to confirm it is OFF before proceeding.",
+        "visualDetection": {
+          "forRuntime": "claudeComputerUse",
+          "locate": "A row labelled 'Boost this post to discover more leads' (or similar wording) with a toggle switch on the right.",
+          "stateCues": {
+            "off": "Toggle pill is visually LEFT-aligned; background is gray / neutral. This is the required state.",
+            "on": "Toggle pill is visually RIGHT-aligned; background is solid blue (#1877F2 / #0866FF). This state is FORBIDDEN at post time."
+          },
+          "verification": "After clicking, TAKE A FRESH SCREENSHOT and re-verify the pill is left-aligned + background is gray. Do not rely on the screenshot you took before the click."
+        },
+        "domDetection": {
+          "forRuntime": "headlessBrowserAutomation",
+          "selectors": {
+            "boostToggle": "role=switch[name=/Boost this post/i] OR role=checkbox[name=/Boost this post/i]"
+          },
+          "stateAttributes": {
+            "off": "aria-checked='false' OR data-checked='false'",
+            "on": "aria-checked='true' OR data-checked='true'"
+          }
+        },
+        "mandatoryVerificationBeforeStep9": "Agent MUST confirm the OFF state AFTER any click, via whichever detection matches its runtime. If state cannot be confirmed as OFF, ABORT — do not proceed to Step 9. See agentInvariants.never-enable-boost.",
+        "severity": "critical"
+      },
+      {
+        "step": 9,
+        "title": "Publish",
+        "action": "Click the final blue 'Post' button. Wait for a success signal before considering the pipeline complete.",
+        "selectors": {
+          "postButton": "role=button[name=/^Post$/i] at the bottom of the Post settings panel"
+        },
+        "successSignals": [
+          "A toast notification appears containing 'Your post is processing' or 'Post published'",
+          "The composer dialog closes and the feed updates with the new post at the top",
+          "The URL changes back to the Page timeline"
+        ],
+        "waitPolicy": {
+          "minWaitMs": 3000,
+          "maxWaitMs": 60000,
+          "recommended": "Poll every 2000ms up to 60s; stop as soon as any success signal is observed.",
+          "onTimeout": "Take a screenshot, report 'Post button clicked but success signal not observed within 60s — please verify manually.' Do NOT click Post a second time (risks duplicate posts)."
+        },
+        "doNotRetryOnSuccess": "If any success signal has been observed, the post is considered published. Never click Post again."
+      }
+    ],
+    "criticalConstraints": [
+      "Verification Step 3 is MANDATORY — always required, even if Step 2 was skipped because positive indicators were already present. This resolves the prior ambiguity in schemaVersion 1.",
+      "Step 4 must bypass OS-level file dialogs by targeting the hidden file input directly (never the visible Photo/video button).",
+      "Step 8 is financially critical — the agent must verify the Boost toggle is OFF via aria-checked before clicking Post, or abort.",
+      "Step 9 must not be retried after any success signal is observed, to avoid duplicate posts."
+    ]
   }
 }
