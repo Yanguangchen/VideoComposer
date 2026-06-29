@@ -22,8 +22,10 @@
         "implicationsForThisDoc": [
           "Target elements by their VISUAL appearance (position, color, label text visible on screen) — see facebookPublishingFlow.selectorStrategy.visualFirst.",
           "For file uploads, CLICK the visible 'Photo/video' button and interact with the OS file picker. This is NATIVE to Computer Use and is the preferred path (not a constraint to bypass).",
-          "For download paths, the agent can open a terminal and `ls -lt ~/Downloads | head` to find the most recently written MP4 — no path-expansion pitfalls.",
-          "DOM-based selector examples in this doc (role=button[name=...], input[type='file']) are informational fallbacks for non-Computer-Use agents and can be ignored."
+          "To locate the exported MP4, go DIRECTLY to the filesystem — open a terminal and `ls -lt ~/Downloads | head`. Do NOT navigate to the browser's downloads tab / chrome://downloads / download shelf — those are unreliable and give no absolute path. See exportFlow.downloadArtifact.downloadLocation.computerUseGuidance.",
+          "DOM-based selector examples in this doc (role=button[name=...], input[type='file']) are informational fallbacks for non-Computer-Use agents and can be ignored.",
+          "SCROLL BEFORE ACTING. A single screenshot never shows the whole UI. See agentInvariants.scroll-before-concluding-absence and agentInvariants.discover-before-act. The dashboard's left sidebar, the Facebook composer dialog, and the Post settings panel all have content below the initial fold.",
+          "Independently-scrolling regions are common (both the dashboard sidebar and the FB composer scroll inside their own containers, not the page). Move the cursor into the target region BEFORE scrolling — scrolling the wrong region is a frequent cause of 'scroll did nothing' hallucinations."
         ]
       },
       "headlessBrowserAutomation": {
@@ -72,6 +74,11 @@
         "severity": "high"
       },
       {
+        "id": "always-customize-background-and-music",
+        "description": "Every exported video MUST have a deliberately chosen background clip and music track — never leave them at the default / 'none' / silent. These are the single biggest contributors to perceived quality on Facebook/Instagram and the agent has full access to the asset library via GET /api/public-media. See videoParameters.optionalInputs.backgroundVideo.agentPolicy and .music.agentPolicy.",
+        "severity": "high"
+      },
+      {
         "id": "desktop-viewport",
         "description": "Drive the app in a desktop viewport (≥1024px width). The mobile layout has a tab bar that changes layout. For Computer Use, ensure the browser window is maximized or at least 1280×800 before starting.",
         "severity": "medium"
@@ -79,6 +86,18 @@
       {
         "id": "fresh-screenshot-per-action",
         "description": "For Computer Use: take a new screenshot before every click/type action. Do not chain multiple actions on a stale screenshot — Facebook's dialogs reflow frequently.",
+        "severity": "high",
+        "appliesToRuntimes": ["claudeComputerUse"]
+      },
+      {
+        "id": "scroll-before-concluding-absence",
+        "description": "ANTI-HALLUCINATION rule. A screenshot shows only one viewport worth of UI. Before reporting that a control, step, button, or option 'does not exist' or 'is missing', the agent MUST scroll the relevant container and re-screenshot. Many interfaces in this pipeline have content below the initial fold — dashboard steps 1–8 + export bar, Facebook's composer dialog, Facebook's Post settings panel, OS file pickers. Concluding absence from a single screenshot is a confabulation failure.",
+        "severity": "critical",
+        "appliesToRuntimes": ["claudeComputerUse"]
+      },
+      {
+        "id": "discover-before-act",
+        "description": "Before starting any multi-step section (dashboard configuration, Facebook composer, Post settings), do a discovery pass: scroll the relevant container from top to bottom, taking screenshots at each stop, to build a mental map of what controls exist and where. Only then begin acting. This is cheaper than chasing hallucinations later.",
         "severity": "high",
         "appliesToRuntimes": ["claudeComputerUse"]
       }
@@ -153,10 +172,52 @@
       "sticky": true,
       "contains": ["App title", "Short description", "Tweaks button", "User avatar", "Sign out", "Light/dark theme toggle"]
     },
+    "scrollingBehavior": {
+      "criticalForComputerUse": true,
+      "summary": "The dashboard uses INDEPENDENTLY-SCROLLABLE COLUMNS — not a normal page scroll. Scrolling the page body does nothing; the agent must scroll the correct column.",
+      "containers": {
+        "leftColumn": {
+          "description": "The sidebar with all configuration steps. Has `overflow-y-auto` on its own flex container — NOT on the page.",
+          "howToScroll": "Move the mouse cursor INSIDE the left column area (roughly the left half of the screen on desktop, or the full width when the mobile 'Configure' tab is active), then scroll the wheel / use PageDown / use scroll-down mouse actions. A page-level scroll or scrolling while the cursor is over the right preview column will NOT scroll the sidebar.",
+          "totalContent": "On a 1080p display with all accordions open, the sidebar is roughly 2–3 viewports tall — everything below step ~3 is below the initial fold. The sticky Export bar at the bottom visually clips another ~60px.",
+          "whatIsBelowTheFold": [
+            "Steps 3 (Logo) onward are typically below the fold on first render.",
+            "The Export bar is sticky at the very bottom — always visible, but do NOT confuse it with the end of content.",
+            "The AI copy section (last step) is the furthest down and is the one most commonly missed."
+          ]
+        },
+        "rightColumn": {
+          "description": "The preview panel with the Remotion <Player>. Also independently scrollable on desktop (`lg:overflow-y-auto`).",
+          "howToScroll": "Move the cursor into the right half of the screen and scroll. On mobile, switch to the 'Preview' tab in the top tab bar first."
+        },
+        "pageBody": {
+          "description": "The outer page itself is effectively NOT scrollable — the header is sticky-top, the Export bar is sticky-bottom, and the middle is a flex container that fills the remaining viewport. Scrolling the page body will appear to do nothing.",
+          "implication": "If the agent tries to scroll and 'nothing happens', it is likely scrolling the page body instead of the correct column. Move the cursor into the target column first."
+        }
+      },
+      "accordionBehavior": {
+        "description": "The left column uses GlassCard / DashboardStepAccordion — collapsible cards, one for each step. Each card has an open/close state that is independent.",
+        "implication": "Even if the agent has scrolled to a step, the step's controls may be COLLAPSED. Look for a caret/chevron icon on the right side of the card title. If the card is collapsed (chevron pointing right or down-arrow closed), click the card header to expand it before interacting.",
+        "initialState": "When the dashboard first loads, only one accordion may be open (or multiple) — agents must not assume any particular step is expanded."
+      },
+      "mobileBehavior": {
+        "tabBar": "On screens <1024px, a sticky tab bar appears near the top with two tabs: 'Configure' and 'Preview'. The agent is viewing only one side at a time.",
+        "implication": "If the agent is looking for the preview / player on mobile and can't find it, they are likely on the Configure tab — click 'Preview'. And vice versa."
+      },
+      "computerUseDiscoveryProcedure": [
+        "1. Take an initial screenshot of the dashboard after sign-in.",
+        "2. Identify the left column's bounding region (typically x: 0–~55% of viewport on desktop).",
+        "3. Move cursor to the middle of the left column.",
+        "4. Scroll down (wheel or PageDown) until no new content appears — note the vertical positions of each step header and which are expanded.",
+        "5. Scroll back to top.",
+        "6. Now plan the work in step order. Before interacting with any step, re-scroll to it and re-screenshot.",
+        "7. REPEAT this discovery loop whenever an element is expected but not visible — never conclude absence without a scroll pass."
+      ]
+    },
     "main": {
       "layout": "Sidebar + preview panel (desktop); mobile tab bar switches between Configure and Preview.",
-      "leftColumn": "Scrollable config area with GlassCard collapsible sections.",
-      "rightColumn": "Sticky Remotion Player (VideoPreview); ssr:false dynamic import."
+      "leftColumn": "Scrollable config area with GlassCard collapsible sections. SEE scrollingBehavior — the sidebar scrolls independently of the page.",
+      "rightColumn": "Sticky Remotion Player (VideoPreview); ssr:false dynamic import. Also scrolls independently on desktop."
     },
     "leftColumn": {
       "pattern": "GlassCard collapsible sections (open/close state per card). Template mode selected via TemplateModePills at the top, sticky.",
@@ -290,16 +351,62 @@
     "optionalInputs": {
       "backgroundVideo": {
         "required": false,
-        "default": "none",
-        "note": "Background clip selector in the 'Background & music' step. Listed by GET /api/public-media. Leave unset unless the user provides one."
+        "technicallyOptional": true,
+        "agentPolicy": "ALWAYS CUSTOMIZE. Do not leave the background at the default / 'none'. Every exported video should have a deliberately chosen background clip that reinforces the brand and the content.",
+        "selectionHeuristic": [
+          "Fetch the available clips from GET /api/public-media (the server returns { backgrounds: MediaAsset[] }). Read the list BEFORE picking.",
+          "Pick a clip whose vibe matches the brand category (see brandCatalog[].facebookQuickLinkSection): beauty salons → soft/clean/aesthetic clips; automobile → dynamic/modern/street clips; maid agencies → warm/domestic clips; car-leasing → sleek/professional clips.",
+          "Prefer a clip that DOES NOT visually compete with the foreground photo (avoid busy clips when the hero image is also busy; prefer solid/gradient/bokeh clips when the hero has fine detail).",
+          "Rotate selection across exports — do not reuse the same background for every video of the same brand. Keep a mental record (or ask the user) of what was used recently and pick something fresh.",
+          "If no clip seems appropriate (e.g. all clips clash with the content), tell the user and suggest adding a new clip to public/backgrounds/ rather than silently falling back to 'none'."
+        ],
+        "componentLocation": "'Background & music' step accordion (step id: style). Use the background <select> in BackgroundMusicControls.",
+        "apiEndpoint": "GET /api/public-media → { backgrounds: MediaAsset[] }"
       },
       "music": {
         "required": false,
-        "default": "none",
-        "note": "Music selector in the 'Background & music' step. Listed by GET /api/public-media."
+        "technicallyOptional": true,
+        "agentPolicy": "ALWAYS CUSTOMIZE. Pick a music track deliberately — do not leave at 'none'. Social video without audio drastically underperforms on Facebook/Instagram.",
+        "selectionHeuristic": [
+          "Fetch the available tracks from GET /api/public-media (→ { music: MediaAsset[] }). Read the list BEFORE picking.",
+          "Match tempo/mood to the content: before/after transformation → upbeat or uplifting track; single-image showcase → calmer, aesthetic track; carousel → energetic/rhythmic track that sustains attention across slides.",
+          "Match genre to the brand: beauty/nails/skin → chill / lofi / indie-pop; automobile → electronic / cinematic / hip-hop; employment agency → uplifting / corporate-warm.",
+          "Respect the video length — if durationSeconds is short (≤6s), pick a track with a strong opening hook rather than a slow build.",
+          "Rotate across exports — avoid the same song in back-to-back videos for the same brand.",
+          "If no track fits, tell the user and suggest adding one to public/music/ rather than exporting silent video."
+        ],
+        "componentLocation": "'Background & music' step accordion. Use the music <select> in BackgroundMusicControls.",
+        "apiEndpoint": "GET /api/public-media → { music: MediaAsset[] }"
       },
-      "subtitleText": { "required": false, "default": "" },
-      "priceTag": { "required": false, "default": { "show": false, "text": "" } }
+      "subtitleText": {
+        "required": false,
+        "default": "",
+        "agentPolicy": "Use creatively when the headline alone doesn't tell the full story. A short subtitle (≤ ~8 words) can reinforce the offer, set expectation, or add urgency (e.g. 'Limited slots this week'). Keep empty if the image + headline already communicate the message — avoid visual clutter."
+      },
+      "priceTag": {
+        "required": false,
+        "default": { "show": false, "text": "" },
+        "agentPolicy": "Enable (showPriceTag: true) when the content is a promo or has a concrete price point (e.g. '$49', '20% OFF', 'From $299/mo'). Leave off for brand/awareness content. Format: short, high-contrast, under 12 chars."
+      }
+    },
+    "creativeDirectionSummary": {
+      "description": "The agent is a video director, not a form-filler. Every export should feel intentional.",
+      "mustCustomize": [
+        "Template mode (based on available images)",
+        "Background video clip (never leave at default — see optionalInputs.backgroundVideo.agentPolicy)",
+        "Music track (never leave silent — see optionalInputs.music.agentPolicy)",
+        "Caption copy (generated via aiCopyAssistant with a concrete prompt, not a generic one)"
+      ],
+      "shouldCustomizeWhenItAddsValue": [
+        "Subtitle text (only when it sharpens the message)",
+        "Price tag (only when the content is a promo with a real price/discount)",
+        "Text colors (only when the defaults clash with the chosen background — use brandCatalog.primaryHex as fallback)"
+      ],
+      "leaveAloneUnlessUserAsks": [
+        "textSizeScale (default 1 works for most content)",
+        "logoOffsetXPx / logoOffsetYPx (default [0,0])",
+        "Font pickers (dashboard defaults are tuned)"
+      ]
     }
   },
   "showLogoToggle": {
@@ -356,14 +463,29 @@
           "claudeComputerUseVm": "~/Downloads/ (the VM's default; resolve with `echo $HOME` or `ls -d ~/Downloads` via bash)"
         },
         "computerUseGuidance": {
-          "preferred": "After clicking Export MP4 and seeing the browser's download shelf confirm completion, open a terminal and run: `ls -lt ~/Downloads/*.mp4 | head -5`. The newest file is the export. Capture its absolute path from `readlink -f <file>` or `ls -1 ~/Downloads/<filename>`.",
-          "exampleCommands": [
-            "ls -lt ~/Downloads | head -5",
-            "ls -t ~/Downloads/*.mp4 2>/dev/null | head -1",
-            "readlink -f \"$(ls -t ~/Downloads/before-after-*.mp4 | head -1)\""
+          "preferred": "AFTER clicking Export MP4 and waiting for the render to finish, go DIRECTLY to the filesystem — do NOT rely on the browser's downloads UI. Open a terminal and list the Downloads folder. The newest MP4 matching filenamePattern is the export.",
+          "doNotDoThis": [
+            "Do NOT open the browser's chrome://downloads (or equivalent 'Downloads' tab) to find the file. That UI often shows stale entries, may be cleared, varies by browser, and does NOT give you an absolute filesystem path.",
+            "Do NOT rely on the browser's download shelf at the bottom of the window — it may be dismissed, auto-hidden, or absent depending on the browser/version (Chrome removed it entirely in favor of the side-panel shelf).",
+            "Do NOT right-click a browser download entry and read its path from a tooltip — Computer Use cannot reliably extract that."
           ],
-          "alternativeVisual": "The browser's download shelf (bottom of the window) shows the filename and a 'Show in folder' option — the agent can visually confirm the filename matches filenamePattern before shelling out.",
-          "note": "Computer Use does NOT hit the tilde/percent trap — tilde is expanded natively by the shell. Just avoid passing '~' through non-shell contexts (e.g. typing it into a GUI file path field)."
+          "doThisInstead": {
+            "step1": "Open a terminal (e.g. click the Files/Terminal icon in the taskbar, or use a keyboard shortcut like Ctrl+Alt+T on typical Linux VMs).",
+            "step2": "Run: `ls -lt ~/Downloads/*.mp4 2>/dev/null | head -5` — this lists the 5 most recently modified MP4 files in the Downloads folder.",
+            "step3": "The newest file (top row) is the export. Confirm its name matches exportFlow.downloadArtifact.filenamePattern (e.g. `before-after-le-motor.mp4`).",
+            "step4": "Capture the absolute path: `readlink -f \"$(ls -t ~/Downloads/<prefix>-<brandId>*.mp4 | head -1)\"`. Store this absolute path in agent memory — it is the value you will pass to Facebook's file picker in Step 4 of facebookPublishingFlow.",
+            "step5": "If the file is missing, WAIT a few seconds and retry `ls` once — some browsers write a `.crdownload` / `.part` temp file during the transfer and rename it to `.mp4` only when complete. Do NOT grab a `.crdownload` file."
+          },
+          "exampleCommands": [
+            "ls -lt ~/Downloads | head -10",
+            "ls -lt ~/Downloads/*.mp4 2>/dev/null | head -5",
+            "ls -t ~/Downloads/before-after-le-motor.mp4 2>/dev/null | head -1",
+            "readlink -f \"$(ls -t ~/Downloads/before-after-*.mp4 | head -1)\"",
+            "# Guard against partial downloads:",
+            "ls -t ~/Downloads/*.mp4 2>/dev/null | grep -v '\\.crdownload$' | grep -v '\\.part$' | head -1"
+          ],
+          "onlyFallbackIfNoTerminal": "If no terminal is available (rare in a Computer Use VM, but possible), open a file manager (Nautilus, Files, Finder, Explorer) and navigate to the Downloads folder visually. Still do NOT use the browser's downloads UI.",
+          "note": "Computer Use does NOT hit the tilde/percent trap — tilde is expanded natively by the shell. Just avoid passing '~' through non-shell contexts (e.g. typing it into a GUI file-path field)."
         },
         "headlessBrowserGuidance": {
           "warning": "Playwright/Puppeteer/Selenium APIs do NOT expand '~' or '%USERPROFILE%'. Passing those literally to setInputFiles() / fs.readFile / open() throws ENOENT.",
@@ -571,6 +693,36 @@
       "The Facebook account in the current browser session is logged in as a user who has Page admin rights for the target brand Page",
       "Desktop viewport (agentInvariants.desktop-viewport)"
     ],
+    "scrollingBehavior": {
+      "criticalForComputerUse": true,
+      "summary": "Facebook's composer and settings panels are MODAL DIALOGS with their own internal scroll — separate from the main feed scroll behind them.",
+      "containers": {
+        "composerDialog": {
+          "description": "The 'Create post' dialog that appears after clicking the 'What's on your mind?' area. It is a fixed-size modal with its own scrollbar on the right edge of the dialog.",
+          "howToScroll": "Move the cursor INSIDE the dialog (not on the darkened overlay behind it, not on the feed that is visible underneath) and scroll. Scrolling outside the dialog will either do nothing or scroll the background feed — which is not what you want.",
+          "whatIsBelowTheFold": [
+            "The composer's footer with 'Add to your post' button row ('Photo/video', '...', etc.) is usually above the fold.",
+            "The audience dropdown may be at the TOP of the dialog; the 'Next' button is at the BOTTOM.",
+            "If the dialog is tall (e.g. with a large video preview), the '...' overflow menu button can scroll off-screen — scroll down within the dialog to reach it."
+          ]
+        },
+        "postSettingsPanel": {
+          "description": "After clicking 'Next', a 'Post settings' panel appears. It also scrolls internally.",
+          "whatIsBelowTheFold": [
+            "The 'Boost this post' toggle may be partway down — scroll if not visible.",
+            "The final blue 'Post' button is at the bottom — scroll to reach it."
+          ]
+        },
+        "menuOverlays": {
+          "description": "Dropdown menus (audience selector, composer overflow '...' menu) are themselves scrollable if they contain many items.",
+          "howToScroll": "Position cursor over the menu and scroll. Do not dismiss the menu by clicking outside."
+        }
+      },
+      "computerUseDiscoveryProcedure": [
+        "When a new FB dialog opens, before clicking anything: move cursor to the dialog center, scroll all the way to the top, screenshot, then scroll all the way to the bottom, screenshot. Use both to build a mental map of controls.",
+        "If a labelled control (e.g. 'Boost this post', 'Next', audience dropdown) is not visible on the current screenshot, SCROLL THE DIALOG before reporting it as missing. See agentInvariants.scroll-before-concluding-absence."
+      ]
+    },
     "selectorStrategy": {
       "description": "Facebook's DOM is heavily obfuscated (React compiler output + A/B tests). Use the track matching your runtime.",
       "visualFirst": {
