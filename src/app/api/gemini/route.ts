@@ -1,7 +1,7 @@
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
-const GEMINI_MODEL = "gemini-3.5-flash-low";
+const GEMINI_MODEL = "gemini-2.5-flash";
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 
 const MAX_BRAND_CONTEXT_CHARS = 8000;
