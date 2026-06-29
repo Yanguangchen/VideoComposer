@@ -12,8 +12,5 @@ export const LOGO_OFFSET_STEP_PX = 4;
 
 export function clampLogoOffset(value: number): number {
   if (!Number.isFinite(value)) return 0;
-  return Math.min(
-    MAX_LOGO_OFFSET_PX,
-    Math.max(MIN_LOGO_OFFSET_PX, value),
-  );
+  return Math.min(MAX_LOGO_OFFSET_PX, Math.max(MIN_LOGO_OFFSET_PX, value));
 }

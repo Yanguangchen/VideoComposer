@@ -131,9 +131,7 @@ export async function uploadLibraryMedia(
         task.on(
           "state_changed",
           (snap) => {
-            const ratio = snap.totalBytes
-              ? snap.bytesTransferred / snap.totalBytes
-              : 0;
+            const ratio = snap.totalBytes ? snap.bytesTransferred / snap.totalBytes : 0;
             onProgress?.({
               filename: file.name,
               ratio: Math.min(0.99, ratio),
@@ -182,8 +180,7 @@ export async function uploadLibraryMedia(
                 uploadedAt: Date.now(),
               });
             } catch (err) {
-              const message =
-                err instanceof Error ? err.message : String(err);
+              const message = err instanceof Error ? err.message : String(err);
               onProgress?.({
                 filename: file.name,
                 ratio: 0.99,
@@ -199,9 +196,7 @@ export async function uploadLibraryMedia(
 
   const results = await Promise.allSettled(jobs);
   return results
-    .filter(
-      (r): r is PromiseFulfilledResult<LibraryAsset> => r.status === "fulfilled",
-    )
+    .filter((r): r is PromiseFulfilledResult<LibraryAsset> => r.status === "fulfilled")
     .map((r) => r.value);
 }
 

@@ -1,4 +1,5 @@
 export const SERVICE_FONT_OPTIONS = [
+  { id: "outfit", label: "Outfit" },
   { id: "inter", label: "Inter" },
   { id: "montserrat", label: "Montserrat" },
   { id: "oswald", label: "Oswald" },
@@ -12,7 +13,7 @@ export const SERVICE_FONT_OPTIONS = [
 export type ServiceFontId = (typeof SERVICE_FONT_OPTIONS)[number]["id"];
 
 /** Default for brand title, service line, and carousel captions. */
-export const DEFAULT_SERVICE_FONT_ID: ServiceFontId = "montserrat";
+export const DEFAULT_SERVICE_FONT_ID: ServiceFontId = "outfit";
 
 export function isServiceFontId(id: string): id is ServiceFontId {
   return SERVICE_FONT_OPTIONS.some((o) => o.id === id);

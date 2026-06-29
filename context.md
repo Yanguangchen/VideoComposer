@@ -7,57 +7,58 @@ A **Next.js** dashboard to build **multi-brand marketing videos**: pick a templa
 ## Stack
 
 - **Next.js 15** (App Router), **React 18**, **TypeScript**
-- **Tailwind CSS** + **next-themes** (dark/light)
+- **Tailwind CSS** + **next-themes** (dark/light mode featuring custom animated Google Day/Night switch and accessible high-contrast light mode styling)
 - **Remotion 4** — compositions in `src/remotion/`, preview with `@remotion/player`, export with `@remotion/renderer` + `@remotion/bundler`
+- **Testing & Verification** — **Vitest v3** native runner (`npm test`) with mock hoisting (`vi.hoisted`) and unified verification pipeline (`npm run verify`)
 - **react-dropzone** — uploads; **react-easy-crop** — optional crop modal after upload
-- **Google Fonts** — loaded in `src/app/layout.tsx` via `<link>` (`src/config/google-fonts.ts`); templates also preload via `@remotion/google-fonts` in `src/remotion/service-font-loaders.ts`
+- **Typography** — **Outfit** global font loaded via `next/font/google` and enforced across DOM elements (`globals.css`); templates also preload via `@remotion/google-fonts` in `src/remotion/service-font-loaders.ts`
 
 ## Directory map
 
-| Path | Role |
-|------|------|
-| `src/app/page.tsx` | Server page; renders `DashboardClient` |
-| `src/app/dashboard-client.tsx` | Main client UI: brand, logos (incl. position nudge), media, text, fonts, video text size, duration, preview, export |
-| `src/app/layout.tsx` | Root layout; ThemeProvider, viewport, PWA metadata |
-| `src/app/globals.css` | Tailwind entry + mobile/safe-area tweaks |
-| `src/app/api/render/route.ts` | `POST` — bundles Remotion, `renderMedia`, returns MP4 bytes; **normalizes** `textSizeScale` and logo offsets before render (see **Render tuning** + **Input normalization**) |
-| `src/app/api/render/progress/route.ts` | `GET` — polling progress by `sessionId` (in-memory store) |
-| `src/app/api/public-media/route.ts` | Lists scanned `public/` music & backgrounds |
-| `src/app/api/brand-logos/[brandId]/route.ts` | Lists logo files per brand folder |
-| `src/app/api/gemini/route.ts` | `POST` — proxies a prompt + brand context to **Gemini 2.5 Flash**; reads `GEMINI_API_KEY` **server-side only** (never `NEXT_PUBLIC_*`) |
-| `src/remotion/index.ts` | Remotion bundle **entry** — `registerRoot(RemotionRoot)` |
-| `src/remotion/Root.tsx` | Three `<Composition>` definitions + default props |
-| `src/remotion/*-template.tsx` | **BeforeAfter**, **SingleImage**, **Carousel** scene components |
-| `src/remotion/webpack-override.ts` | Webpack alias `@` → `src` for the Remotion bundler (mirrors `tsconfig` paths) |
-| `src/remotion/price-tag-badge.tsx` | Pill UI for optional price line |
-| `src/config/brands.ts` | Brand ids, display names, logo folders under `public/` |
-| `src/config/service-fonts.ts` | Service/headline font ids and defaults |
-| `src/config/template-modes.ts` | Template mode ids ↔ composition ids |
-| `src/config/video-duration.ts` | Duration clamping / frames |
-| `src/config/video-text-scale.ts` | Min/max/default and `clampVideoTextSizeScale` for on-video typography |
-| `src/config/logo-offset.ts` | Min/max/step and `clampLogoOffset` for logo `translate` nudge (px) |
-| `src/config/background-music.ts` | URL helpers for `public/` assets |
-| `src/components/VideoPreview.tsx` | `<Player>` per mode; **key** includes font ids, `textSizeScale`, and logo offsets so the player remounts when those change |
-| `src/components/VideoTextSizeSlider.tsx` | Range control in step 5 — scales all template text (preview + export) |
-| `src/components/LogoPositionControls.tsx` | Horizontal/vertical sliders in step 2 — disabled when logo hidden |
-| `src/components/RenderAndDownload.tsx` | Export button, progress bar, errors, link to Facebook Pages dashboard |
-| `src/components/MediaUploader.tsx` | Dropzone + preview + **Crop & position** (opens `ImageCropModal`) |
-| `src/components/AiCopyAssistant.tsx` | **AI copy** section — editable `brand_context` textarea + prompt + generate (Gemini) + **Copy** button |
-| `src/lib/brand-context.ts` | Firestore helpers for `brandContexts/{brandId}` (`getBrandContext`, `saveBrandContext`, `subscribeBrandContext`) |
-| `src/components/ImageCropModal.tsx` | `react-easy-crop` modal; outputs JPEG via `getCroppedImageBlob` |
-| `src/components/CarouselSlidesEditor.tsx` | Per-slide image + title; uses `MediaUploader` |
-| `src/lib/get-cropped-image.ts` | Canvas export from crop pixels (max dimension 1920) |
-| `src/lib/render-progress-store.ts` | Session progress for export (same Node process as API) |
-| `src/lib/render-error.ts` | User-facing render error messages (SIGKILL, module missing, etc.) |
-| `src/lib/render-environment.ts` | Blocks export on Vercel/Netlify serverless unless escape hatch env |
-| `src/lib/simulated-auth.ts` | Simulated sign-in gate (localStorage) |
-| `Dockerfile` | Production image: FFmpeg, Chrome libs, Next standalone, **full `node_modules` + `src/` + `public/`**, `ensureBrowser()` in runner |
-| `railway.toml` | Force `DOCKERFILE` builder; deploy restart policy |
-| `docs/deployment.md` | Long-form: why Docker, Railway checklist, OOM/thread notes, troubleshooting |
-| `scripts/verify-remotion.ts` | Bundles Remotion entry without `next build` — run `npm run verify:remotion` |
-| `public/` | Static assets: `assets/logos/<brand-id>/`, optional `backgrounds/`, `music/` |
-| `public/VideoComposerInstruction.json` | **AI agent instructions** (JSON): app flow, APIs, template rules, deployment notes; served at **`/VideoComposerInstruction.json`** |
-| `src/components/AiAgentsInstructionFab.tsx` | Floating **bottom-right** control — opens the instruction JSON in a new browser tab (shown after auth gate, `z-index` above sign-in overlay) |
+| Path                                         | Role                                                                                                                                                                         |
+| -------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/app/page.tsx`                           | Server page; renders `DashboardClient`                                                                                                                                       |
+| `src/app/dashboard-client.tsx`               | Main client UI: brand, logos (incl. position nudge), media, text, fonts, video text size, duration, preview, export                                                          |
+| `src/app/layout.tsx`                         | Root layout; ThemeProvider, viewport, PWA metadata                                                                                                                           |
+| `src/app/globals.css`                        | Tailwind entry + mobile/safe-area tweaks                                                                                                                                     |
+| `src/app/api/render/route.ts`                | `POST` — bundles Remotion, `renderMedia`, returns MP4 bytes; **normalizes** `textSizeScale` and logo offsets before render (see **Render tuning** + **Input normalization**) |
+| `src/app/api/render/progress/route.ts`       | `GET` — polling progress by `sessionId` (in-memory store)                                                                                                                    |
+| `src/app/api/public-media/route.ts`          | Lists scanned `public/` music & backgrounds                                                                                                                                  |
+| `src/app/api/brand-logos/[brandId]/route.ts` | Lists logo files per brand folder                                                                                                                                            |
+| `src/app/api/gemini/route.ts`                | `POST` — proxies a prompt + brand context to **Gemini 3.5 Flash Low**; reads `GEMINI_API_KEY` **server-side only** (never `NEXT_PUBLIC_*`)                                       |
+| `src/remotion/index.ts`                      | Remotion bundle **entry** — `registerRoot(RemotionRoot)`                                                                                                                     |
+| `src/remotion/Root.tsx`                      | Three `<Composition>` definitions + default props                                                                                                                            |
+| `src/remotion/*-template.tsx`                | **BeforeAfter**, **SingleImage**, **Carousel** scene components                                                                                                              |
+| `src/remotion/webpack-override.ts`           | Webpack alias `@` → `src` for the Remotion bundler (mirrors `tsconfig` paths)                                                                                                |
+| `src/remotion/price-tag-badge.tsx`           | Pill UI for optional price line                                                                                                                                              |
+| `src/config/brands.ts`                       | Brand ids, display names, logo folders under `public/`                                                                                                                       |
+| `src/config/service-fonts.ts`                | Service/headline font ids and defaults                                                                                                                                       |
+| `src/config/template-modes.ts`               | Template mode ids ↔ composition ids                                                                                                                                          |
+| `src/config/video-duration.ts`               | Duration clamping / frames                                                                                                                                                   |
+| `src/config/video-text-scale.ts`             | Min/max/default and `clampVideoTextSizeScale` for on-video typography                                                                                                        |
+| `src/config/logo-offset.ts`                  | Min/max/step and `clampLogoOffset` for logo `translate` nudge (px)                                                                                                           |
+| `src/config/background-music.ts`             | URL helpers for `public/` assets                                                                                                                                             |
+| `src/components/VideoPreview.tsx`            | `<Player>` per mode; **key** includes font ids, `textSizeScale`, and logo offsets so the player remounts when those change                                                   |
+| `src/components/VideoTextSizeSlider.tsx`     | Range control in step 5 — scales all template text (preview + export)                                                                                                        |
+| `src/components/LogoPositionControls.tsx`    | Horizontal/vertical sliders in step 2 — disabled when logo hidden                                                                                                            |
+| `src/components/RenderAndDownload.tsx`       | Export button, progress bar, errors, link to Facebook Pages dashboard                                                                                                        |
+| `src/components/MediaUploader.tsx`           | Dropzone + preview + **Crop & position** (opens `ImageCropModal`)                                                                                                            |
+| `src/components/AiCopyAssistant.tsx`         | **AI copy** section — editable `brand_context` textarea + prompt + generate (Gemini) + **Copy** button                                                                       |
+| `src/lib/brand-context.ts`                   | Firestore helpers for `brandContexts/{brandId}` (`getBrandContext`, `saveBrandContext`, `subscribeBrandContext`)                                                             |
+| `src/components/ImageCropModal.tsx`          | `react-easy-crop` modal; outputs JPEG via `getCroppedImageBlob`                                                                                                              |
+| `src/components/CarouselSlidesEditor.tsx`    | Per-slide image + title; uses `MediaUploader`                                                                                                                                |
+| `src/lib/get-cropped-image.ts`               | Canvas export from crop pixels (max dimension 1920)                                                                                                                          |
+| `src/lib/render-progress-store.ts`           | Session progress for export (same Node process as API)                                                                                                                       |
+| `src/lib/render-error.ts`                    | User-facing render error messages (SIGKILL, module missing, etc.)                                                                                                            |
+| `src/lib/render-environment.ts`              | Blocks export on Vercel/Netlify serverless unless escape hatch env                                                                                                           |
+| `src/lib/simulated-auth.ts`                  | Simulated sign-in gate (localStorage)                                                                                                                                        |
+| `Dockerfile`                                 | Production image: FFmpeg, Chrome libs, Next standalone, **full `node_modules` + `src/` + `public/`**, `ensureBrowser()` in runner                                            |
+| `railway.toml`                               | Force `DOCKERFILE` builder; deploy restart policy                                                                                                                            |
+| `docs/deployment.md`                         | Long-form: why Docker, Railway checklist, OOM/thread notes, troubleshooting                                                                                                  |
+| `scripts/verify-remotion.ts`                 | Bundles Remotion entry without `next build` — run `npm run verify:remotion`                                                                                                  |
+| `public/`                                    | Static assets: `assets/logos/<brand-id>/`, optional `backgrounds/`, `music/`                                                                                                 |
+| `public/VideoComposerInstruction.json`       | **AI agent instructions** (JSON): app flow, APIs, template rules, deployment notes; served at **`/VideoComposerInstruction.json`**                                           |
+| `src/components/AiAgentsInstructionFab.tsx`  | Floating **bottom-right** control — opens the instruction JSON in a new browser tab (shown after auth gate, `z-index` above sign-in overlay)                                 |
 
 ## AI agent instructions
 
@@ -152,7 +153,7 @@ After upload, **Crop & position** opens **`ImageCropModal`**: pan/zoom, aspect p
 The last left-column section — **AI copy** — generates Facebook / Instagram captions per brand.
 
 - **Brand context** — free-form plaintext stored at Firestore `brandContexts/{brandId}` (`{ brandId, text, updatedAt }`). Edited in-app, live-synced via `onSnapshot`, clamped to **8 000 chars** (`BRAND_CONTEXT_MAX_CHARS` in `src/lib/brand-context.ts`).
-- **Prompt + Generate** — posts `{ brandName, brandContext, userPrompt }` to `POST /api/gemini`, which calls **Gemini 2.5 Flash** (`generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent`). The server injects a system-style preamble instructing Gemini to output plain-text captions with a hook, message, CTA, and hashtags.
+- **Prompt + Generate** — posts `{ brandName, brandContext, userPrompt }` to `POST /api/gemini`, which calls **Gemini 3.5 Flash Low** (`generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-low:generateContent`). The server injects a system-style preamble instructing Gemini to output plain-text captions with a hook, message, CTA, and hashtags.
 - **Copy button** — writes the output to the clipboard via `navigator.clipboard.writeText`. No dashboard state is mutated (the caption is copy-paste-only; videos are rendered separately).
 - **Key is server-only** — `GEMINI_API_KEY` is read inside the API route and **must not** be prefixed `NEXT_PUBLIC_*`. Setting it as a `NEXT_PUBLIC_*` var would inline it into every visitor's browser bundle.
 - **Opt-out** — missing `GEMINI_API_KEY` → `/api/gemini` returns **503** with a configuration error; missing Firebase → the panel shows the "Firebase not configured" notice (same as the media library).
@@ -184,41 +185,41 @@ Template input props (`beforeAfterProps`, `singleImageProps`, `carouselProps`) a
 
 Steps rendered via `DashboardStepAccordion` (numbered cards with accent colors). Step ids and the components they host:
 
-| # | Step | Component(s) |
-|---|------|--------------|
-| 1 | Layout | `TemplateModeToggle` |
-| 2 | Brand | `BrandSelector` |
-| 3 | Logo | `LogoPicker` + `LogoPositionControls` (+ show/hide) |
-| 4 | Video text colors | `VideoTextColors` |
-| 5 | Background & music | `BackgroundMusicControls` |
-| 6 | Text & fonts | `ServiceFontPicker`, subtitle/price inputs, `VideoTextSizeSlider` |
-| 7 | Video length | `VideoDurationControl` |
-| 8 | Photos | `MediaUploader` ×N (or `CarouselSlidesEditor` for carousel) |
-| — | Export | `RenderAndDownload` |
-| — | Preview | `VideoPreview` |
+| #   | Step               | Component(s)                                                      |
+| --- | ------------------ | ----------------------------------------------------------------- |
+| 1   | Layout             | `TemplateModeToggle`                                              |
+| 2   | Brand              | `BrandSelector`                                                   |
+| 3   | Logo               | `LogoPicker` + `LogoPositionControls` (+ show/hide)               |
+| 4   | Video text colors  | `VideoTextColors`                                                 |
+| 5   | Background & music | `BackgroundMusicControls`                                         |
+| 6   | Text & fonts       | `ServiceFontPicker`, subtitle/price inputs, `VideoTextSizeSlider` |
+| 7   | Video length       | `VideoDurationControl`                                            |
+| 8   | Photos             | `MediaUploader` ×N (or `CarouselSlidesEditor` for carousel)       |
+| —   | Export             | `RenderAndDownload`                                               |
+| —   | Preview            | `VideoPreview`                                                    |
 
 ## Component catalog
 
-| Component | Props (summary) | Role |
-|-----------|-----------------|------|
-| `DashboardStepAccordion` | `{ id, title, accent, openId, onOpenChange, children }` | Collapsible step card; 9 accent palettes. |
-| `BrandSelector` | `{ brands, activeBrandId, onSelect }` | Grid of brand buttons; active is highlighted. |
-| `TemplateModeToggle` | `{ value, onChange }` | 3-way mode switch. |
-| `LogoPicker` | `{ brand, value, onChange }` | Fetches `/api/brand-logos/[brandId]`, shows dropdown + preview, persists per-brand selection in `localStorage` (`LOGO_STORAGE_PREFIX`). |
-| `LogoPositionControls` | `{ offsetXPx, offsetYPx, onOffsetXChange, onOffsetYChange, disabled? }` | X/Y sliders, reset button. |
-| `MediaUploader` | `{ label, description, imageSrc, onFile, sourceFile?, enableCrop?, cropAspect? }` | Dropzone + preview + "Crop & position" button. |
-| `ImageCropModal` | `{ open, imageSrc, onClose, onApply, fileNameHint?, defaultAspect? }` | `react-easy-crop` → `getCroppedImageBlob` → JPEG. |
-| `CarouselSlidesEditor` | `{ slides, onChange }` | Up to `MAX_CAROUSEL_SLIDES` rows; each has title + `MediaUploader`. |
-| `BackgroundMusicControls` | `{ backgroundOptions, musicOptions, backgroundPath, musicPath, onBackgroundChange, onMusicChange, mediaLoading }` | Two selects for public-asset paths. |
-| `ServiceFontPicker` | `{ value, onChange, label?, description? }` | Service/headline font id picker. |
-| `VideoTextColors` | `{ headlineColorHex, captionColorHex, defaultHeadlineHex, onHeadlineChange, onCaptionChange }` | Native color inputs + hex fields + reset. |
-| `VideoDurationControl` | `{ durationSeconds, onChange }` | Clamped seconds slider. |
-| `VideoTextSizeSlider` | `{ value, onChange }` | Unified scale (65–165 %). |
-| `VideoPreview` | `{ mode, beforeAfterProps, singleImageProps, carouselProps }` | `<Player>` from `@remotion/player`; `key` includes fonts/scale/offsets to force remount. |
-| `RenderAndDownload` | `{ disabled, isRendering, compositionId, getInputProps, onBusyChange }` | Orchestrates sessionId, progress polling, `POST /api/render`, MP4 download. |
-| `SignInModal` | `{ onSuccess }` | Simulated auth gate. |
-| `AiAgentsInstructionFab` | — | Floating button → opens `/VideoComposerInstruction.json`. |
-| `ThemeProvider` / `ThemeToggle` | — | `next-themes` wrapper + toggle. |
+| Component                       | Props (summary)                                                                                                   | Role                                                                                                                                    |
+| ------------------------------- | ----------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `DashboardStepAccordion`        | `{ id, title, accent, openId, onOpenChange, children }`                                                           | Collapsible step card; 9 accent palettes.                                                                                               |
+| `BrandSelector`                 | `{ brands, activeBrandId, onSelect }`                                                                             | Grid of brand buttons; active is highlighted.                                                                                           |
+| `TemplateModeToggle`            | `{ value, onChange }`                                                                                             | 3-way mode switch.                                                                                                                      |
+| `LogoPicker`                    | `{ brand, value, onChange }`                                                                                      | Fetches `/api/brand-logos/[brandId]`, shows dropdown + preview, persists per-brand selection in `localStorage` (`LOGO_STORAGE_PREFIX`). |
+| `LogoPositionControls`          | `{ offsetXPx, offsetYPx, onOffsetXChange, onOffsetYChange, disabled? }`                                           | X/Y sliders, reset button.                                                                                                              |
+| `MediaUploader`                 | `{ label, description, imageSrc, onFile, sourceFile?, enableCrop?, cropAspect? }`                                 | Dropzone + preview + "Crop & position" button.                                                                                          |
+| `ImageCropModal`                | `{ open, imageSrc, onClose, onApply, fileNameHint?, defaultAspect? }`                                             | `react-easy-crop` → `getCroppedImageBlob` → JPEG.                                                                                       |
+| `CarouselSlidesEditor`          | `{ slides, onChange }`                                                                                            | Up to `MAX_CAROUSEL_SLIDES` rows; each has title + `MediaUploader`.                                                                     |
+| `BackgroundMusicControls`       | `{ backgroundOptions, musicOptions, backgroundPath, musicPath, onBackgroundChange, onMusicChange, mediaLoading }` | Two selects for public-asset paths.                                                                                                     |
+| `ServiceFontPicker`             | `{ value, onChange, label?, description? }`                                                                       | Service/headline font id picker.                                                                                                        |
+| `VideoTextColors`               | `{ headlineColorHex, captionColorHex, defaultHeadlineHex, onHeadlineChange, onCaptionChange }`                    | Native color inputs + hex fields + reset.                                                                                               |
+| `VideoDurationControl`          | `{ durationSeconds, onChange }`                                                                                   | Clamped seconds slider.                                                                                                                 |
+| `VideoTextSizeSlider`           | `{ value, onChange }`                                                                                             | Unified scale (65–165 %).                                                                                                               |
+| `VideoPreview`                  | `{ mode, beforeAfterProps, singleImageProps, carouselProps }`                                                     | `<Player>` from `@remotion/player`; `key` includes fonts/scale/offsets to force remount.                                                |
+| `RenderAndDownload`             | `{ disabled, isRendering, compositionId, getInputProps, onBusyChange }`                                           | Orchestrates sessionId, progress polling, `POST /api/render`, MP4 download.                                                             |
+| `SignInModal`                   | `{ onSuccess }`                                                                                                   | Simulated auth gate.                                                                                                                    |
+| `AiAgentsInstructionFab`        | —                                                                                                                 | Floating button → opens `/VideoComposerInstruction.json`.                                                                               |
+| `ThemeProvider` / `ThemeToggle` | —                                                                                                                 | `next-themes` wrapper + toggle.                                                                                                         |
 
 ## Remotion templates — input props
 
@@ -237,23 +238,23 @@ logoOffsetXPx, logoOffsetYPx
 
 Mode-specific additions:
 
-| Composition (id) | Extra input props |
-|------------------|-------------------|
-| `BeforeAfter` | `topImageSrc`, `bottomImageSrc`, `showArrow`, `serviceTitle` |
-| `SingleImage` | `imageSrc`, `serviceTitle` |
-| `Carousel` | `slides: CarouselSlide[]` (`{ imageSrc, title }`) — duration scales with `CAROUSEL_FRAMES_PER_SLIDE` (45 @ 30 fps) |
+| Composition (id) | Extra input props                                                                                                  |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `BeforeAfter`    | `topImageSrc`, `bottomImageSrc`, `showArrow`, `serviceTitle`                                                       |
+| `SingleImage`    | `imageSrc`, `serviceTitle`                                                                                         |
+| `Carousel`       | `slides: CarouselSlide[]` (`{ imageSrc, title }`) — duration scales with `CAROUSEL_FRAMES_PER_SLIDE` (45 @ 30 fps) |
 
 Image sources are normally **data URLs** (from `fileToDataUrl` / crop blob) for dashboard renders; `resolveMediaSrc` in `src/remotion/media-utils.ts` passes `data:` / `blob:` / `http(s)` through and routes plain paths to `staticFile()` for `public/` assets.
 
 ## API surface
 
-| Method & path | Request | Response | Notes |
-|---------------|---------|----------|-------|
-| `POST /api/render` | `{ compositionId, inputProps, sessionId? }` | `video/mp4` binary or `{ error }` | Validates inputs; runs `bundle()` (cached) + `selectComposition` + `renderMedia`; low-RAM tuning (see below). |
-| `GET /api/render/progress?sessionId=` | — | `{ progress, label, active }` | In-memory store; single Node process. |
-| `GET /api/public-media` | — | `{ music: MediaAsset[], backgrounds: MediaAsset[] }` | Calls `scanPublicMedia()` + merges static config. |
-| `GET /api/brand-logos/[brandId]` | — | `{ files, folder }` | Reads `public/assets/logos/<brandId>/` and filters image extensions. |
-| `POST /api/gemini` | `{ brandName, brandContext, userPrompt }` | `{ text }` or `{ error }` | Calls **Gemini 2.5 Flash** (`generativelanguage.googleapis.com`). Reads `GEMINI_API_KEY` from server env — never exposed to the browser. |
+| Method & path                         | Request                                     | Response                                             | Notes                                                                                                                                    |
+| ------------------------------------- | ------------------------------------------- | ---------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `POST /api/render`                    | `{ compositionId, inputProps, sessionId? }` | `video/mp4` binary or `{ error }`                    | Validates inputs; runs `bundle()` (cached) + `selectComposition` + `renderMedia`; low-RAM tuning (see below).                            |
+| `GET /api/render/progress?sessionId=` | —                                           | `{ progress, label, active }`                        | In-memory store; single Node process.                                                                                                    |
+| `GET /api/public-media`               | —                                           | `{ music: MediaAsset[], backgrounds: MediaAsset[] }` | Calls `scanPublicMedia()` + merges static config.                                                                                        |
+| `GET /api/brand-logos/[brandId]`      | —                                           | `{ files, folder }`                                  | Reads `public/assets/logos/<brandId>/` and filters image extensions.                                                                     |
+| `POST /api/gemini`                    | `{ brandName, brandContext, userPrompt }`   | `{ text }` or `{ error }`                            | Calls **Gemini 3.5 Flash Low** (`generativelanguage.googleapis.com`). Reads `GEMINI_API_KEY` from server env — never exposed to the browser. |
 
 ## End-to-end data flow
 
@@ -297,21 +298,21 @@ VideoPreview <Player>         RenderAndDownload
 
 ## Key type catalog
 
-| Type | File | Used by |
-|------|------|---------|
-| `Brand` | `src/config/brands.ts` | `BrandSelector`, `LogoPicker`, `brandLogoPublicUrl` |
-| `TemplateModeId` | `src/config/template-modes.ts` | dashboard, `TemplateModeToggle`, `templateModeToCompositionId` |
-| `RemotionCompositionId` | `src/remotion/composition-ids.ts` | `Root.tsx`, `/api/render` (`selectComposition`) |
-| `ServiceFontId` | `src/config/service-fonts.ts` | `ServiceFontPicker`, `SERVICE_FONT_CSS`, template text styles |
-| `BeforeAfterTemplateProps` | `src/remotion/before-after-template.tsx` | `Root.tsx` defaults, `VideoPreview`, `/api/render` |
-| `SingleImageTemplateProps` | `src/remotion/single-image-template.tsx` | same |
-| `CarouselTemplateProps` | `src/remotion/carousel-template.tsx` | same |
-| `CarouselSlide` / `CarouselSlideDraft` | `carousel-template.tsx` / `src/lib/carousel-slides.ts` | `CarouselSlidesEditor` (draft) → render props (slide) |
-| `MediaAsset` | `src/config/background-music.ts` | `BackgroundMusicControls`, `/api/public-media` |
-| `RenderProgressSnapshot` | `src/lib/render-progress-store.ts` | `/api/render` (write), `/api/render/progress` (read), `RenderAndDownload` (display) |
-| `UiLayerMotion` | `src/remotion/ui-motion.ts` | Templates' staggered enter/exit animations |
-| `AccordionAccent` | `src/components/DashboardStepAccordion.tsx` | All step cards |
-| `CroppedImageOptions` | `src/lib/get-cropped-image.ts` | `ImageCropModal` JPEG export |
+| Type                                   | File                                                   | Used by                                                                             |
+| -------------------------------------- | ------------------------------------------------------ | ----------------------------------------------------------------------------------- |
+| `Brand`                                | `src/config/brands.ts`                                 | `BrandSelector`, `LogoPicker`, `brandLogoPublicUrl`                                 |
+| `TemplateModeId`                       | `src/config/template-modes.ts`                         | dashboard, `TemplateModeToggle`, `templateModeToCompositionId`                      |
+| `RemotionCompositionId`                | `src/remotion/composition-ids.ts`                      | `Root.tsx`, `/api/render` (`selectComposition`)                                     |
+| `ServiceFontId`                        | `src/config/service-fonts.ts`                          | `ServiceFontPicker`, `SERVICE_FONT_CSS`, template text styles                       |
+| `BeforeAfterTemplateProps`             | `src/remotion/before-after-template.tsx`               | `Root.tsx` defaults, `VideoPreview`, `/api/render`                                  |
+| `SingleImageTemplateProps`             | `src/remotion/single-image-template.tsx`               | same                                                                                |
+| `CarouselTemplateProps`                | `src/remotion/carousel-template.tsx`                   | same                                                                                |
+| `CarouselSlide` / `CarouselSlideDraft` | `carousel-template.tsx` / `src/lib/carousel-slides.ts` | `CarouselSlidesEditor` (draft) → render props (slide)                               |
+| `MediaAsset`                           | `src/config/background-music.ts`                       | `BackgroundMusicControls`, `/api/public-media`                                      |
+| `RenderProgressSnapshot`               | `src/lib/render-progress-store.ts`                     | `/api/render` (write), `/api/render/progress` (read), `RenderAndDownload` (display) |
+| `UiLayerMotion`                        | `src/remotion/ui-motion.ts`                            | Templates' staggered enter/exit animations                                          |
+| `AccordionAccent`                      | `src/components/DashboardStepAccordion.tsx`            | All step cards                                                                      |
+| `CroppedImageOptions`                  | `src/lib/get-cropped-image.ts`                         | `ImageCropModal` JPEG export                                                        |
 
 ## Environment & persistence
 

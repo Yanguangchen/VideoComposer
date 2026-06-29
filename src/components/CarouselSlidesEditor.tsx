@@ -28,9 +28,7 @@ export function CarouselSlidesEditor({
 }: Props) {
   const updateSlide = useCallback(
     (id: string, patch: Partial<CarouselSlideDraft>) => {
-      onChange(
-        slides.map((s) => (s.id === id ? { ...s, ...patch } : s)),
-      );
+      onChange(slides.map((s) => (s.id === id ? { ...s, ...patch } : s)));
     },
     [onChange, slides],
   );
@@ -66,13 +64,11 @@ export function CarouselSlidesEditor({
     if (maxFiles <= 0) return;
     const files = await onBulkAddFromLibrary(maxFiles);
     if (!files.length) return;
-    const newSlides: CarouselSlideDraft[] = files
-      .slice(0, maxFiles)
-      .map((file) => ({
-        ...createCarouselSlide(),
-        file,
-        url: URL.createObjectURL(file),
-      }));
+    const newSlides: CarouselSlideDraft[] = files.slice(0, maxFiles).map((file) => ({
+      ...createCarouselSlide(),
+      file,
+      url: URL.createObjectURL(file),
+    }));
     onChange([...slides, ...newSlides]);
   }, [onBulkAddFromLibrary, onChange, slides]);
 
@@ -89,8 +85,8 @@ export function CarouselSlidesEditor({
   return (
     <div className="flex flex-col gap-4">
       <p className="text-xs text-slate-500 dark:text-slate-400">
-        Slides share the video duration equally. Add a title per image
-        (caption). Up to {MAX_CAROUSEL_SLIDES} slides.
+        Slides share the video duration equally. Add a title per image (caption). Up to{" "}
+        {MAX_CAROUSEL_SLIDES} slides.
       </p>
       {slides.map((slide, index) => (
         <div
@@ -117,7 +113,7 @@ export function CarouselSlidesEditor({
               type="text"
               value={slide.title}
               onChange={(e) => setTitle(slide.id, e.target.value)}
-              placeholder="e.g. Deep cleanse"
+              placeholder="e.g., Deep cleanse"
               className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500"
             />
           </label>
@@ -138,7 +134,7 @@ export function CarouselSlidesEditor({
             onClick={addSlide}
             className="flex-1 rounded-lg border-2 border-dashed border-slate-300 bg-white py-3 text-sm font-semibold text-slate-700 transition hover:border-blue-400 hover:bg-blue-50/50 dark:border-slate-600 dark:bg-slate-900/60 dark:text-slate-200 dark:hover:border-blue-500 dark:hover:bg-blue-950/30"
           >
-            + Add slide
+            Add slide
           </button>
           {onBulkAddFromLibrary ? (
             <button
@@ -146,7 +142,7 @@ export function CarouselSlidesEditor({
               onClick={bulkAddFromLibrary}
               className="flex-1 rounded-lg border-2 border-dashed border-emerald-300 bg-emerald-50/50 py-3 text-sm font-semibold text-emerald-800 transition hover:border-emerald-500 hover:bg-emerald-100/70 dark:border-emerald-700/60 dark:bg-emerald-950/20 dark:text-emerald-200 dark:hover:border-emerald-500 dark:hover:bg-emerald-900/30"
             >
-              + Bulk add from library
+              Bulk add from library
             </button>
           ) : null}
         </div>

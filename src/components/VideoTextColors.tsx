@@ -65,10 +65,7 @@ export function VideoTextColors({
           <div className="flex items-center gap-2">
             <input
               type="color"
-              value={normalizeHexColor(
-                captionColorHex,
-                DEFAULT_CAPTION_COLOR_HEX,
-              )}
+              value={normalizeHexColor(captionColorHex, DEFAULT_CAPTION_COLOR_HEX)}
               onChange={(e) => onCaptionChange(e.target.value)}
               className="h-10 w-14 cursor-pointer rounded border border-slate-300 bg-white dark:border-slate-600 dark:bg-slate-800"
             />

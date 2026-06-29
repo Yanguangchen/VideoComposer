@@ -78,8 +78,8 @@ export function getFirebaseAuth(): Auth {
 export function isFirebaseConfigured(): boolean {
   return Boolean(
     firebaseConfig.apiKey &&
-      firebaseConfig.projectId &&
-      firebaseConfig.storageBucket &&
-      firebaseConfig.appId,
+    firebaseConfig.projectId &&
+    firebaseConfig.storageBucket &&
+    firebaseConfig.appId,
   );
 }

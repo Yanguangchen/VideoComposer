@@ -32,12 +32,7 @@ type Props = {
   carouselProps: CarouselTemplateProps;
 };
 
-export function VideoPreview({
-  mode,
-  beforeAfterProps,
-  singleImageProps,
-  carouselProps,
-}: Props) {
+export function VideoPreview({ mode, beforeAfterProps, singleImageProps, carouselProps }: Props) {
   const clickToPlay = useMobilePlaybackGesture();
   const carouselDuration = getEffectiveCarouselDurationInFrames(
     carouselProps.durationInFrames,

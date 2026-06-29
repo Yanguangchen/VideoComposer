@@ -18,7 +18,7 @@ bundle({
     process.stdout.write(`Remotion bundle OK: ${serveUrl}\n`);
   })
   .catch((err: unknown) => {
-    const message = err instanceof Error ? err.stack ?? err.message : String(err);
+    const message = err instanceof Error ? (err.stack ?? err.message) : String(err);
     process.stderr.write(`${message}\n`);
     process.exit(1);
   });

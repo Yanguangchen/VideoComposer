@@ -44,9 +44,7 @@ export function LogoPositionControls({
           max={MAX_LOGO_OFFSET_PX}
           step={LOGO_OFFSET_STEP_PX}
           value={x}
-          onChange={(e) =>
-            onOffsetXChange(clampLogoOffset(Number(e.target.value)))
-          }
+          onChange={(e) => onOffsetXChange(clampLogoOffset(Number(e.target.value)))}
           className="w-full accent-blue-600 dark:accent-blue-500"
           aria-label="Logo horizontal offset"
           disabled={disabled}
@@ -62,9 +60,7 @@ export function LogoPositionControls({
           max={MAX_LOGO_OFFSET_PX}
           step={LOGO_OFFSET_STEP_PX}
           value={y}
-          onChange={(e) =>
-            onOffsetYChange(clampLogoOffset(Number(e.target.value)))
-          }
+          onChange={(e) => onOffsetYChange(clampLogoOffset(Number(e.target.value)))}
           className="w-full accent-blue-600 dark:accent-blue-500"
           aria-label="Logo vertical offset"
           disabled={disabled}

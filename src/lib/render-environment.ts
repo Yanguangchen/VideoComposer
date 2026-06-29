@@ -14,9 +14,7 @@ export function getServerlessExportBlockMessage(): string | null {
     );
   }
   if (process.env.NETLIFY) {
-    return (
-      "MP4 export is not supported on Netlify Functions. Deploy with Docker or another Node host that includes FFmpeg (see README)."
-    );
+    return "MP4 export is not supported on Netlify Functions. Deploy with Docker or another Node host that includes FFmpeg (see README).";
   }
   return null;
 }

@@ -152,17 +152,94 @@
     "source": "src/config/brands.ts (authoritative). If this list and brands.ts disagree, brands.ts wins — re-read it.",
     "lookupOrder": ["id", "displayName", "facebookQuickLinkLabel"],
     "brands": [
-      { "id": "le-motor", "displayName": "Le Motor Enterprise", "primaryHex": "#2563eb", "logoFolder": "assets/logos/le-motor", "facebookQuickLinkLabel": "LE MOTOR", "facebookQuickLinkSection": "Automobile Companies" },
-      { "id": "vskin", "displayName": "VSKIN Beauty & Slimming", "primaryHex": "#0d9488", "logoFolder": "assets/logos/vskin", "facebookQuickLinkLabel": "VSKIN", "facebookQuickLinkSection": "Beauty Salons" },
-      { "id": "shebella-jurong", "displayName": "Shebella Beauty", "primaryHex": "#ec4899", "logoFolder": "assets/logos/shebella-jurong", "facebookQuickLinkLabel": "SHEBELLA", "facebookQuickLinkSection": "Beauty Salons" },
-      { "id": "rains-coco", "displayName": "RAINS & COCO", "primaryHex": "#d97706", "logoFolder": "assets/logos/rains-coco", "facebookQuickLinkLabel": "RAINS & COCO", "facebookQuickLinkSection": "Beauty Salons" },
-      { "id": "angel-nails", "displayName": "ANGEL NAILS", "primaryHex": "#9333ea", "logoFolder": "assets/logos/angel-nails", "facebookQuickLinkLabel": "ANGEL NAILS", "facebookQuickLinkSection": "Beauty Salons" },
-      { "id": "kuts-kurls", "displayName": "KUTS AND KURLS", "primaryHex": "#059669", "logoFolder": "assets/logos/kuts-kurls", "facebookQuickLinkLabel": "KUTS AND KURLS", "facebookQuickLinkSection": "Beauty Salons" },
-      { "id": "oscar-leasing", "displayName": "OSCAR LEASING", "primaryHex": "#4f46e5", "logoFolder": "assets/logos/oscar-leasing", "facebookQuickLinkLabel": "OSCAR LEASING", "facebookQuickLinkSection": "Automobile Companies" },
-      { "id": "e-perfect-eyebrow", "displayName": "E-PERFECT EYEBROW", "primaryHex": "#f43f5e", "logoFolder": "assets/logos/e-perfect-eyebrow", "facebookQuickLinkLabel": "E-PERFECT EYEBROW", "facebookQuickLinkSection": "Beauty Salons" },
-      { "id": "vibrant-employment", "displayName": "VIBRANT EMPLOYMENT", "primaryHex": "#65a30d", "logoFolder": "assets/logos/vibrant-employment", "facebookQuickLinkLabel": "VIBRANT EMPLOYMENT", "facebookQuickLinkSection": "Maid Agencies" },
-      { "id": "kare-skin", "displayName": "Kare Skin", "primaryHex": "#e11d48", "logoFolder": "assets/logos/kare-skin", "facebookQuickLinkLabel": "KARE SKIN", "facebookQuickLinkSection": "Beauty Salons" },
-      { "id": "tabernacle-beauty", "displayName": "Tabernacle Beauty", "primaryHex": "#7c3aed", "logoFolder": "assets/logos/tabernacle-beauty", "facebookQuickLinkLabel": "TABERNACLE BEAUTY", "facebookQuickLinkSection": "Beauty Salons" }
+      {
+        "id": "le-motor",
+        "displayName": "Le Motor Enterprise",
+        "primaryHex": "#2563eb",
+        "logoFolder": "assets/logos/le-motor",
+        "facebookQuickLinkLabel": "LE MOTOR",
+        "facebookQuickLinkSection": "Automobile Companies"
+      },
+      {
+        "id": "vskin",
+        "displayName": "VSKIN Beauty & Slimming",
+        "primaryHex": "#0d9488",
+        "logoFolder": "assets/logos/vskin",
+        "facebookQuickLinkLabel": "VSKIN",
+        "facebookQuickLinkSection": "Beauty Salons"
+      },
+      {
+        "id": "shebella-jurong",
+        "displayName": "Shebella Beauty",
+        "primaryHex": "#ec4899",
+        "logoFolder": "assets/logos/shebella-jurong",
+        "facebookQuickLinkLabel": "SHEBELLA",
+        "facebookQuickLinkSection": "Beauty Salons"
+      },
+      {
+        "id": "rains-coco",
+        "displayName": "RAINS & COCO",
+        "primaryHex": "#d97706",
+        "logoFolder": "assets/logos/rains-coco",
+        "facebookQuickLinkLabel": "RAINS & COCO",
+        "facebookQuickLinkSection": "Beauty Salons"
+      },
+      {
+        "id": "angel-nails",
+        "displayName": "ANGEL NAILS",
+        "primaryHex": "#9333ea",
+        "logoFolder": "assets/logos/angel-nails",
+        "facebookQuickLinkLabel": "ANGEL NAILS",
+        "facebookQuickLinkSection": "Beauty Salons"
+      },
+      {
+        "id": "kuts-kurls",
+        "displayName": "KUTS AND KURLS",
+        "primaryHex": "#059669",
+        "logoFolder": "assets/logos/kuts-kurls",
+        "facebookQuickLinkLabel": "KUTS AND KURLS",
+        "facebookQuickLinkSection": "Beauty Salons"
+      },
+      {
+        "id": "oscar-leasing",
+        "displayName": "OSCAR LEASING",
+        "primaryHex": "#4f46e5",
+        "logoFolder": "assets/logos/oscar-leasing",
+        "facebookQuickLinkLabel": "OSCAR LEASING",
+        "facebookQuickLinkSection": "Automobile Companies"
+      },
+      {
+        "id": "e-perfect-eyebrow",
+        "displayName": "E-PERFECT EYEBROW",
+        "primaryHex": "#f43f5e",
+        "logoFolder": "assets/logos/e-perfect-eyebrow",
+        "facebookQuickLinkLabel": "E-PERFECT EYEBROW",
+        "facebookQuickLinkSection": "Beauty Salons"
+      },
+      {
+        "id": "vibrant-employment",
+        "displayName": "VIBRANT EMPLOYMENT",
+        "primaryHex": "#65a30d",
+        "logoFolder": "assets/logos/vibrant-employment",
+        "facebookQuickLinkLabel": "VIBRANT EMPLOYMENT",
+        "facebookQuickLinkSection": "Maid Agencies"
+      },
+      {
+        "id": "kare-skin",
+        "displayName": "Kare Skin",
+        "primaryHex": "#e11d48",
+        "logoFolder": "assets/logos/kare-skin",
+        "facebookQuickLinkLabel": "KARE SKIN",
+        "facebookQuickLinkSection": "Beauty Salons"
+      },
+      {
+        "id": "tabernacle-beauty",
+        "displayName": "Tabernacle Beauty",
+        "primaryHex": "#7c3aed",
+        "logoFolder": "assets/logos/tabernacle-beauty",
+        "facebookQuickLinkLabel": "TABERNACLE BEAUTY",
+        "facebookQuickLinkSection": "Beauty Salons"
+      }
     ],
     "facebookQuickLinkMappingNote": "facebookQuickLinkLabel is the TEXT the agent should match when clicking on https://wizards-dashboard.vercel.app/facebook.html. Labels are case-insensitive; match by trimmed uppercase string. If a brand's button is missing from the page, abort posting and report to the user (do NOT improvise a Facebook URL).",
     "agentDecisionRule": "When the user names a brand loosely (e.g. 'KSQ', 'the nail salon'), resolve it by: (1) exact id match, (2) case-insensitive displayName contains, (3) facebookQuickLinkLabel contains. If >1 match, ask the user to disambiguate."
@@ -170,7 +247,14 @@
   "dashboardLayout": {
     "header": {
       "sticky": true,
-      "contains": ["App title", "Short description", "Tweaks button", "User avatar", "Sign out", "Light/dark theme toggle"]
+      "contains": [
+        "App title",
+        "Short description",
+        "Tweaks button",
+        "User avatar",
+        "Sign out",
+        "Light/dark theme toggle"
+      ]
     },
     "scrollingBehavior": {
       "criticalForComputerUse": true,
@@ -449,11 +533,7 @@
         "SingleImage": "single",
         "Carousel": "carousel"
       },
-      "examples": [
-        "before-after-le-motor.mp4",
-        "single-vskin.mp4",
-        "carousel-angel-nails.mp4"
-      ],
+      "examples": ["before-after-le-motor.mp4", "single-vskin.mp4", "carousel-angel-nails.mp4"],
       "downloadLocation": {
         "mechanism": "Browser's default download directory (triggered via anchor click on blob URL — see RenderAndDownload.tsx).",
         "defaultPathsByOS": {
@@ -589,7 +669,15 @@
       {
         "collection": "media",
         "docId": "auto (UUID)",
-        "fields": ["brandId", "storagePath", "downloadUrl", "filename", "contentType", "sizeBytes", "uploadedAt"],
+        "fields": [
+          "brandId",
+          "storagePath",
+          "downloadUrl",
+          "filename",
+          "contentType",
+          "sizeBytes",
+          "uploadedAt"
+        ],
         "usedBy": "Shared brand media library (BrandMediaLibrary, MediaLibraryPicker)"
       },
       {

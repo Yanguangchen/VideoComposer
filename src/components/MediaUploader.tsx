@@ -59,9 +59,7 @@ export function MediaUploader({
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="text-sm font-semibold text-slate-800 dark:text-slate-100">
-        {label}
-      </div>
+      <div className="text-sm font-semibold text-slate-800 dark:text-slate-100">{label}</div>
       <div
         {...getRootProps()}
         className={`touch-manipulation flex min-h-[160px] min-w-0 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed p-4 transition-colors active:opacity-90 ${
@@ -71,9 +69,7 @@ export function MediaUploader({
         }`}
       >
         <input {...getInputProps()} />
-        <p className="text-center text-xs text-slate-600 dark:text-slate-300">
-          {description}
-        </p>
+        <p className="text-center text-xs text-slate-600 dark:text-slate-300">{description}</p>
         <p className="mt-2 text-[11px] text-slate-400 dark:text-slate-500">
           Drag &amp; drop or click to browse
         </p>
@@ -93,7 +89,7 @@ export function MediaUploader({
           }}
           className="rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-800 transition hover:bg-emerald-100 disabled:opacity-60 dark:border-emerald-700/60 dark:bg-emerald-950/30 dark:text-emerald-200 dark:hover:bg-emerald-900/40"
         >
-          {pickBusy ? "Loading…" : "Pick from library"}
+          {pickBusy ? "Loading…" : "Choose from library"}
         </button>
       ) : null}
       {imageSrc ? (

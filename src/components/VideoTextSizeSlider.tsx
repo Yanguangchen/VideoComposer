@@ -32,9 +32,7 @@ export function VideoTextSizeSlider({ value, onChange }: Props) {
         max={MAX_VIDEO_TEXT_SIZE_SCALE}
         step={VIDEO_TEXT_SIZE_SCALE_STEP}
         value={safe}
-        onChange={(e) =>
-          onChange(clampVideoTextSizeScale(Number(e.target.value)))
-        }
+        onChange={(e) => onChange(clampVideoTextSizeScale(Number(e.target.value)))}
         className="w-full accent-blue-600 dark:accent-blue-500"
         aria-label="Video text size scale"
       />

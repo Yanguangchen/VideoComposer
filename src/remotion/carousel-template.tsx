@@ -13,17 +13,11 @@ import {
 } from "remotion";
 import { isServiceFontId } from "@/config/service-fonts";
 import { clampDurationFrames } from "@/config/video-duration";
-import {
-  DEFAULT_CAPTION_COLOR_HEX,
-  normalizeHexColor,
-} from "@/lib/hex-color";
+import { DEFAULT_CAPTION_COLOR_HEX, normalizeHexColor } from "@/lib/hex-color";
 import { BackgroundLayer } from "@/remotion/background-layer";
 import { resolveMediaSrc } from "@/remotion/media-utils";
 import { PriceTagBadge } from "@/remotion/price-tag-badge";
-import {
-  preloadAllServiceFonts,
-  SERVICE_FONT_CSS,
-} from "@/remotion/service-font-loaders";
+import { preloadAllServiceFonts, SERVICE_FONT_CSS } from "@/remotion/service-font-loaders";
 import { uiLayerMotion } from "@/remotion/ui-motion";
 
 /**
@@ -113,11 +107,7 @@ const SlideCard: FC<SlideCardProps> = ({
   const fs = (px: number) => Math.round(px * textSizeScale);
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
-  const pulse = interpolate(
-    Math.sin((frame / fps) * Math.PI * 2),
-    [-1, 1],
-    [0.96, 1.04],
-  );
+  const pulse = interpolate(Math.sin((frame / fps) * Math.PI * 2), [-1, 1], [0.96, 1.04]);
   const motionCard = uiLayerMotion(frame, slideDurationInFrames, 0, 2);
   const motionSub = uiLayerMotion(frame, slideDurationInFrames, 8, 1);
   const motionSlideTitle = uiLayerMotion(frame, slideDurationInFrames, 16, 0);
@@ -158,8 +148,7 @@ const SlideCard: FC<SlideCardProps> = ({
             }}
           />
 
-          {subtitleText.trim() ||
-          (showPriceTag && priceTagText.trim()) ? (
+          {subtitleText.trim() || (showPriceTag && priceTagText.trim()) ? (
             <div
               style={{
                 display: "flex",
@@ -270,12 +259,7 @@ export const CarouselTemplate: FC<CarouselTemplateProps> = ({
   const [fontBlock] = useState(() => delayRender());
   const { durationInFrames: compositionDuration } = useVideoConfig();
   const frame = useCurrentFrame();
-  const motionTopTitle = uiLayerMotion(
-    frame,
-    compositionDuration,
-    0,
-    3,
-  );
+  const motionTopTitle = uiLayerMotion(frame, compositionDuration, 0, 3);
 
   useEffect(() => {
     preloadAllServiceFonts()
@@ -286,20 +270,15 @@ export const CarouselTemplate: FC<CarouselTemplateProps> = ({
   const brandTitleResolved = isServiceFontId(brandTitleFontId)
     ? SERVICE_FONT_CSS[brandTitleFontId]
     : SERVICE_FONT_CSS.inter;
-  const brandTitleWeight =
-    brandTitleFontId === "bebas-neue" ? 400 : 800;
+  const brandTitleWeight = brandTitleFontId === "bebas-neue" ? 400 : 800;
 
   const serviceFontResolved = isServiceFontId(serviceFontId)
     ? SERVICE_FONT_CSS[serviceFontId]
     : SERVICE_FONT_CSS.inter;
-  const serviceFontWeight =
-    serviceFontId === "bebas-neue" ? 400 : 700;
+  const serviceFontWeight = serviceFontId === "bebas-neue" ? 400 : 700;
 
   const headlineColor = normalizeHexColor(headlineColorHex, "#ffffff");
-  const captionColor = normalizeHexColor(
-    captionColorHex,
-    DEFAULT_CAPTION_COLOR_HEX,
-  );
+  const captionColor = normalizeHexColor(captionColorHex, DEFAULT_CAPTION_COLOR_HEX);
 
   const safeSlides = slides.length > 0 ? slides : [{ imageSrc: "", title: "" }];
   const slideCount = safeSlides.length;
@@ -311,20 +290,13 @@ export const CarouselTemplate: FC<CarouselTemplateProps> = ({
 
   return (
     <AbsoluteFill style={{ backgroundColor: "#0f172a" }}>
-      {musicSrc ? (
-        <Audio
-          src={resolveMediaSrc(musicSrc)}
-          volume={0.22}
-          loop
-        />
-      ) : null}
+      {musicSrc ? <Audio src={resolveMediaSrc(musicSrc)} volume={0.22} loop /> : null}
       {bgSrc ? (
         <BackgroundLayer bgSrc={bgSrc} />
       ) : (
         <AbsoluteFill
           style={{
-            background:
-              "linear-gradient(160deg, #0f172a 0%, #1e3a5f 45%, #312e81 100%)",
+            background: "linear-gradient(160deg, #0f172a 0%, #1e3a5f 45%, #312e81 100%)",
           }}
         />
       )}
@@ -366,11 +338,7 @@ export const CarouselTemplate: FC<CarouselTemplateProps> = ({
             const from = cursor;
             cursor += segmentFrames;
             return (
-              <Sequence
-                key={index}
-                from={from}
-                durationInFrames={segmentFrames}
-              >
+              <Sequence key={index} from={from} durationInFrames={segmentFrames}>
                 <SlideCard
                   slide={slide}
                   serviceFontResolved={serviceFontResolved}

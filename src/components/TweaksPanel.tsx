@@ -51,10 +51,7 @@ function applyTweaks(state: TweaksState): void {
   if (typeof document === "undefined") return;
   const root = document.documentElement;
   root.style.setProperty("--sidebar-w", `${state.sidebarWidth}px`);
-  root.style.setProperty(
-    "--accent-rgb",
-    ACCENTS[state.accentIndex]?.rgb ?? ACCENTS[0]!.rgb,
-  );
+  root.style.setProperty("--accent-rgb", ACCENTS[state.accentIndex]?.rgb ?? ACCENTS[0]!.rgb);
   root.style.setProperty(
     "--preview-tone",
     PREVIEW_TONES[state.previewToneIndex]?.hs ?? PREVIEW_TONES[0]!.hs,
@@ -99,16 +96,10 @@ export function TweaksPanel({ open, onClose, state, setState }: Props) {
   if (!open) return null;
 
   return (
-    <div
-      className="glass-bar sticky bottom-0 z-10 border-t"
-      role="dialog"
-      aria-label="Tweaks"
-    >
+    <div className="glass-bar sticky bottom-0 z-10 border-t" role="dialog" aria-label="Tweaks">
       <div className="space-y-3 px-3 py-3 text-slate-200 dark:text-slate-200">
         <div className="flex items-center justify-between">
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-            Tweaks
-          </h3>
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400">Tweaks</h3>
           <button
             type="button"
             onClick={onClose}
@@ -129,9 +120,7 @@ export function TweaksPanel({ open, onClose, state, setState }: Props) {
             max={480}
             step={4}
             value={state.sidebarWidth}
-            onChange={(e) =>
-              setState({ ...state, sidebarWidth: Number(e.target.value) })
-            }
+            onChange={(e) => setState({ ...state, sidebarWidth: Number(e.target.value) })}
             className="w-full accent-accent"
           />
         </label>
@@ -171,7 +160,7 @@ export function TweaksPanel({ open, onClose, state, setState }: Props) {
                   className={`rounded-lg border px-2 py-1.5 text-[11px] font-semibold transition ${
                     active
                       ? "border-accent/60 bg-accent-dim text-accent"
-                      : "border-white/10 text-slate-300 hover:bg-white/5"
+                      : "border-slate-300 text-slate-700 hover:bg-slate-200 dark:border-white/10 dark:text-slate-300 dark:hover:bg-white/5"
                   }`}
                 >
                   {t.label}
@@ -182,7 +171,7 @@ export function TweaksPanel({ open, onClose, state, setState }: Props) {
         </div>
 
         <div className="flex items-center justify-between gap-2 text-xs">
-          <span className="text-slate-400">Compact density</span>
+          <span className="text-slate-600 dark:text-slate-400">Compact density</span>
           <button
             type="button"
             role="switch"
@@ -196,7 +185,7 @@ export function TweaksPanel({ open, onClose, state, setState }: Props) {
             className={`relative h-5 w-10 rounded-full border transition ${
               state.density === "compact"
                 ? "border-accent/60 bg-accent/60"
-                : "border-white/15 bg-white/10"
+                : "border-slate-300 bg-slate-200 dark:border-white/15 dark:bg-white/10"
             }`}
           >
             <span

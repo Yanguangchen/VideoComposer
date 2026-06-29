@@ -12,17 +12,11 @@ import {
   useVideoConfig,
 } from "remotion";
 import { isServiceFontId } from "@/config/service-fonts";
-import {
-  DEFAULT_CAPTION_COLOR_HEX,
-  normalizeHexColor,
-} from "@/lib/hex-color";
+import { DEFAULT_CAPTION_COLOR_HEX, normalizeHexColor } from "@/lib/hex-color";
 import { BackgroundLayer } from "@/remotion/background-layer";
 import { resolveMediaSrc } from "@/remotion/media-utils";
 import { PriceTagBadge } from "@/remotion/price-tag-badge";
-import {
-  preloadAllServiceFonts,
-  SERVICE_FONT_CSS,
-} from "@/remotion/service-font-loaders";
+import { preloadAllServiceFonts, SERVICE_FONT_CSS } from "@/remotion/service-font-loaders";
 import { uiLayerMotion } from "@/remotion/ui-motion";
 
 export type BeforeAfterTemplateProps = {
@@ -96,20 +90,15 @@ export const BeforeAfterTemplate: FC<BeforeAfterTemplateProps> = ({
   const brandTitleResolved = isServiceFontId(brandTitleFontId)
     ? SERVICE_FONT_CSS[brandTitleFontId]
     : SERVICE_FONT_CSS.inter;
-  const brandTitleWeight =
-    brandTitleFontId === "bebas-neue" ? 400 : 800;
+  const brandTitleWeight = brandTitleFontId === "bebas-neue" ? 400 : 800;
 
   const serviceFontResolved = isServiceFontId(serviceFontId)
     ? SERVICE_FONT_CSS[serviceFontId]
     : SERVICE_FONT_CSS.inter;
-  const serviceFontWeight =
-    serviceFontId === "bebas-neue" ? 400 : 700;
+  const serviceFontWeight = serviceFontId === "bebas-neue" ? 400 : 700;
 
   const headlineColor = normalizeHexColor(headlineColorHex, "#ffffff");
-  const captionColor = normalizeHexColor(
-    captionColorHex,
-    DEFAULT_CAPTION_COLOR_HEX,
-  );
+  const captionColor = normalizeHexColor(captionColorHex, DEFAULT_CAPTION_COLOR_HEX);
 
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
@@ -117,28 +106,17 @@ export const BeforeAfterTemplate: FC<BeforeAfterTemplateProps> = ({
   const motionPhotos = uiLayerMotion(frame, durationInFrames, 8, 2);
   const motionSub = uiLayerMotion(frame, durationInFrames, 16, 1);
   const motionService = uiLayerMotion(frame, durationInFrames, 24, 0);
-  const pulse = interpolate(
-    Math.sin((frame / fps) * Math.PI * 2),
-    [-1, 1],
-    [0.96, 1.04],
-  );
+  const pulse = interpolate(Math.sin((frame / fps) * Math.PI * 2), [-1, 1], [0.96, 1.04]);
 
   return (
     <AbsoluteFill style={{ backgroundColor: "#0f172a" }}>
-      {musicSrc ? (
-        <Audio
-          src={resolveMediaSrc(musicSrc)}
-          volume={0.22}
-          loop
-        />
-      ) : null}
+      {musicSrc ? <Audio src={resolveMediaSrc(musicSrc)} volume={0.22} loop /> : null}
       {bgSrc ? (
         <BackgroundLayer bgSrc={bgSrc} />
       ) : (
         <AbsoluteFill
           style={{
-            background:
-              "linear-gradient(160deg, #0f172a 0%, #1e3a5f 45%, #312e81 100%)",
+            background: "linear-gradient(160deg, #0f172a 0%, #1e3a5f 45%, #312e81 100%)",
           }}
         />
       )}
@@ -246,8 +224,7 @@ export const BeforeAfterTemplate: FC<BeforeAfterTemplateProps> = ({
           ) : null}
         </div>
 
-        {subtitleText.trim() ||
-        (showPriceTag && priceTagText.trim()) ? (
+        {subtitleText.trim() || (showPriceTag && priceTagText.trim()) ? (
           <div
             style={{
               display: "flex",
@@ -296,11 +273,7 @@ export const BeforeAfterTemplate: FC<BeforeAfterTemplateProps> = ({
               fontSize: fs(52),
               fontWeight: serviceFontWeight,
               textAlign: "center",
-              marginTop:
-                subtitleText.trim() ||
-                (showPriceTag && priceTagText.trim())
-                  ? 40
-                  : 36,
+              marginTop: subtitleText.trim() || (showPriceTag && priceTagText.trim()) ? 40 : 36,
               maxWidth: "92%",
               lineHeight: 1.2,
               textShadow: "0 4px 20px rgba(0,0,0,0.55)",

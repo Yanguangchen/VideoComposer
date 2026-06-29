@@ -34,11 +34,7 @@ type Params = {
  * behavior is byte-for-byte the same; only UI shells differ between the
  * legacy card and the new ExportBar.
  */
-export function useRender({
-  compositionId,
-  getInputProps,
-  onBusyChange,
-}: Params): UseRender {
+export function useRender({ compositionId, getInputProps, onBusyChange }: Params): UseRender {
   const [isRendering, setIsRendering] = useState(false);
   const [progress, setProgress] = useState(0);
   const [phaseLabel, setPhaseLabel] = useState("");
@@ -67,9 +63,7 @@ export function useRender({
 
     const pollOnce = async () => {
       try {
-        const r = await fetch(
-          `/api/render/progress?sessionId=${encodeURIComponent(sessionId)}`,
-        );
+        const r = await fetch(`/api/render/progress?sessionId=${encodeURIComponent(sessionId)}`);
         if (!r.ok) return;
         const j = (await r.json()) as {
           progress?: number;
@@ -130,9 +124,7 @@ export function useRender({
     } catch (e) {
       stopPolling();
       const msg =
-        e instanceof Error
-          ? e.message
-          : "Export failed. Check your connection and try again.";
+        e instanceof Error ? e.message : "Export failed. Check your connection and try again.";
       setLastError(msg);
     } finally {
       stopPolling();

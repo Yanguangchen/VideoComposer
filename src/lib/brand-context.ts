@@ -1,13 +1,6 @@
 "use client";
 
-import {
-  doc,
-  getDoc,
-  onSnapshot,
-  serverTimestamp,
-  setDoc,
-  Timestamp,
-} from "firebase/firestore";
+import { doc, getDoc, onSnapshot, serverTimestamp, setDoc, Timestamp } from "firebase/firestore";
 import { getDb } from "@/lib/firebase";
 
 /**
@@ -74,10 +67,7 @@ export function subscribeBrandContext(
   );
 }
 
-export async function saveBrandContext(
-  brandId: string,
-  text: string,
-): Promise<void> {
+export async function saveBrandContext(brandId: string, text: string): Promise<void> {
   const db = getDb();
   await setDoc(
     doc(db, BRAND_CONTEXT_COLLECTION, brandId),

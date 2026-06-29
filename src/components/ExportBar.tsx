@@ -47,8 +47,22 @@ function ProgressDot({ done, label }: Dot) {
 
 function Chevron(): ReactNode {
   return (
-    <svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor" aria-hidden className="opacity-60">
-      <path d="M7 5l5 5-5 5" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+    <svg
+      width="12"
+      height="12"
+      viewBox="0 0 20 20"
+      fill="currentColor"
+      aria-hidden
+      className="opacity-60"
+    >
+      <path
+        d="M7 5l5 5-5 5"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        fill="none"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   );
 }
@@ -82,7 +96,7 @@ export function ExportBar({
           <Chevron />
           <ProgressDot done={hasLogo} label="Logo" />
           <Chevron />
-          <ProgressDot done={hasContent} label="Photos" />
+          <ProgressDot done={hasContent} label="Content" />
         </div>
 
         {/* Progress bar (while rendering) */}
@@ -112,7 +126,15 @@ export function ExportBar({
           className="btn-ghost hidden items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold sm:inline-flex"
         >
           Facebook Pages
-          <svg width="12" height="12" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+          <svg
+            width="12"
+            height="12"
+            viewBox="0 0 20 20"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            aria-hidden
+          >
             <path d="M10 4h6v6" />
             <path d="M16 4L8 12" />
             <path d="M16 13v3H4V4h3" />
@@ -126,7 +148,14 @@ export function ExportBar({
           className="btn-accent inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold tracking-wide transition"
         >
           <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
-            <path d="M10 3v10m0 0l-3.5-3.5M10 13l3.5-3.5M4 15h12" stroke="currentColor" strokeWidth="1.75" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+            <path
+              d="M10 3v10m0 0l-3.5-3.5M10 13l3.5-3.5M4 15h12"
+              stroke="currentColor"
+              strokeWidth="1.75"
+              fill="none"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
           </svg>
           {render.isRendering ? "Rendering…" : "Export MP4"}
         </button>

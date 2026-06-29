@@ -10,8 +10,5 @@ export const VIDEO_TEXT_SIZE_SCALE_STEP = 0.05;
 
 export function clampVideoTextSizeScale(value: number): number {
   if (!Number.isFinite(value)) return DEFAULT_VIDEO_TEXT_SIZE_SCALE;
-  return Math.min(
-    MAX_VIDEO_TEXT_SIZE_SCALE,
-    Math.max(MIN_VIDEO_TEXT_SIZE_SCALE, value),
-  );
+  return Math.min(MAX_VIDEO_TEXT_SIZE_SCALE, Math.max(MIN_VIDEO_TEXT_SIZE_SCALE, value));
 }

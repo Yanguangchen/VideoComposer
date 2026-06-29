@@ -97,10 +97,7 @@ export function AiCopyAssistant({ brandId, brandLabel }: Props) {
       setOriginalContext(contextText);
       toast("Brand context saved", "success");
     } catch (err) {
-      toast(
-        `Couldn't save: ${err instanceof Error ? err.message : String(err)}`,
-        "error",
-      );
+      toast(`Couldn't save: ${err instanceof Error ? err.message : String(err)}`, "error");
     } finally {
       setSaving(false);
     }
@@ -160,9 +157,8 @@ export function AiCopyAssistant({ brandId, brandLabel }: Props) {
       <div className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-700/50 dark:bg-amber-950/30 dark:text-amber-200">
         <p className="font-semibold">Firebase not configured</p>
         <p className="mt-1 text-xs">
-          Brand contexts are stored in Firestore. Set the{" "}
-          <code>NEXT_PUBLIC_FIREBASE_*</code> env vars to enable the AI copy
-          assistant. See <code>docs/media-library-setup.md</code>.
+          Brand contexts are stored in Firestore. Set the <code>NEXT_PUBLIC_FIREBASE_*</code> env
+          vars to enable the AI copy assistant. See <code>docs/media-library-setup.md</code>.
         </p>
       </div>
     );
@@ -172,8 +168,7 @@ export function AiCopyAssistant({ brandId, brandLabel }: Props) {
     <div className="flex flex-col gap-4">
       <div>
         <p className="text-sm text-slate-700 dark:text-slate-200">
-          AI copy assistant for{" "}
-          <span className="font-semibold">{brandLabel}</span>. Describe the
+          AI copy assistant for <span className="font-semibold">{brandLabel}</span>. Describe the
           brand once — Gemini reuses it for every caption.
         </p>
       </div>
@@ -190,9 +185,7 @@ export function AiCopyAssistant({ brandId, brandLabel }: Props) {
         </div>
         <textarea
           value={contextText}
-          onChange={(e) =>
-            setContextText(e.target.value.slice(0, BRAND_CONTEXT_MAX_CHARS))
-          }
+          onChange={(e) => setContextText(e.target.value.slice(0, BRAND_CONTEXT_MAX_CHARS))}
           rows={6}
           disabled={loadingContext}
           placeholder={
@@ -202,9 +195,7 @@ export function AiCopyAssistant({ brandId, brandLabel }: Props) {
           }
           className="w-full resize-y rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-accent/60 focus:outline-none focus:ring-2 focus:ring-accent/25 disabled:opacity-60 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-100 dark:placeholder:text-slate-500"
         />
-        {contextError ? (
-          <p className="text-xs text-red-400">{contextError}</p>
-        ) : null}
+        {contextError ? <p className="text-xs text-red-400">{contextError}</p> : null}
         <div className="flex items-center gap-2">
           <button
             type="button"
@@ -212,11 +203,9 @@ export function AiCopyAssistant({ brandId, brandLabel }: Props) {
             disabled={!dirty || saving || loadingContext}
             className="rounded-lg bg-accent px-3 py-1.5 text-xs font-semibold text-black transition disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {saving ? "Saving…" : dirty ? "Save context" : "Saved"}
+            {saving ? "Saving…" : dirty ? "Save context" : "Context saved"}
           </button>
-          {dirty ? (
-            <span className="text-[11px] text-slate-500">Unsaved changes</span>
-          ) : null}
+          {dirty ? <span className="text-[11px] text-slate-500">Unsaved changes</span> : null}
         </div>
       </div>
 
@@ -229,8 +218,8 @@ export function AiCopyAssistant({ brandId, brandLabel }: Props) {
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
           rows={3}
-          placeholder="e.g. Write a Mother's Day promo caption for our signature facial, 20% off this weekend only."
-          className="w-full resize-y rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-accent/60 focus:outline-none focus:ring-2 focus:ring-accent/25"
+          placeholder="e.g., Write a Mother's Day promo caption for our signature facial, 20% off this weekend only."
+          className="w-full resize-y rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-accent/60 focus:outline-none focus:ring-2 focus:ring-accent/25 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-100 dark:placeholder:text-slate-500"
         />
         <div className="flex items-center gap-2">
           <button
@@ -241,11 +230,9 @@ export function AiCopyAssistant({ brandId, brandLabel }: Props) {
           >
             {generating ? "Generating…" : "Generate caption"}
           </button>
-          <span className="text-[11px] text-slate-500">Gemini 2.5 Flash</span>
+          <span className="text-[11px] text-slate-500">Gemini 3.5 Flash Low</span>
         </div>
-        {generateError ? (
-          <p className="text-xs text-red-400">{generateError}</p>
-        ) : null}
+        {generateError ? <p className="text-xs text-red-400">{generateError}</p> : null}
       </div>
 
       {/* Output */}

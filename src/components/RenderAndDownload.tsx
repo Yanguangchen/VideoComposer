@@ -50,9 +50,7 @@ export function RenderAndDownload({
 
     const pollOnce = async () => {
       try {
-        const r = await fetch(
-          `/api/render/progress?sessionId=${encodeURIComponent(sessionId)}`,
-        );
+        const r = await fetch(`/api/render/progress?sessionId=${encodeURIComponent(sessionId)}`);
         if (!r.ok) return;
         const j = (await r.json()) as {
           progress?: number;
@@ -113,9 +111,7 @@ export function RenderAndDownload({
     } catch (e) {
       stopPolling();
       const msg =
-        e instanceof Error
-          ? e.message
-          : "Export failed. Check your connection and try again.";
+        e instanceof Error ? e.message : "Export failed. Check your connection and try again.";
       setLastError(msg);
     } finally {
       stopPolling();
@@ -177,9 +173,7 @@ export function RenderAndDownload({
           className="rounded-lg border border-red-300 bg-red-50 px-3 py-2.5 text-sm leading-snug text-red-900 dark:border-red-800 dark:bg-red-950/40 dark:text-red-100"
           role="alert"
         >
-          <p className="font-semibold text-red-950 dark:text-red-100">
-            Could not export video
-          </p>
+          <p className="font-semibold text-red-950 dark:text-red-100">Export failed</p>
           <p className="mt-1 whitespace-pre-wrap">{lastError}</p>
         </div>
       ) : null}

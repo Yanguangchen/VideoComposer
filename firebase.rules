@@ -1,0 +1,35 @@
+/*
+ * Firebase Security Rules Reference (firebase.rules)
+ * ----------------------------------------------------
+ * Note: By standard Firebase CLI convention (configured in firebase.json):
+ *  - Firestore rules are deployed from: firestore.rules
+ *  - Storage rules are deployed from:   storage.rules
+ *
+ * Below are the consolidated rules for this project for easy reference:
+ */
+
+// ==========================================
+// 1. FIRESTORE SECURITY RULES (firestore.rules)
+// ==========================================
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}
+
+// ==========================================
+// 2. FIREBASE STORAGE RULES (storage.rules)
+// ==========================================
+/*
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /{allPaths=**} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}
+*/

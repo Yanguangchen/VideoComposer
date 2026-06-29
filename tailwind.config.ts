@@ -8,10 +8,16 @@ const config: Config = {
     "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   safelist: [
-    { pattern: /^(text|bg|border)-(slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose)-(50|100|200|300|400|500|600|700|800|900)$/ },
+    {
+      pattern:
+        /^(text|bg|border)-(slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose)-(50|100|200|300|400|500|600|700|800|900)$/,
+    },
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ["var(--font-outfit)", "Outfit", "sans-serif"],
+      },
       colors: {
         // Accent driven by CSS variable so TweaksPanel can swap it at runtime.
         accent: {
@@ -24,8 +30,9 @@ const config: Config = {
         scene: "rgb(var(--scene-rgb) / <alpha-value>)",
       },
       boxShadow: {
-        "glass": "0 1px 0 0 rgba(255,255,255,0.06) inset, 0 10px 30px -12px rgba(0,0,0,0.55)",
-        "accent-glow": "0 0 0 1px rgb(var(--accent-rgb) / 0.55), 0 12px 28px -8px rgb(var(--accent-rgb) / 0.45)",
+        glass: "0 1px 0 0 rgba(255,255,255,0.06) inset, 0 10px 30px -12px rgba(0,0,0,0.55)",
+        "accent-glow":
+          "0 0 0 1px rgb(var(--accent-rgb) / 0.55), 0 12px 28px -8px rgb(var(--accent-rgb) / 0.45)",
       },
       backdropBlur: {
         xs: "6px",

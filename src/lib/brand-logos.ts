@@ -1,13 +1,6 @@
 const IMAGE_EXT = /\.(png|jpe?g|svg|webp|gif)$/i;
 
-const PREFERRED = [
-  "logo.svg",
-  "logo.png",
-  "logo.jpg",
-  "logo.jpeg",
-  "primary.svg",
-  "primary.png",
-];
+const PREFERRED = ["logo.svg", "logo.png", "logo.jpg", "logo.jpeg", "primary.svg", "primary.png"];
 
 export function pickDefaultLogoFile(files: string[]): string | null {
   if (files.length === 0) return null;

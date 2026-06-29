@@ -4,8 +4,10 @@ Next.js dashboard for multi-brand **Before / After** (and related) marketing vid
 
 ## Stack
 
-- **Next.js 15** (App Router) + **Tailwind CSS** + **next-themes** (dark/light)
+- **Next.js 15** (App Router) + **Tailwind CSS** + **next-themes** (dark/light with animated Google Day/Night switch and high-contrast accessible styling)
 - **Remotion** — `@remotion/player` (preview), `@remotion/bundler` + `@remotion/renderer` (server render via `POST /api/render`)
+- **Typography** — **Outfit** global typography applied universally across client components and Remotion templates
+- **Testing & Verification** — **Vitest v3** native test suite + unified `npm run verify` verification pipeline
 - **react-dropzone** — drag-and-drop uploads with `URL.createObjectURL` previews
 
 ## Quick start
@@ -78,24 +80,26 @@ The repo **`Dockerfile`** installs **FFmpeg**, Chrome runtime **libraries**, Nex
 
 ## Project layout (selected)
 
-| Path | Purpose |
-|------|---------|
-| `src/app/api/render/route.ts` | Server-side Remotion render + MP4 response |
-| `src/remotion/` | Remotion compositions and entry (`index.ts` → `Root.tsx`) |
-| `src/config/brands.ts` | Brand definitions |
-| `src/config/video-text-scale.ts` | Clamped scale for all template text |
-| `src/config/logo-offset.ts` | Clamped logo `translate` offsets (px) |
-| `public/assets/logos/<brand-id>/` | Per-brand logos |
-| `public/backgrounds/`, `public/music/` | Optional assets |
+| Path                                   | Purpose                                                   |
+| -------------------------------------- | --------------------------------------------------------- |
+| `src/app/api/render/route.ts`          | Server-side Remotion render + MP4 response                |
+| `src/remotion/`                        | Remotion compositions and entry (`index.ts` → `Root.tsx`) |
+| `src/config/brands.ts`                 | Brand definitions                                         |
+| `src/config/video-text-scale.ts`       | Clamped scale for all template text                       |
+| `src/config/logo-offset.ts`            | Clamped logo `translate` offsets (px)                     |
+| `public/assets/logos/<brand-id>/`      | Per-brand logos                                           |
+| `public/backgrounds/`, `public/music/` | Optional assets                                           |
 
 ## Scripts
 
 ```bash
-npm run dev      # development server
-npm run build    # production build
-npm run start    # production server (after build)
-npm run lint
-npm run verify   # remotion verify + lint + build
+npm run dev           # development server
+npm run build         # production build
+npm run start         # production server (after build)
+npm test              # run native Vitest v3 test suite (15 suites, 65 tests)
+npm run test:coverage # run Vitest with V8 code coverage report
+npm run lint          # ESLint code checks
+npm run verify        # definitive build check: remotion verify + vitest + lint + build
 ```
 
 ## License

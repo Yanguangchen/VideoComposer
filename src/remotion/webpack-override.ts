@@ -7,9 +7,7 @@ export const remotionWebpackOverride: WebpackOverrideFn = (config) => {
   config.resolve = config.resolve ?? {};
   const existing = config.resolve.alias;
   const alias =
-    typeof existing === "object" &&
-    existing !== null &&
-    !Array.isArray(existing)
+    typeof existing === "object" && existing !== null && !Array.isArray(existing)
       ? { ...existing }
       : {};
   alias["@"] = src;

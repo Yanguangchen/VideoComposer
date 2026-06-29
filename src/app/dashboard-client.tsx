@@ -34,9 +34,7 @@ const VideoPreview = dynamic(
     })),
   {
     ssr: false,
-    loading: () => (
-      <p className="p-6 text-sm text-slate-400">Loading preview…</p>
-    ),
+    loading: () => <p className="p-6 text-sm text-slate-400">Loading preview…</p>,
   },
 );
 import { brandLogoPublicUrl, brands, getBrandById } from "@/config/brands";
@@ -45,15 +43,9 @@ import {
   templateModeToCompositionId,
   type TemplateModeId,
 } from "@/config/template-modes";
-import {
-  DEFAULT_SERVICE_FONT_ID,
-  type ServiceFontId,
-} from "@/config/service-fonts";
+import { DEFAULT_SERVICE_FONT_ID, type ServiceFontId } from "@/config/service-fonts";
 import { fileToDataUrl } from "@/lib/files";
-import {
-  DEFAULT_CAPTION_COLOR_HEX,
-  DEFAULT_HEADLINE_COLOR_HEX,
-} from "@/lib/hex-color";
+import { DEFAULT_CAPTION_COLOR_HEX, DEFAULT_HEADLINE_COLOR_HEX } from "@/lib/hex-color";
 import {
   type MediaAsset,
   BACKGROUND_VIDEOS,
@@ -68,14 +60,17 @@ import {
   secondsToDurationFrames,
 } from "@/config/video-duration";
 import { clampLogoOffset } from "@/config/logo-offset";
+import { clampVideoTextSizeScale, DEFAULT_VIDEO_TEXT_SIZE_SCALE } from "@/config/video-text-scale";
+import { createInitialCarouselSlides, type CarouselSlideDraft } from "@/lib/carousel-slides";
 import {
-  clampVideoTextSizeScale,
-  DEFAULT_VIDEO_TEXT_SIZE_SCALE,
-} from "@/config/video-text-scale";
-import {
-  createInitialCarouselSlides,
-  type CarouselSlideDraft,
-} from "@/lib/carousel-slides";
+  clearDraft,
+  draftHasContent,
+  DRAFT_VERSION,
+  loadDraft,
+  saveDraftMedia,
+  saveDraftSettings,
+  type ProjectDraft,
+} from "@/lib/project-draft";
 import type { BeforeAfterTemplateProps } from "@/remotion/before-after-template";
 import type { CarouselTemplateProps } from "@/remotion/carousel-template";
 import type { SingleImageTemplateProps } from "@/remotion/single-image-template";
@@ -94,8 +89,7 @@ function DashboardInner() {
   const [tweaksOpen, setTweaksOpen] = useState(false);
 
   // --- Template / brand / logo ---
-  const [templateMode, setTemplateMode] =
-    useState<TemplateModeId>(DEFAULT_TEMPLATE_MODE);
+  const [templateMode, setTemplateMode] = useState<TemplateModeId>(DEFAULT_TEMPLATE_MODE);
   const [activeBrandId, setActiveBrandId] = useState(brands[0]!.id);
   const [logoFile, setLogoFile] = useState<string | null>(null);
   const [showLogo, setShowLogo] = useState(true);
@@ -109,19 +103,11 @@ function DashboardInner() {
   const [subtitleText, setSubtitleText] = useState("");
   const [showPriceTag, setShowPriceTag] = useState(false);
   const [priceTagText, setPriceTagText] = useState("");
-  const [brandTitleFontId, setBrandTitleFontId] =
-    useState<ServiceFontId>(DEFAULT_SERVICE_FONT_ID);
-  const [serviceFontId, setServiceFontId] =
-    useState<ServiceFontId>(DEFAULT_SERVICE_FONT_ID);
-  const [headlineColorHex, setHeadlineColorHex] = useState(
-    () => DEFAULT_HEADLINE_COLOR_HEX,
-  );
-  const [captionColorHex, setCaptionColorHex] = useState(
-    () => DEFAULT_CAPTION_COLOR_HEX,
-  );
-  const [textSizeScale, setTextSizeScale] = useState(
-    DEFAULT_VIDEO_TEXT_SIZE_SCALE,
-  );
+  const [brandTitleFontId, setBrandTitleFontId] = useState<ServiceFontId>(DEFAULT_SERVICE_FONT_ID);
+  const [serviceFontId, setServiceFontId] = useState<ServiceFontId>(DEFAULT_SERVICE_FONT_ID);
+  const [headlineColorHex, setHeadlineColorHex] = useState(() => DEFAULT_HEADLINE_COLOR_HEX);
+  const [captionColorHex, setCaptionColorHex] = useState(() => DEFAULT_CAPTION_COLOR_HEX);
+  const [textSizeScale, setTextSizeScale] = useState(DEFAULT_VIDEO_TEXT_SIZE_SCALE);
   const videoTextScale = clampVideoTextSizeScale(textSizeScale);
 
   // --- Media paths (background / music) ---
@@ -140,15 +126,13 @@ function DashboardInner() {
   const [afterUrl, setAfterUrl] = useState<string | null>(null);
   const [singleFile, setSingleFile] = useState<File | null>(null);
   const [singleUrl, setSingleUrl] = useState<string | null>(null);
-  const [carouselSlides, setCarouselSlides] = useState<CarouselSlideDraft[]>(
-    () => createInitialCarouselSlides(),
+  const [carouselSlides, setCarouselSlides] = useState<CarouselSlideDraft[]>(() =>
+    createInitialCarouselSlides(),
   );
 
   // --- Misc ---
   const [isRendering, setIsRendering] = useState(false);
-  const [durationSeconds, setDurationSeconds] = useState(
-    DEFAULT_DURATION_SECONDS,
-  );
+  const [durationSeconds, setDurationSeconds] = useState(DEFAULT_DURATION_SECONDS);
   const [showBeforeAfterArrow, setShowBeforeAfterArrow] = useState(true);
   const [authReady, setAuthReady] = useState(false);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -160,9 +144,7 @@ function DashboardInner() {
   const [openAiCopy, setOpenAiCopy] = useState(false);
 
   // --- Mobile tab state ---
-  const [mobileTab, setMobileTab] = useState<"configure" | "preview">(
-    "configure",
-  );
+  const [mobileTab, setMobileTab] = useState<"configure" | "preview">("configure");
 
   // --- Library picker ---
   const [libraryPicker, setLibraryPicker] = useState<{
@@ -172,6 +154,16 @@ function DashboardInner() {
 
   const carouselSlidesRef = useRef(carouselSlides);
   carouselSlidesRef.current = carouselSlides;
+
+  // --- Local autosave / resume (IndexedDB, browser-local) ---
+  // `draftReady` gates autosave: we don't write until the initial load has
+  // either restored a draft or confirmed there's nothing to resume, so the
+  // empty default state can never clobber a saved draft before the user decides.
+  const [draftReady, setDraftReady] = useState(false);
+  const [resumeDraft, setResumeDraft] = useState<ProjectDraft | null>(null);
+  // Set while applying a restored draft so the template-switch reset effect
+  // (which wipes uploads on templateMode change) doesn't erase what we restore.
+  const restoringRef = useRef(false);
 
   useEffect(() => {
     return onAuthChange((user) => {
@@ -191,6 +183,9 @@ function DashboardInner() {
   // --- Template switch: reset uploads (keep everything else), show toast ---
   const isFirstRender = useRef(true);
   useEffect(() => {
+    // Restoring a draft sets templateMode to the saved value; skip the reset so
+    // the just-restored uploads survive.
+    if (restoringRef.current) return;
     setBeforeFile(null);
     setAfterFile(null);
     setSingleFile(null);
@@ -299,6 +294,160 @@ function DashboardInner() {
     setSingleFile(file);
   }, []);
 
+  // --- On mount: look for a saved draft and offer to resume it ---
+  useEffect(() => {
+    let cancelled = false;
+    loadDraft()
+      .then((draft) => {
+        if (cancelled) return;
+        if (draft && draftHasContent(draft)) {
+          setResumeDraft(draft);
+        } else {
+          setDraftReady(true); // nothing to resume — start autosaving fresh work
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setDraftReady(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const applyDraft = useCallback(
+    (draft: ProjectDraft) => {
+      const { settings, media } = draft;
+      // Guard the template-switch reset effect while we set everything back.
+      restoringRef.current = true;
+
+      setTemplateMode(settings.templateMode);
+      setActiveBrandId(settings.activeBrandId);
+      setLogoFile(settings.logoFile);
+      setShowLogo(settings.showLogo);
+      setLogoOffsetXPx(settings.logoOffsetXPx);
+      setLogoOffsetYPx(settings.logoOffsetYPx);
+      setServiceTitle(settings.serviceTitle);
+      setSubtitleText(settings.subtitleText);
+      setShowPriceTag(settings.showPriceTag);
+      setPriceTagText(settings.priceTagText);
+      setBrandTitleFontId(settings.brandTitleFontId);
+      setServiceFontId(settings.serviceFontId);
+      setHeadlineColorHex(settings.headlineColorHex);
+      setCaptionColorHex(settings.captionColorHex);
+      setTextSizeScale(settings.textSizeScale);
+      setBackgroundPath(settings.backgroundPath);
+      setMusicPath(settings.musicPath);
+      setDurationSeconds(settings.durationSeconds);
+      setShowBeforeAfterArrow(settings.showBeforeAfterArrow);
+
+      // Files: setBefore/After/Single recreate the object URLs for preview.
+      setBefore(media.beforeFile);
+      setAfter(media.afterFile);
+      setSingle(media.singleFile);
+      setCarouselSlides((prev) => {
+        prev.forEach((s) => {
+          if (s.url) URL.revokeObjectURL(s.url);
+        });
+        if (!media.carouselSlides.length) return createInitialCarouselSlides();
+        return media.carouselSlides.map((s) => ({
+          id: s.id,
+          title: s.title,
+          file: s.file,
+          url: s.file ? URL.createObjectURL(s.file) : null,
+        }));
+      });
+
+      // Release the guard after this commit so genuine template switches reset.
+      setTimeout(() => {
+        restoringRef.current = false;
+      }, 0);
+    },
+    [setBefore, setAfter, setSingle],
+  );
+
+  const handleResume = useCallback(() => {
+    if (resumeDraft) applyDraft(resumeDraft);
+    setResumeDraft(null);
+    setDraftReady(true);
+    toast("Resumed your previous project", "success");
+  }, [resumeDraft, applyDraft, toast]);
+
+  const handleDiscardDraft = useCallback(() => {
+    void clearDraft();
+    setResumeDraft(null);
+    setDraftReady(true);
+  }, []);
+
+  // --- Autosave: settings (small, debounced on every edit) ---
+  useEffect(() => {
+    if (!draftReady) return;
+    const t = setTimeout(() => {
+      void saveDraftSettings({
+        version: DRAFT_VERSION,
+        savedAt: Date.now(),
+        templateMode,
+        activeBrandId,
+        logoFile,
+        showLogo,
+        logoOffsetXPx,
+        logoOffsetYPx,
+        serviceTitle,
+        subtitleText,
+        showPriceTag,
+        priceTagText,
+        brandTitleFontId,
+        serviceFontId,
+        headlineColorHex,
+        captionColorHex,
+        textSizeScale,
+        backgroundPath,
+        musicPath,
+        durationSeconds,
+        showBeforeAfterArrow,
+      });
+    }, 600);
+    return () => clearTimeout(t);
+  }, [
+    draftReady,
+    templateMode,
+    activeBrandId,
+    logoFile,
+    showLogo,
+    logoOffsetXPx,
+    logoOffsetYPx,
+    serviceTitle,
+    subtitleText,
+    showPriceTag,
+    priceTagText,
+    brandTitleFontId,
+    serviceFontId,
+    headlineColorHex,
+    captionColorHex,
+    textSizeScale,
+    backgroundPath,
+    musicPath,
+    durationSeconds,
+    showBeforeAfterArrow,
+  ]);
+
+  // --- Autosave: media blobs (rewritten only when the files change) ---
+  useEffect(() => {
+    if (!draftReady) return;
+    const t = setTimeout(() => {
+      void saveDraftMedia({
+        beforeFile,
+        afterFile,
+        singleFile,
+        carouselSlides: carouselSlides.map((s) => ({
+          id: s.id,
+          title: s.title,
+          file: s.file,
+        })),
+      });
+    }, 400);
+    return () => clearTimeout(t);
+  }, [draftReady, beforeFile, afterFile, singleFile, carouselSlides]);
+
   const libraryEnabled = isFirebaseConfigured();
 
   const openLibraryPicker = useCallback(
@@ -321,10 +470,7 @@ function DashboardInner() {
   );
 
   const pickManyFromLibrary = useMemo(
-    () =>
-      libraryEnabled
-        ? (maxFiles: number) => openLibraryPicker(maxFiles)
-        : undefined,
+    () => (libraryEnabled ? (maxFiles: number) => openLibraryPicker(maxFiles) : undefined),
     [libraryEnabled, openLibraryPicker],
   );
 
@@ -349,8 +495,7 @@ function DashboardInner() {
       bottomImageSrc: afterUrl ?? "",
       bgSrc: backgroundAndMusicPaths.bgSrc,
       musicSrc: backgroundAndMusicPaths.musicSrc,
-      logoSrc:
-        showLogo && logoFile ? brandLogoPublicUrl(brand, logoFile) : "",
+      logoSrc: showLogo && logoFile ? brandLogoPublicUrl(brand, logoFile) : "",
       showLogo,
       showArrow: showBeforeAfterArrow,
       headlineColorHex,
@@ -397,8 +542,7 @@ function DashboardInner() {
       imageSrc: singleUrl ?? "",
       bgSrc: backgroundAndMusicPaths.bgSrc,
       musicSrc: backgroundAndMusicPaths.musicSrc,
-      logoSrc:
-        showLogo && logoFile ? brandLogoPublicUrl(brand, logoFile) : "",
+      logoSrc: showLogo && logoFile ? brandLogoPublicUrl(brand, logoFile) : "",
       showLogo,
       headlineColorHex,
       captionColorHex,
@@ -441,8 +585,7 @@ function DashboardInner() {
       priceTagText,
       bgSrc: backgroundAndMusicPaths.bgSrc,
       musicSrc: backgroundAndMusicPaths.musicSrc,
-      logoSrc:
-        showLogo && logoFile ? brandLogoPublicUrl(brand, logoFile) : "",
+      logoSrc: showLogo && logoFile ? brandLogoPublicUrl(brand, logoFile) : "",
       showLogo,
       headlineColorHex,
       captionColorHex,
@@ -482,17 +625,11 @@ function DashboardInner() {
     if (showLogo && !logoFile) {
       throw new Error("Select a logo from the brand folder.");
     }
-    const origin =
-      typeof window !== "undefined" ? window.location.origin : "";
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
     const logoPath = logoFile ? brandLogoPublicUrl(brand, logoFile) : "";
-    const logoSrcForRender =
-      showLogo && logoPath ? `${origin}${logoPath}` : "";
-    const bgForRender = backgroundPath
-      ? originPublicUrl(origin, backgroundPath)
-      : "";
-    const musicForRender = musicPath
-      ? originPublicUrl(origin, musicPath)
-      : "";
+    const logoSrcForRender = showLogo && logoPath ? `${origin}${logoPath}` : "";
+    const bgForRender = backgroundPath ? originPublicUrl(origin, backgroundPath) : "";
+    const musicForRender = musicPath ? originPublicUrl(origin, musicPath) : "";
 
     if (templateMode === "carousel") {
       if (!carouselSlides.length) {
@@ -562,10 +699,7 @@ function DashboardInner() {
     if (!beforeFile || !afterFile) {
       throw new Error("Both images are required.");
     }
-    const [top, bottom] = await Promise.all([
-      fileToDataUrl(beforeFile),
-      fileToDataUrl(afterFile),
-    ]);
+    const [top, bottom] = await Promise.all([fileToDataUrl(beforeFile), fileToDataUrl(afterFile)]);
     const props: BeforeAfterTemplateProps = {
       brandId: brand.id,
       titleText: brand.displayName,
@@ -662,8 +796,8 @@ function DashboardInner() {
               <span className="text-accent">Composer</span>
             </h1>
             <p className="hidden flex-1 truncate text-xs text-slate-500 dark:text-slate-400 md:block">
-              Multi-brand marketing videos — choose a layout, pick a client,
-              select a logo, add copy, upload media, preview, then export MP4.
+              Multi-brand marketing videos — choose a layout, pick a client, select a logo, add
+              copy, upload media, preview, then export MP4.
             </p>
             <div className="flex flex-1 md:hidden" />
             <div className="flex shrink-0 items-center gap-2">
@@ -695,6 +829,33 @@ function DashboardInner() {
             </div>
           </div>
         </header>
+
+        {/* ------------- Resume previous project banner ------------- */}
+        {resumeDraft ? (
+          <div className="glass-bar sticky top-[52px] z-30 border-b">
+            <div className="mx-auto flex w-full max-w-[1600px] flex-wrap items-center gap-3 px-4 py-2.5">
+              <span className="text-sm text-slate-700 dark:text-slate-200">
+                You have an unfinished project saved on this device.
+              </span>
+              <div className="ml-auto flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleResume}
+                  className="rounded-lg bg-accent px-3 py-1.5 text-xs font-semibold text-white hover:opacity-90"
+                >
+                  Resume
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDiscardDraft}
+                  className="btn-ghost rounded-lg px-3 py-1.5 text-xs font-semibold"
+                >
+                  Start fresh
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : null}
 
         {/* ------------- Mobile tab bar ------------- */}
         <div className="glass-bar sticky top-[52px] z-30 border-b lg:hidden">
@@ -732,10 +893,7 @@ function DashboardInner() {
               <div className="flex flex-col gap-3">
                 {/* Sticky template selector */}
                 <div className="sticky top-0 z-10 -mx-1 -mt-1 px-1 pt-1 pb-2">
-                  <TemplateModePills
-                    value={templateMode}
-                    onChange={setTemplateMode}
-                  />
+                  <TemplateModePills value={templateMode} onChange={setTemplateMode} />
                 </div>
 
                 {/* --------- Section 1 · Identity --------- */}
@@ -798,9 +956,7 @@ function DashboardInner() {
 
                     <details className="group rounded-lg border border-slate-200 bg-black/[0.02] dark:border-white/10 dark:bg-white/[0.02]">
                       <summary className="cursor-pointer list-none px-3 py-2 text-xs font-semibold text-slate-600 transition hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-100">
-                        <span className="mr-1 inline-block transition group-open:rotate-90">
-                          ›
-                        </span>
+                        <span className="mr-1 inline-block transition group-open:rotate-90">›</span>
                         Brand media library
                       </summary>
                       <div className="border-t border-slate-100 p-3 dark:border-white/10">
@@ -869,9 +1025,7 @@ function DashboardInner() {
                         <input
                           type="checkbox"
                           checked={showBeforeAfterArrow}
-                          onChange={(e) =>
-                            setShowBeforeAfterArrow(e.target.checked)
-                          }
+                          onChange={(e) => setShowBeforeAfterArrow(e.target.checked)}
                           className="h-4 w-4 rounded border-slate-500 accent-accent"
                         />
                         Show arrow between before &amp; after
@@ -916,7 +1070,7 @@ function DashboardInner() {
                             type="text"
                             value={serviceTitle}
                             onChange={(e) => setServiceTitle(e.target.value)}
-                            placeholder="e.g. Signature Hydra Facial"
+                            placeholder="e.g., Signature Hydra Facial"
                             className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-accent/60 focus:outline-none focus:ring-2 focus:ring-accent/25 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-100 dark:placeholder:text-slate-500"
                           />
                         </label>
@@ -927,7 +1081,7 @@ function DashboardInner() {
                           type="text"
                           value={subtitleText}
                           onChange={(e) => setSubtitleText(e.target.value)}
-                          placeholder="e.g. Beauty & Wellness"
+                          placeholder="e.g., Beauty & Wellness"
                           className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-accent/60 focus:outline-none focus:ring-2 focus:ring-accent/25 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-100 dark:placeholder:text-slate-500"
                         />
                       </label>
@@ -936,9 +1090,7 @@ function DashboardInner() {
                           <input
                             type="checkbox"
                             checked={showPriceTag}
-                            onChange={(e) =>
-                              setShowPriceTag(e.target.checked)
-                            }
+                            onChange={(e) => setShowPriceTag(e.target.checked)}
                             className="h-3.5 w-3.5 rounded border-slate-500 accent-accent"
                           />
                           Show price tag
@@ -947,10 +1099,8 @@ function DashboardInner() {
                           <input
                             type="text"
                             value={priceTagText}
-                            onChange={(e) =>
-                              setPriceTagText(e.target.value)
-                            }
-                            placeholder="e.g. $99 · From $129"
+                            onChange={(e) => setPriceTagText(e.target.value)}
+                            placeholder="e.g., $99 · From $129"
                             className="mt-2 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-accent/60 focus:outline-none focus:ring-2 focus:ring-accent/25 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-100 dark:placeholder:text-slate-500"
                           />
                         ) : null}
@@ -970,9 +1120,7 @@ function DashboardInner() {
                       />
                       <ServiceFontPicker
                         label={
-                          templateMode === "carousel"
-                            ? "Slide caption font"
-                            : "Service title font"
+                          templateMode === "carousel" ? "Slide caption font" : "Service title font"
                         }
                         description={
                           templateMode === "carousel"
@@ -982,10 +1130,7 @@ function DashboardInner() {
                         value={serviceFontId}
                         onChange={setServiceFontId}
                       />
-                      <VideoTextSizeSlider
-                        value={videoTextScale}
-                        onChange={setTextSizeScale}
-                      />
+                      <VideoTextSizeSlider value={videoTextScale} onChange={setTextSizeScale} />
                     </div>
 
                     {/* Background & music */}
@@ -1048,10 +1193,7 @@ function DashboardInner() {
           <section
             className={`${mobileTab === "preview" ? "flex" : "hidden"} relative min-h-0 flex-1 lg:flex lg:overflow-y-auto`}
           >
-            <div
-              aria-hidden
-              className="preview-ambient pointer-events-none absolute inset-0"
-            />
+            <div aria-hidden className="preview-ambient pointer-events-none absolute inset-0" />
             <div className="relative flex w-full flex-1 flex-col items-center justify-start px-4 py-6 lg:justify-center lg:px-8">
               <div className="flex w-full flex-col items-center gap-3 lg:sticky lg:top-4">
                 <div

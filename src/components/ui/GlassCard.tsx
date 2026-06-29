@@ -86,9 +86,7 @@ export function GlassCard({
             {badge ? <Badge kind={badge} /> : null}
           </span>
           {hint && !open ? (
-            <span className="truncate text-xs text-slate-500 dark:text-slate-400">
-              {hint}
-            </span>
+            <span className="truncate text-xs text-slate-500 dark:text-slate-400">{hint}</span>
           ) : null}
         </div>
         <svg
@@ -106,9 +104,7 @@ export function GlassCard({
           />
         </svg>
       </button>
-      <div
-        className={`collapse-grid ${open ? "collapse-grid--open" : "collapse-grid--closed"}`}
-      >
+      <div className={`collapse-grid ${open ? "collapse-grid--open" : "collapse-grid--closed"}`}>
         <div>
           <div
             id={panelId}

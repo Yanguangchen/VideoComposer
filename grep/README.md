@@ -4,19 +4,19 @@ Pre-built, grep-friendly indexes of the VideoComposer codebase. Every line ends 
 
 ## Files
 
-| File | What it indexes |
-|------|-----------------|
-| `exports.txt` | Every top-level `export` in `src/` (functions, consts, types, interfaces, default exports) |
-| `types.txt` | Every `type` and `interface` declaration (exported and local `Props`) |
-| `components.txt` | Every React component with its file and prop type location |
-| `api-routes.txt` | HTTP handler entry points in `src/app/api/` |
-| `hooks.txt` | Files using React hooks (`useState`, `useEffect`, `useRef`, `useMemo`, `useCallback`, `useContext`) |
-| `client-boundaries.txt` | Files marked `"use client"` (client-only React tree) |
-| `fetch-calls.txt` | All `fetch(...)` call sites (client → server API map) |
-| `remotion-imports.txt` | Every import from `remotion` or `@remotion/*` (bundler/renderer/player seams) |
-| `file-tree.txt` | Annotated `src/` tree with one-line role per file |
-| `symbol-map.txt` | Flat symbol → file:line lookup, sorted alphabetically |
-| `cheatsheet.md` | Common `grep`/`rg` recipes for this repo |
+| File                    | What it indexes                                                                                     |
+| ----------------------- | --------------------------------------------------------------------------------------------------- |
+| `exports.txt`           | Every top-level `export` in `src/` (functions, consts, types, interfaces, default exports)          |
+| `types.txt`             | Every `type` and `interface` declaration (exported and local `Props`)                               |
+| `components.txt`        | Every React component with its file and prop type location                                          |
+| `api-routes.txt`        | HTTP handler entry points in `src/app/api/`                                                         |
+| `hooks.txt`             | Files using React hooks (`useState`, `useEffect`, `useRef`, `useMemo`, `useCallback`, `useContext`) |
+| `client-boundaries.txt` | Files marked `"use client"` (client-only React tree)                                                |
+| `fetch-calls.txt`       | All `fetch(...)` call sites (client → server API map)                                               |
+| `remotion-imports.txt`  | Every import from `remotion` or `@remotion/*` (bundler/renderer/player seams)                       |
+| `file-tree.txt`         | Annotated `src/` tree with one-line role per file                                                   |
+| `symbol-map.txt`        | Flat symbol → file:line lookup, sorted alphabetically                                               |
+| `cheatsheet.md`         | Common `grep`/`rg` recipes for this repo                                                            |
 
 ## Usage
 

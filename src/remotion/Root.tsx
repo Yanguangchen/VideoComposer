@@ -1,26 +1,11 @@
 import { Composition } from "remotion";
-import {
-  clampDurationFrames,
-  DEFAULT_DURATION_FRAMES,
-} from "@/config/video-duration";
+import { clampDurationFrames, DEFAULT_DURATION_FRAMES } from "@/config/video-duration";
 import { DEFAULT_SERVICE_FONT_ID } from "@/config/service-fonts";
-import {
-  DEFAULT_CAPTION_COLOR_HEX,
-  DEFAULT_HEADLINE_COLOR_HEX,
-} from "@/lib/hex-color";
+import { DEFAULT_CAPTION_COLOR_HEX, DEFAULT_HEADLINE_COLOR_HEX } from "@/lib/hex-color";
 import { brands } from "../config/brands";
-import {
-  BeforeAfterTemplate,
-  type BeforeAfterTemplateProps,
-} from "./before-after-template";
-import {
-  CarouselTemplate,
-  type CarouselTemplateProps,
-} from "./carousel-template";
-import {
-  SingleImageTemplate,
-  type SingleImageTemplateProps,
-} from "./single-image-template";
+import { BeforeAfterTemplate, type BeforeAfterTemplateProps } from "./before-after-template";
+import { CarouselTemplate, type CarouselTemplateProps } from "./carousel-template";
+import { SingleImageTemplate, type SingleImageTemplateProps } from "./single-image-template";
 
 const defaultBrand = brands[0]!;
 
@@ -105,9 +90,7 @@ export const RemotionRoot = () => {
         calculateMetadata={async ({ props }) => {
           const p = props as BeforeAfterTemplateProps;
           return {
-            durationInFrames: clampDurationFrames(
-              p.durationInFrames ?? DEFAULT_DURATION_FRAMES,
-            ),
+            durationInFrames: clampDurationFrames(p.durationInFrames ?? DEFAULT_DURATION_FRAMES),
           };
         }}
       />
@@ -122,9 +105,7 @@ export const RemotionRoot = () => {
         calculateMetadata={async ({ props }) => {
           const p = props as SingleImageTemplateProps;
           return {
-            durationInFrames: clampDurationFrames(
-              p.durationInFrames ?? DEFAULT_DURATION_FRAMES,
-            ),
+            durationInFrames: clampDurationFrames(p.durationInFrames ?? DEFAULT_DURATION_FRAMES),
           };
         }}
       />
@@ -139,9 +120,7 @@ export const RemotionRoot = () => {
         calculateMetadata={async ({ props }) => {
           const p = props as CarouselTemplateProps;
           const slideCount = Math.max(1, p.slides?.length ?? 1);
-          const user = clampDurationFrames(
-            p.durationInFrames ?? DEFAULT_DURATION_FRAMES,
-          );
+          const user = clampDurationFrames(p.durationInFrames ?? DEFAULT_DURATION_FRAMES);
           // Honor the user's duration — slides share it equally in the template.
           // Only lift to `slideCount` frames so each slide has at least one frame.
           return {

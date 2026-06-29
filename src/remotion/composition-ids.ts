@@ -1,4 +1,1 @@
-export type RemotionCompositionId =
-  | "BeforeAfter"
-  | "SingleImage"
-  | "Carousel";
+export type RemotionCompositionId = "BeforeAfter" | "SingleImage" | "Carousel";

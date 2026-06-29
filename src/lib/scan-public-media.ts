@@ -22,10 +22,7 @@ function shouldSkipEntry(name: string): boolean {
   return name.startsWith(".") || name.startsWith("_");
 }
 
-async function walkFiles(
-  dirAbs: string,
-  relBase: string,
-): Promise<string[]> {
+async function walkFiles(dirAbs: string, relBase: string): Promise<string[]> {
   const out: string[] = [];
   let entries;
   try {

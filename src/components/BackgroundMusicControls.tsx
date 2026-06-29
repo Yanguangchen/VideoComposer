@@ -24,9 +24,7 @@ export function BackgroundMusicControls({
   return (
     <div className="flex flex-col gap-6">
       {mediaLoading ? (
-        <p className="text-xs text-slate-500 dark:text-slate-400">
-          Scanning public folders…
-        </p>
+        <p className="text-xs text-slate-500 dark:text-slate-400">Scanning public folders…</p>
       ) : null}
 
       <div className="flex flex-col gap-2">
@@ -65,9 +63,7 @@ export function BackgroundMusicControls({
       </div>
 
       <div className="flex flex-col gap-2">
-        <label className="text-sm font-semibold text-slate-800 dark:text-slate-100">
-          Music
-        </label>
+        <label className="text-sm font-semibold text-slate-800 dark:text-slate-100">Music</label>
         <select
           value={musicPath ?? ""}
           onChange={(e) => {

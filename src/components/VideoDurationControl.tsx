@@ -28,9 +28,7 @@ export function VideoDurationControl({ durationSeconds, onChange }: Props) {
             max={MAX_DURATION_SECONDS}
             step={0.5}
             value={safe}
-            onChange={(e) =>
-              onChange(clampDurationSeconds(Number(e.target.value)))
-            }
+            onChange={(e) => onChange(clampDurationSeconds(Number(e.target.value)))}
             className="w-full accent-blue-600 dark:accent-blue-500"
           />
           <span className="text-[11px] text-slate-400 dark:text-slate-500">
@@ -38,9 +36,7 @@ export function VideoDurationControl({ durationSeconds, onChange }: Props) {
           </span>
         </label>
         <label className="flex flex-col gap-1">
-          <span className="text-xs font-medium text-slate-700 dark:text-slate-200">
-            Exact
-          </span>
+          <span className="text-xs font-medium text-slate-700 dark:text-slate-200">Exact</span>
           <input
             type="number"
             min={MIN_DURATION_SECONDS}
@@ -62,7 +58,7 @@ export function VideoDurationControl({ durationSeconds, onChange }: Props) {
         onClick={() => onChange(DEFAULT_DURATION_SECONDS)}
         className="self-start text-xs font-medium text-blue-700 hover:underline dark:text-blue-400"
       >
-        Reset to {DEFAULT_DURATION_SECONDS}s default
+        Reset to {DEFAULT_DURATION_SECONDS}s
       </button>
     </div>
   );

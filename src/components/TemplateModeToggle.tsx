@@ -14,9 +14,7 @@ type Props = {
 export function TemplateModeToggle({ value, onChange }: Props) {
   return (
     <div className="flex flex-col gap-2">
-      <span className="text-sm font-semibold text-slate-800 dark:text-slate-100">
-        Video layout
-      </span>
+      <span className="text-sm font-semibold text-slate-800 dark:text-slate-100">Video layout</span>
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
         {TEMPLATE_MODES.map((m) => {
           const active = value === m.id;
@@ -33,9 +31,7 @@ export function TemplateModeToggle({ value, onChange }: Props) {
             >
               <span
                 className={`text-sm font-bold ${
-                  active
-                    ? "text-blue-900 dark:text-blue-100"
-                    : "text-slate-800 dark:text-slate-200"
+                  active ? "text-blue-900 dark:text-blue-100" : "text-slate-800 dark:text-slate-200"
                 }`}
               >
                 {m.shortLabel}

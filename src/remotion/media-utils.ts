@@ -5,11 +5,7 @@ export const PIXEL =
 
 export function resolveMediaSrc(src: string): string {
   if (!src) return PIXEL;
-  if (
-    src.startsWith("http") ||
-    src.startsWith("data:") ||
-    src.startsWith("blob:")
-  ) {
+  if (src.startsWith("http") || src.startsWith("data:") || src.startsWith("blob:")) {
     return src;
   }
   const trimmed = src.startsWith("/") ? src.slice(1) : src;

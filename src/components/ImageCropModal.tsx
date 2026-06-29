@@ -59,12 +59,9 @@ export function ImageCropModal({
     }
   }, [open, imageSrc, defaultAspect]);
 
-  const onCropComplete = useCallback(
-    (_croppedArea: Area, croppedAreaPixels: Area) => {
-      croppedAreaPixelsRef.current = croppedAreaPixels;
-    },
-    [],
-  );
+  const onCropComplete = useCallback((_croppedArea: Area, croppedAreaPixels: Area) => {
+    croppedAreaPixelsRef.current = croppedAreaPixels;
+  }, []);
 
   const handleApply = useCallback(async () => {
     const pixels = croppedAreaPixelsRef.current;
@@ -76,10 +73,7 @@ export function ImageCropModal({
         quality: 0.92,
       });
       const base =
-        (fileNameHint?.replace(/\.[^.]+$/, "") || "image").replace(
-          /[^\w\-]+/g,
-          "-",
-        ) || "image";
+        (fileNameHint?.replace(/\.[^.]+$/, "") || "image").replace(/[^\w\-]+/g, "-") || "image";
       const file = new File([blob], `${base}-cropped.jpg`, {
         type: "image/jpeg",
       });
@@ -113,8 +107,7 @@ export function ImageCropModal({
             Crop &amp; position
           </h2>
           <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-            Drag to reframe. Use zoom to scale. Matches your video frame best at
-            9:16.
+            Drag to reframe. Use zoom to scale. Matches your video frame best at 9:16.
           </p>
         </div>
 

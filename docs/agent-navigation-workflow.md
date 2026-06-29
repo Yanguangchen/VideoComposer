@@ -1,165 +1,163 @@
-# AI agent navigation workflow — Video Composer
+# AI Agent Navigation Workflow & Automation Blueprint
 
-This document describes how an **AI agent** (browser automation, testing harness, or coding assistant driving the UI) should **navigate and use** the Video Composer dashboard at `/` (single-page app).
-
----
-
-## 1. Entry URL and shell
-
-- **Route:** `/` loads `DashboardClient` (client-only dashboard).
-- **Header:** “Video Composer” title, tagline, **Sign out**, **theme toggle** (light/dark).
-- **Main:** Two-column layout on large screens — **left:** configuration accordions + Export; **right:** **Preview** accordion.
+This document describes how an **AI agent** (browser automation, testing harness, or coding assistant driving the UI) should **navigate and automate** the Video Composer dashboard at `/` (single-page app) and the subsequent Facebook publishing pipeline.
 
 ---
 
-## 2. Authentication gate (must pass first)
+## 1. Entry URL and Shell Layout
 
-1. On first visit, a **modal dialog** (`role="dialog"`, “Sign in”) blocks the dashboard.
-2. The form has a **Password** field (`type="password"`, `name="password"`) and a submit action.
-3. Successful sign-in sets client storage and dismisses the modal; the full dashboard appears.
-4. **Agents:** Read the current demo password from the repo constant **`SIMULATED_AUTH_PASSWORD`** in `src/lib/simulated-auth.ts` (do not hardcode secrets in automation configs; sync with that file if it changes).
-5. **Sign out:** Header button clears sign-in and returns to the sign-in modal.
-
-Until signed in, **no** accordion content is available.
-
----
-
-## 3. Accordion navigation pattern
-
-Steps use **`DashboardStepAccordion`**: only **one** section in the left column may be “open” at a time (`openLeftStepId`). Clicking a section **header** toggles that section open and closes others.
-
-| Section id        | Title (approx.)                 |
-|-------------------|----------------------------------|
-| `layout`          | Layout                           |
-| `brand`           | 1. Brand                         |
-| `logo`            | 2. Logo (from disk)              |
-| `colors`          | 3. Video text colors             |
-| `background`      | 4. Background video & music      |
-| `text`            | 5. Text & fonts                  |
-| `duration`        | 6. Video length                  |
-| `photos`          | 7. Images (label varies by mode) |
-
-**Preview** (right column) uses a separate accordion id **`preview`**; it can stay open independently of the left column.
-
-**Agent strategy:** Open each section by clicking its **visible heading** (or button that expands it), then interact with controls inside the expanded panel.
+- **Route**: `/` loads `DashboardClient` (client-only dashboard).
+- **Header Controls**: “Video Composer” title, tagline, **Sign out** button, and the **theme toggle** (light/dark).
+- **Main Layout**: Two-column layout on desktop:
+  - **Left column**: Configuration accordions (numbered steps 1–8) + Sticky Export Bar at the bottom.
+  - **Right column**: **Preview** accordion containing the live Remotion Player.
+- **Mobile Viewports (<1024px)**: Top tab bar switches views between **Configure** (left column) and **Preview** (right column).
 
 ---
 
-## 4. Recommended workflow (happy path)
+## 2. Authentication Gate
 
-Execute in order; skip steps that do not apply after **Layout** is chosen.
-
-### Step A — Layout (`layout`)
-
-- Find **“Video layout”** and three buttons: **Before / After**, **Single image**, **Carousel**.
-- Click one to set `templateMode`:
-  - **before-after** — two photos, optional arrow.
-  - **single-image** — one hero image.
-  - **carousel** — multiple slides (image + title each).
-
-Changing layout **resets** uploaded photos in the client state.
-
-### Step B — Brand (`brand`)
-
-- Select a brand (list driven by `src/config/brands.ts`).
-- Brand drives default headline text and logo folder.
-
-### Step C — Logo (`logo`)
-
-- **LogoPicker:** choose a file from the brand’s logo folder (or upload path as implemented).
-- Checkbox **“Show logo in video”** — if **unchecked**, export does **not** require a logo file; if **checked**, a logo selection is required for export (see gating below).
-
-### Step D — Colors (`colors`)
-
-- Set **headline** and **caption** hex colors (color pickers / inputs).
-
-### Step E — Background & music (`background`)
-
-- Choose optional **background video** and **music** from scanned `public/` assets (dropdowns; may show loading until `/api/public-media` returns).
-
-### Step F — Text & fonts (`text`)
-
-- **Brand title font** — always relevant.
-- **Subtitle** (optional).
-- **Show price tag** + **price tag text** if enabled.
-- **Service title** + **Service title font** — for **Before/After** and **Single image** only.
-- **Carousel:** includes **Slide caption font**; **service title** block is not used the same way (per-slide titles in carousel step).
-
-### Step G — Video length (`duration`)
-
-- Set duration in seconds (clamped by app config).
-
-### Step H — Photos (`photos`) — depends on layout
-
-| Layout        | Actions |
-|---------------|---------|
-| **Single image** | One **MediaUploader** (“Hero image”). Optional **Crop & position** after upload. |
-| **Before/After** | Two uploaders: **Before**, **After**. Optional **Show arrow between before & after**. |
-| **Carousel** | **CarouselSlidesEditor:** per slide: **Slide title** text, **Image** upload, optional crop. **+ Add slide** up to max slides. |
-
-**Export gating:**
-
-- **showLogo true:** need logo **and** required images.
-- **showLogo false:** need only required images (single / both before-after / every slide).
-
-### Step I — Export (section below accordions)
-
-- **“Export MP4”** button in the **Export** card.
-- Disabled until `canExport` (see messages under the button when disabled).
-- Triggers `POST /api/render` with progress polling on `/api/render/progress`; success downloads **video.mp4**.
-
-### Step J — Preview (`preview`)
-
-- Right column **“8. Preview”** — expand to see **Remotion Player** live preview.
-- Preview reflects current props; useful to verify before export.
+1. On first visit, a **modal dialog** (`role="dialog"`, title "Sign in") overlays and blocks the dashboard.
+2. The form contains a **Password** field (`type="password"`, `name="password"`) and a submit button.
+3. **Agent Rule**: Retrieve the current password dynamically from the `SIMULATED_AUTH_PASSWORD` constant in [src/lib/simulated-auth.ts](file:///C:/Users/Yangu/Documents/GitHub/VideoComposer/src/lib/simulated-auth.ts) (default is `webwizards@01`).
+4. Programmatic bypass for headless testing: Inject `localStorage.setItem('video-composer-simulated-auth', '1')` into the browser context before loading the URL to skip the modal entirely.
 
 ---
 
-## 5. Composition IDs (for API / automation)
+## 3. Step Accordion Navigation Pattern
 
-Mapping from `src/config/template-modes.ts`:
+The left column uses collapsible sections. Only **one** configuration step is open at a time (`openLeftStepId`). Clicking a section **header** toggles it open and automatically closes others.
 
-| Layout        | `templateMode`   | `compositionId` (POST body) |
-|---------------|------------------|-------------------------------|
-| Before/After  | `before-after`   | `BeforeAfter`                 |
-| Single image  | `single-image`   | `SingleImage`                 |
-| Carousel      | `carousel`       | `Carousel`                    |
+| Step ID      | Title                       | Elements Contained                                                 |
+| :----------- | :-------------------------- | :----------------------------------------------------------------- |
+| `layout`     | Layout                      | TemplateMode Toggle pills (Before/After, Single, Carousel)         |
+| `brand`      | 1. Brand                    | Brand selector grid (driven by `brands.ts` list)                   |
+| `logo`       | 2. Logo                     | Brand logo picker dropdown, "Show logo" checkbox, nudge sliders    |
+| `colors`     | 3. Video text colors        | Color pickers and hex value input fields for text custom styles    |
+| `background` | 4. Background video & music | Dropdowns selecting music tracks and background clips              |
+| `text`       | 5. Text & fonts             | Font pickers, subtitle input, price tag toggles, text scale slider |
+| `duration`   | 6. Video length             | Video length slider (clamps duration in seconds)                   |
+| `photos`     | 7. Images / Slides          | Media upload dropzones (varies by template mode)                   |
 
----
-
-## 6. Secondary actions
-
-- **Go to Facebook Pages** — link under Export (`RenderAndDownload`), opens external URL in a new tab.
-- **Theme toggle** — header; affects CSS class `dark` on `<html>`, not export output.
-
----
-
-## 7. Pitfalls for agents
-
-1. **Sign-in required** — automate password submit first.
-2. **One accordion open** on the left — open the target section before querying controls inside it.
-3. **Layout switch clears uploads** — set layout before uploading images.
-4. **Carousel** — every slide must have an image file for export when requirements are met.
-5. **Export** needs a **server** with FFmpeg + Remotion deps (local `next dev` or Docker); serverless hosts may return 503 (see `docs/deployment.md`).
-6. **Crop modal** — opens from **Crop & position**; **Apply** replaces the file; **Cancel** closes without changes.
+The **Preview** section in the right column uses a separate independent accordion ID `preview` and remains open regardless of the left sidebar state.
 
 ---
 
-## 8. Quick reference — DOM / accessibility hints
+## 4. Recommended Configuration Workflow (Happy Path)
 
-- Sign-in: `role="dialog"`, heading “Sign in”.
-- Main steps: accordion buttons/headings with section titles above.
-- Export: primary button text **“Export MP4”**.
-- Progress: region with **“Render progress”** (`role="progressbar"`) during render.
+### Step A — Layout selection (`layout`)
+
+Select the layout mode first. **Changing template mode resets uploaded media state**.
+
+- **Before / After** (`before-after`): For comparing transformation states.
+- **Single image** (`single-image`): For displaying a hero graphic.
+- **Carousel** (`carousel`): For multi-slide portfolio slide shows.
+
+### Step B — Brand selection (`brand`)
+
+Select a brand from the grid. This populates brand defaults and presets the logo folder mapping.
+
+### Step C — Logo settings (`logo`)
+
+- Choose a logo filename from the list.
+- Toggle **"Show logo in video"**. If disabled, logo requirements are bypassed on export.
+
+### Step D — Style adjustments (`colors`, `background`, `text`, `duration`)
+
+- Select headline and caption colors.
+- Select background video loops and music tracks. **Do not leave these at "none"** (see creative guidelines in [docs/developer-guide.md](file:///C:/Users/Yangu/Documents/GitHub/VideoComposer/docs/developer-guide.md)).
+- Set title fonts, subtitle text, price badges, and clamping length in seconds.
+
+### Step E — Media uploads (`photos`)
+
+- **Single Image**: Drop a hero photo. Click **Crop & position** to format it (9:16 aspect ratio).
+- **Before / After**: Drop a starting photo in "Before" and a finished photo in "After".
+- **Carousel**: Add slide cards (up to `MAX_CAROUSEL_SLIDES`). For each slide, write a title and drop an image.
 
 ---
 
-## 9. Related files
+## 5. Crop Modal & AI Copy Assistant Automation
 
-| File | Purpose |
-|------|---------|
-| `src/app/dashboard-client.tsx` | All steps, gating, export |
-| `src/lib/simulated-auth.ts` | Sign-in storage + password constant |
-| `src/config/template-modes.ts` | Layout ids ↔ composition ids |
-| `src/config/brands.ts` | Brand list |
-| `docs/deployment.md` | Production export constraints |
+### 5.1 Image Crop Modal Flow
+
+When **Crop & position** is clicked:
+
+1. An overlay modal opens.
+2. **Visual Strategy**: Locate the viewport container (`react-easy-crop` container).
+3. **Controls**:
+   - Zoom Slider: Range input. Automate by setting the value (1.0 to 3.0) or drag-sliding.
+   - Crop Aspect Ratios: Click aspect button (e.g. `9:16` or `1:1`).
+4. **Action**: Click the primary button **"Apply"** to run canvas cropping and update the local upload blob, or click **"Cancel"** to close.
+
+### 5.2 AI Copy Assistant Generation Flow
+
+1. Scroll down to the **AI copy** step card (last card in the left column).
+2. Type or edit context inside the **Brand context** textarea. Click **"Save"** (verifying that it writes to Firestore `brandContexts/{brandId}`).
+3. Type the description details in the **Ad prompt** input field.
+4. Click **"Generate caption"**.
+5. **Loading check**: Detect the spinner/loading status on the button.
+6. When the response appears, click the **"Copy"** button to copy the plain-text ad copy block to the clipboard.
+
+---
+
+## 6. Export Execution Flow
+
+1. Verify that the **"Export MP4"** button in the bottom Export Bar is active (checks `canExport` rules).
+2. Click **"Export MP4"**.
+3. **Progress Tracking**: Scan the progress bar text (polls `/api/render/progress` until it displays "Done" or hits 100%).
+4. **File Retrieval**:
+   - Do **not** open browser downloads pages (`chrome://downloads`).
+   - Run a terminal command to fetch the newest MP4 in the default folder:
+     ```bash
+     readlink -f "$(ls -t ~/Downloads/*.mp4 | head -1)"
+     ```
+   - Store the absolute path in memory for publishing.
+
+---
+
+## 7. Facebook Publishing Automation Blueprint
+
+After export, click **"Go to Facebook Pages"** or navigate to `https://wizards-dashboard.vercel.app/facebook.html`.
+
+```mermaid
+flowchart TD
+    Start[Load Facebook Quick Links] --> Auth[Verify active brand profile Page]
+    Auth --> Match[Match brand name to section link]
+    Match --> ClickLink[Click brand link to open page]
+    ClickLink --> FindComposer[Locate Create Post / Photo/Video button]
+    FindComposer --> DropMedia[Click upload & pass absolute MP4 file path]
+    DropMedia --> PasteText[Paste Gemini copy caption from clipboard]
+    PasteText --> SecurityCheck{Verify 'Boost Post' is toggled OFF}
+    SecurityCheck -- ON --> DisableBoost[Toggle Boost Post OFF]
+    DisableBoost --> Post[Click final Publish / Post button]
+    SecurityCheck -- OFF --> Post
+```
+
+### Step 1: Switch Profile Page
+
+Ensure that you are publishing as the Facebook Page identity, not a personal account. If prompted by a popup, accept the profile switch.
+
+### Step 2: Select the Brand Link
+
+Locate the matching brand title under the target category header (e.g. "Beauty Salons") on the Quick Links portal. Click the link to open the Facebook Page composer tab.
+
+### Step 3: Upload the Exported Video
+
+1. Click the **"Photo/video"** button inside the page composer block.
+2. In the OS file selection modal, paste the absolute path retrieved during the Export flow.
+3. Wait for the upload progress indicator to complete.
+
+### Step 4: Add Caption & safety checks
+
+1. Click the description text block and paste the Gemini ad caption copy.
+2. **Critical Safety Gate**: Verify the **"Boost post"** (ad budget) toggle is turned **OFF**. If it is turned ON, click to disable it.
+3. Click the final **"Post"** or **"Share"** button to publish the reel/ad video.
+
+---
+
+## 8. Common Pitfalls for Automation Scripts
+
+- **Collapsed Accordions**: Attempting to click controls inside a step before clicking the accordion header to expand it.
+- **State Erasure**: Selecting the Template layout _after_ uploading images. Layout switches clear files.
+- **Partial Carousel Uploads**: Every carousel slide row must have an image before the export button activates.
+- **Download Delays**: Grabbing the file from the filesystem before the browser finishes writing it (verify that the file extension is `.mp4` and not `.crdownload` or `.part`).

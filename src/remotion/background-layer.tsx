@@ -21,15 +21,7 @@ type Props = {
 export const BackgroundLayer: FC<Props> = ({ bgSrc }) => {
   const resolved = resolveMediaSrc(bgSrc);
   if (isBackgroundVideoSrc(bgSrc)) {
-    return (
-      <Video
-        src={resolved}
-        style={bgStyle}
-        muted
-        volume={0}
-        loop
-      />
-    );
+    return <Video src={resolved} style={bgStyle} muted volume={0} loop />;
   }
   return <Img src={resolved} style={bgStyle} />;
 };

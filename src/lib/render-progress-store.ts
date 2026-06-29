@@ -19,10 +19,7 @@ function prune() {
   }
 }
 
-export function setRenderProgress(
-  sessionId: string,
-  update: Partial<RenderProgressSnapshot>,
-) {
+export function setRenderProgress(sessionId: string, update: Partial<RenderProgressSnapshot>) {
   prune();
   const prev = store.get(sessionId);
   const next: RenderProgressSnapshot & { updatedAt: number } = {
@@ -33,9 +30,7 @@ export function setRenderProgress(
   store.set(sessionId, next);
 }
 
-export function getRenderProgress(
-  sessionId: string,
-): RenderProgressSnapshot | null {
+export function getRenderProgress(sessionId: string): RenderProgressSnapshot | null {
   prune();
   const v = store.get(sessionId);
   if (!v) return null;

@@ -14,10 +14,7 @@ export const BACKGROUND_VIDEOS: MediaAsset[] = [];
 export const MUSIC_TRACKS: MediaAsset[] = [];
 
 /** Merge scanned + config; config wins on duplicate `publicPath`. */
-export function mergeMediaAssets(
-  scanned: MediaAsset[],
-  config: MediaAsset[],
-): MediaAsset[] {
+export function mergeMediaAssets(scanned: MediaAsset[], config: MediaAsset[]): MediaAsset[] {
   const m = new Map<string, MediaAsset>();
   for (const a of scanned) {
     m.set(a.publicPath, a);

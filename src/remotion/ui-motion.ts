@@ -31,16 +31,11 @@ export function uiLayerMotion(
   const total = Math.max(1, durationInFrames);
   const { enter: enterLen, exit: exitLen, stagger } = scaledFrames(total);
 
-  const enterT = interpolate(
-    frame,
-    [enterDelay, enterDelay + enterLen],
-    [0, 1],
-    {
-      extrapolateLeft: "clamp",
-      extrapolateRight: "clamp",
-      easing: Easing.out(Easing.cubic),
-    },
-  );
+  const enterT = interpolate(frame, [enterDelay, enterDelay + enterLen], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+    easing: Easing.out(Easing.cubic),
+  });
 
   const exitLead = exitOrder * stagger;
   const exitEnd = Math.max(0, total - 1 - exitLead);
@@ -51,11 +46,14 @@ export function uiLayerMotion(
   if (exitStart >= exitEnd && exitEnd > 0) {
     exitStart = exitEnd - 1;
   }
-  const exitT = interpolate(frame, [exitStart, exitEnd], [1, 0], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-    easing: Easing.in(Easing.cubic),
-  });
+  const exitT =
+    exitEnd <= 0
+      ? 0
+      : interpolate(frame, [exitStart, exitEnd], [1, 0], {
+          extrapolateLeft: "clamp",
+          extrapolateRight: "clamp",
+          easing: Easing.in(Easing.cubic),
+        });
 
   const opacity = enterT * exitT;
 

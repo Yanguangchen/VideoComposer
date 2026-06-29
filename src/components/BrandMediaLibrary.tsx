@@ -114,9 +114,7 @@ export function BrandMediaLibrary({ brandId, brandLabel }: Props) {
     try {
       await deleteLibraryAsset(asset);
     } catch (err) {
-      alert(
-        `Failed to delete: ${err instanceof Error ? err.message : String(err)}`,
-      );
+      alert(`Failed to delete: ${err instanceof Error ? err.message : String(err)}`);
     } finally {
       setDeletingId(null);
     }
@@ -127,9 +125,8 @@ export function BrandMediaLibrary({ brandId, brandLabel }: Props) {
       <div className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-700/50 dark:bg-amber-950/30 dark:text-amber-200">
         <p className="font-semibold">Firebase not configured</p>
         <p className="mt-1 text-xs">
-          Set the <code>NEXT_PUBLIC_FIREBASE_*</code> env vars in{" "}
-          <code>.env.local</code> to enable the shared media library. See{" "}
-          <code>docs/media-library-setup.md</code>.
+          Set the <code>NEXT_PUBLIC_FIREBASE_*</code> env vars in <code>.env.local</code> to enable
+          the shared media library. See <code>docs/media-library-setup.md</code>.
         </p>
       </div>
     );
@@ -139,8 +136,8 @@ export function BrandMediaLibrary({ brandId, brandLabel }: Props) {
     <div className="flex flex-col gap-4">
       <div>
         <p className="text-sm text-slate-700 dark:text-slate-200">
-          Shared library for <span className="font-semibold">{brandLabel}</span>
-          . Drop photos here to bulk-upload, then pick them into any step.
+          Shared library for <span className="font-semibold">{brandLabel}</span>. Drop photos here
+          to bulk-upload, then pick them into any step.
         </p>
       </div>
 
@@ -157,8 +154,7 @@ export function BrandMediaLibrary({ brandId, brandLabel }: Props) {
           Drop photos to upload
         </p>
         <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
-          Multiple files supported · saved under{" "}
-          <code>brands/{brandId}/…</code>
+          Multiple files supported · saved under <code>brands/{brandId}/…</code>
         </p>
       </div>
 
@@ -182,11 +178,11 @@ export function BrandMediaLibrary({ brandId, brandLabel }: Props) {
                 }
               >
                 {p.status === "error"
-                  ? (p.error ?? "failed")
+                  ? (p.error ?? "Failed")
                   : p.status === "done"
-                    ? "done"
+                    ? "Done"
                     : p.status === "finalizing"
-                      ? "finalizing…"
+                      ? "Finalizing…"
                       : `${Math.round(p.ratio * 100)}%`}
               </span>
             </li>
@@ -197,9 +193,7 @@ export function BrandMediaLibrary({ brandId, brandLabel }: Props) {
       {loadError ? (
         <p className="text-sm text-red-600 dark:text-red-400">{loadError}</p>
       ) : loading ? (
-        <p className="text-xs text-slate-500 dark:text-slate-400">
-          Loading library…
-        </p>
+        <p className="text-xs text-slate-500 dark:text-slate-400">Loading library…</p>
       ) : assets.length === 0 ? (
         <p className="text-xs text-slate-500 dark:text-slate-400">
           No assets yet. Upload a batch above to get started.
@@ -234,8 +228,7 @@ export function BrandMediaLibrary({ brandId, brandLabel }: Props) {
 
       {uploading ? (
         <p className="text-xs text-slate-500 dark:text-slate-400">
-          Uploads in progress — you can continue editing; they&apos;ll appear
-          above when ready.
+          Uploads in progress — you can continue editing; they&apos;ll appear above when ready.
         </p>
       ) : null}
     </div>

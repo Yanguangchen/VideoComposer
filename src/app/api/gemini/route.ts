@@ -1,7 +1,7 @@
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
-const GEMINI_MODEL = "gemini-2.5-flash";
+const GEMINI_MODEL = "gemini-3.5-flash-low";
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 
 const MAX_BRAND_CONTEXT_CHARS = 8000;
@@ -56,8 +56,7 @@ export async function POST(req: Request) {
   if (!apiKey) {
     return Response.json(
       {
-        error:
-          "Gemini is not configured on the server. Set GEMINI_API_KEY and redeploy.",
+        error: "Gemini is not configured on the server. Set GEMINI_API_KEY and redeploy.",
       },
       { status: 503 },
     );
@@ -99,10 +98,7 @@ export async function POST(req: Request) {
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    return Response.json(
-      { error: `Couldn't reach Gemini: ${message}` },
-      { status: 502 },
-    );
+    return Response.json({ error: `Couldn't reach Gemini: ${message}` }, { status: 502 });
   }
 
   const data = (await upstream.json().catch(() => null)) as GeminiResponse | null;

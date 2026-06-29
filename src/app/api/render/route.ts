@@ -8,16 +8,10 @@ import type { RemotionCompositionId } from "@/remotion/composition-ids";
 import type { SingleImageTemplateProps } from "@/remotion/single-image-template";
 import { remotionWebpackOverride } from "@/remotion/webpack-override";
 import { clampLogoOffset } from "@/config/logo-offset";
-import {
-  clampVideoTextSizeScale,
-  DEFAULT_VIDEO_TEXT_SIZE_SCALE,
-} from "@/config/video-text-scale";
+import { clampVideoTextSizeScale, DEFAULT_VIDEO_TEXT_SIZE_SCALE } from "@/config/video-text-scale";
 import { formatRenderError } from "@/lib/render-error";
 import { getServerlessExportBlockMessage } from "@/lib/render-environment";
-import {
-  clearRenderProgress,
-  setRenderProgress,
-} from "@/lib/render-progress-store";
+import { clearRenderProgress, setRenderProgress } from "@/lib/render-progress-store";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -65,10 +59,7 @@ function validateInput(
 
 function normalizeRenderInputProps(
   inputProps: BeforeAfterTemplateProps | SingleImageTemplateProps | CarouselTemplateProps,
-):
-  | BeforeAfterTemplateProps
-  | SingleImageTemplateProps
-  | CarouselTemplateProps {
+): BeforeAfterTemplateProps | SingleImageTemplateProps | CarouselTemplateProps {
   const p = inputProps as {
     textSizeScale?: unknown;
     logoOffsetXPx?: unknown;
@@ -77,12 +68,8 @@ function normalizeRenderInputProps(
   const textSizeScale = clampVideoTextSizeScale(
     typeof p.textSizeScale === "number" ? p.textSizeScale : DEFAULT_VIDEO_TEXT_SIZE_SCALE,
   );
-  const logoOffsetXPx = clampLogoOffset(
-    typeof p.logoOffsetXPx === "number" ? p.logoOffsetXPx : 0,
-  );
-  const logoOffsetYPx = clampLogoOffset(
-    typeof p.logoOffsetYPx === "number" ? p.logoOffsetYPx : 0,
-  );
+  const logoOffsetXPx = clampLogoOffset(typeof p.logoOffsetXPx === "number" ? p.logoOffsetXPx : 0);
+  const logoOffsetYPx = clampLogoOffset(typeof p.logoOffsetYPx === "number" ? p.logoOffsetYPx : 0);
   return { ...inputProps, textSizeScale, logoOffsetXPx, logoOffsetYPx };
 }
 
@@ -104,10 +91,7 @@ export async function POST(req: Request) {
     sessionId = isValidSessionId(body.sessionId) ? body.sessionId : undefined;
 
     if (!compositionId || !inputProps) {
-      return Response.json(
-        { error: "Missing compositionId or inputProps" },
-        { status: 400 },
-      );
+      return Response.json({ error: "Missing compositionId or inputProps" }, { status: 400 });
     }
 
     if (
@@ -137,9 +121,7 @@ export async function POST(req: Request) {
       });
     }
 
-    const { ensureBrowser, renderMedia, selectComposition } = await import(
-      "@remotion/renderer"
-    );
+    const { ensureBrowser, renderMedia, selectComposition } = await import("@remotion/renderer");
 
     if (sessionId) {
       setRenderProgress(sessionId, {
@@ -195,10 +177,7 @@ export async function POST(req: Request) {
       onProgress: ({ progress, stitchStage }) => {
         if (!sessionId) return;
         const pct = 10 + Math.round(progress * 90);
-        const label =
-          stitchStage === "muxing"
-            ? "Muxing audio and video…"
-            : "Rendering frames…";
+        const label = stitchStage === "muxing" ? "Muxing audio and video…" : "Rendering frames…";
         setRenderProgress(sessionId, {
           progress: Math.min(99, pct),
           label,

@@ -1,9 +1,6 @@
 "use client";
 
-import {
-  TEMPLATE_MODES,
-  type TemplateModeId,
-} from "@/config/template-modes";
+import { TEMPLATE_MODES, type TemplateModeId } from "@/config/template-modes";
 
 type Props = {
   value: TemplateModeId;
@@ -72,9 +69,7 @@ export function TemplateModePills({ value, onChange }: Props) {
             title={m.description}
           >
             <ModeIcon mode={m.id} />
-            <span className="truncate text-[11px] font-semibold leading-tight">
-              {m.shortLabel}
-            </span>
+            <span className="truncate text-[11px] font-semibold leading-tight">{m.shortLabel}</span>
           </button>
         );
       })}

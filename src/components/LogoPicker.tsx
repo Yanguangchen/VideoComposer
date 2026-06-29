@@ -3,10 +3,7 @@
 import { useEffect, useState } from "react";
 import type { Brand } from "@/config/brands";
 import { brandLogoPublicUrl } from "@/config/brands";
-import {
-  LOGO_STORAGE_PREFIX,
-  pickDefaultLogoFile,
-} from "@/lib/brand-logos";
+import { LOGO_STORAGE_PREFIX, pickDefaultLogoFile } from "@/lib/brand-logos";
 
 type Props = {
   brand: Brand;
@@ -33,12 +30,9 @@ export function LogoPicker({ brand, value, onChange }: Props) {
         setFiles(data.files);
         const storageKey = `${LOGO_STORAGE_PREFIX}${brand.id}`;
         const stored =
-          typeof window !== "undefined"
-            ? window.localStorage.getItem(storageKey)
-            : null;
+          typeof window !== "undefined" ? window.localStorage.getItem(storageKey) : null;
         const defaultFile = pickDefaultLogoFile(data.files);
-        const next =
-          stored && data.files.includes(stored) ? stored : defaultFile;
+        const next = stored && data.files.includes(stored) ? stored : defaultFile;
         onChange(next);
       })
       .catch((e: unknown) => {
@@ -60,26 +54,18 @@ export function LogoPicker({ brand, value, onChange }: Props) {
   function handleSelect(filename: string) {
     onChange(filename || null);
     if (filename && typeof window !== "undefined") {
-      window.localStorage.setItem(
-        `${LOGO_STORAGE_PREFIX}${brand.id}`,
-        filename,
-      );
+      window.localStorage.setItem(`${LOGO_STORAGE_PREFIX}${brand.id}`, filename);
     }
   }
 
-  const previewUrl =
-    value && files.includes(value) ? brandLogoPublicUrl(brand, value) : null;
+  const previewUrl = value && files.includes(value) ? brandLogoPublicUrl(brand, value) : null;
 
   return (
     <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900/60">
-      <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-100">
-        Brand logo
-      </h3>
+      <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-100">Brand logo</h3>
 
       {loading ? (
-        <p className="mt-3 text-sm text-slate-600 dark:text-slate-300">
-          Loading logos…
-        </p>
+        <p className="mt-3 text-sm text-slate-600 dark:text-slate-300">Loading logos…</p>
       ) : error ? (
         <p className="mt-3 text-sm text-red-600 dark:text-red-400">{error}</p>
       ) : files.length === 0 ? (

@@ -1,11 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import {
-  type LibraryAsset,
-  libraryAssetToFile,
-  subscribeLibraryMedia,
-} from "@/lib/media-library";
+import { type LibraryAsset, libraryAssetToFile, subscribeLibraryMedia } from "@/lib/media-library";
 
 type Props = {
   open: boolean;
@@ -109,7 +105,7 @@ export function MediaLibraryPicker({
         <div className="flex items-center justify-between border-b border-slate-200 p-4 dark:border-slate-700">
           <div>
             <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-              Pick from library
+              Choose from library
             </h3>
             <p className="text-xs text-slate-500 dark:text-slate-400">
               {brandLabel}
@@ -129,9 +125,7 @@ export function MediaLibraryPicker({
           {loadError ? (
             <p className="text-sm text-red-600 dark:text-red-400">{loadError}</p>
           ) : loading ? (
-            <p className="text-sm text-slate-500 dark:text-slate-400">
-              Loading…
-            </p>
+            <p className="text-sm text-slate-500 dark:text-slate-400">Loading library…</p>
           ) : assets.length === 0 ? (
             <p className="text-sm text-slate-500 dark:text-slate-400">
               No assets yet. Upload photos to this brand&apos;s library first.
@@ -140,9 +134,7 @@ export function MediaLibraryPicker({
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
               {assets.map((asset) => {
                 const isSelected = selectedIds.includes(asset.id);
-                const order = isSelected
-                  ? selectedIds.indexOf(asset.id) + 1
-                  : null;
+                const order = isSelected ? selectedIds.indexOf(asset.id) + 1 : null;
                 return (
                   <button
                     key={asset.id}
@@ -195,7 +187,7 @@ export function MediaLibraryPicker({
             disabled={applying || selected.length === 0}
             className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {applying ? "Preparing…" : "Use selection"}
+            {applying ? "Applying selection…" : "Apply selection"}
           </button>
         </div>
       </div>
