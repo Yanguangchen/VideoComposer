@@ -9,6 +9,7 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "verify:remotion": "tsx scripts/verify-remotion.ts",
+    "download": "tsx scripts/download-video.ts",
     "verify": "npm run verify:remotion && npm test && npm run lint && npm run build",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage"
