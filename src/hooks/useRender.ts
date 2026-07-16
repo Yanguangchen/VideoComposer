@@ -16,10 +16,14 @@ export type RenderState = {
   progress: number;
   phaseLabel: string;
   lastError: string | null;
+  /** True once a render has completed and a video is available to download. */
+  hasVideo: boolean;
 };
 
 export type UseRender = RenderState & {
   start: () => Promise<void>;
+  /** Re-download the most recently rendered video without re-rendering. */
+  download: () => void;
   clearError: () => void;
 };
 
@@ -39,7 +43,11 @@ export function useRender({ compositionId, getInputProps, onBusyChange }: Params
   const [progress, setProgress] = useState(0);
   const [phaseLabel, setPhaseLabel] = useState("");
   const [lastError, setLastError] = useState<string | null>(null);
+  const [hasVideo, setHasVideo] = useState(false);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  // Holds the most recent render so it can be downloaded again without
+  // re-rendering. The object URL is revoked when replaced or on unmount.
+  const lastVideoRef = useRef<{ url: string; fileName: string } | null>(null);
 
   const stopPolling = useCallback(() => {
     if (pollRef.current) {
@@ -48,15 +56,42 @@ export function useRender({ compositionId, getInputProps, onBusyChange }: Params
     }
   }, []);
 
-  useEffect(() => () => stopPolling(), [stopPolling]);
+  const revokeLastVideo = useCallback(() => {
+    if (lastVideoRef.current) {
+      URL.revokeObjectURL(lastVideoRef.current.url);
+      lastVideoRef.current = null;
+    }
+  }, []);
+
+  const triggerDownload = useCallback((url: string, fileName: string) => {
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = fileName;
+    a.click();
+  }, []);
+
+  useEffect(
+    () => () => {
+      stopPolling();
+      revokeLastVideo();
+    },
+    [stopPolling, revokeLastVideo],
+  );
 
   const clearError = useCallback(() => setLastError(null), []);
+
+  const download = useCallback(() => {
+    if (!lastVideoRef.current) return;
+    triggerDownload(lastVideoRef.current.url, lastVideoRef.current.fileName);
+  }, [triggerDownload]);
 
   const start = useCallback(async () => {
     setLastError(null);
     setProgress(0);
     setPhaseLabel("Connecting…");
     setIsRendering(true);
+    setHasVideo(false);
+    revokeLastVideo();
     onBusyChange?.(true);
 
     const sessionId = crypto.randomUUID();
@@ -110,17 +145,18 @@ export function useRender({ compositionId, getInputProps, onBusyChange }: Params
 
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
       const base =
         compositionId === "SingleImage"
           ? "single"
           : compositionId === "Carousel"
             ? "carousel"
             : "before-after";
-      a.download = `${base}-${inputProps.brandId}.mp4`;
-      a.click();
-      URL.revokeObjectURL(url);
+      const fileName = `${base}-${inputProps.brandId}.mp4`;
+      // Retain the video so the Download button can re-save it without a
+      // re-render; revoked when the next render starts or on unmount.
+      lastVideoRef.current = { url, fileName };
+      setHasVideo(true);
+      triggerDownload(url, fileName);
     } catch (e) {
       stopPolling();
       const msg =
@@ -133,14 +169,16 @@ export function useRender({ compositionId, getInputProps, onBusyChange }: Params
       setIsRendering(false);
       onBusyChange?.(false);
     }
-  }, [compositionId, getInputProps, onBusyChange, stopPolling]);
+  }, [compositionId, getInputProps, onBusyChange, stopPolling, revokeLastVideo, triggerDownload]);
 
   return {
     isRendering,
     progress,
     phaseLabel,
     lastError,
+    hasVideo,
     start,
+    download,
     clearError,
   };
 }

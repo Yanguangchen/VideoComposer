@@ -141,6 +141,26 @@ export function ExportBar({
           </svg>
         </a>
 
+        {render.hasVideo && !render.isRendering ? (
+          <button
+            type="button"
+            onClick={() => render.download()}
+            className="btn-ghost inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-semibold tracking-wide transition"
+            title="Download the last rendered video again"
+          >
+            <svg width="14" height="14" viewBox="0 0 20 20" fill="none" aria-hidden>
+              <path
+                d="M10 3v10m0 0l-3.5-3.5M10 13l3.5-3.5M4 15h12"
+                stroke="currentColor"
+                strokeWidth="1.75"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+            Download
+          </button>
+        ) : null}
+
         <button
           type="button"
           onClick={handleClick}
