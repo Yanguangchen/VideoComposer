@@ -23,7 +23,9 @@ describe("useRender", () => {
       createObjectURL: { configurable: true, value: createObjectURL },
       revokeObjectURL: { configurable: true, value: revokeObjectURL },
     });
-    vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => undefined);
+    const clickSpy = vi
+      .spyOn(HTMLAnchorElement.prototype, "click")
+      .mockImplementation(() => undefined);
     globalThis.fetch = vi.fn(async (input) => {
       if (String(input).startsWith("/api/render/progress")) {
         return Response.json({ progress: 120, label: "Rendering frames…", active: true });
@@ -45,7 +47,10 @@ describe("useRender", () => {
     assert.deepEqual(onBusyChange.mock.calls.map((call) => call[0]), [true, false]);
     assert.equal(result.current.lastError, null);
     assert.equal(createObjectURL.mock.calls.length, 1);
-    assert.deepEqual(revokeObjectURL.mock.calls[0], ["blob:video"]);
+    // The rendered video is retained (not revoked) so it can be downloaded again.
+    assert.equal(revokeObjectURL.mock.calls.length, 0);
+    assert.equal(result.current.hasVideo, true);
+    assert.equal(clickSpy.mock.calls.length, 1);
     assert.equal(result.current.isRendering, false);
     assert.equal(result.current.progress, 0);
     assert.equal(result.current.phaseLabel, "");
@@ -53,6 +58,11 @@ describe("useRender", () => {
     const body = JSON.parse(String(renderCall?.[1]?.body));
     assert.equal(body.sessionId, "session-id");
     assert.equal(body.compositionId, "SingleImage");
+
+    // The Download button re-saves the same video without another render.
+    act(() => result.current.download());
+    assert.equal(clickSpy.mock.calls.length, 2);
+    assert.equal(createObjectURL.mock.calls.length, 1);
   });
 
   it("surfaces API errors and clears them", async () => {
