@@ -7,6 +7,7 @@ import {
   saveBrandContext,
   subscribeBrandContext,
 } from "@/lib/brand-context";
+import { isDirectorySaveSupported, saveBlobToFolder } from "@/lib/save-to-directory";
 import { useToast } from "@/components/ui/Toast";
 
 type Props = {
@@ -160,6 +161,32 @@ export function AiCopyAssistant({ brandId, brandLabel, onCaptionChange }: Props)
     }
   }, [output, toast]);
 
+  const captionFileName = `caption-${brandId}.txt`;
+
+  const handleDownloadTxt = useCallback(() => {
+    if (!output) return;
+    const blob = new Blob([output], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = captionFileName;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [output, captionFileName]);
+
+  const handleSaveTxtToFolder = useCallback(async () => {
+    if (!output) return;
+    try {
+      const blob = new Blob([output], { type: "text/plain;charset=utf-8" });
+      const dirName = await saveBlobToFolder(captionFileName, blob);
+      toast(`Saved caption to “${dirName}”.`, "success");
+    } catch (e) {
+      // Cancelling the folder picker is not an error worth surfacing.
+      if (e instanceof DOMException && e.name === "AbortError") return;
+      toast(e instanceof Error ? e.message : "Could not save the caption.", "error");
+    }
+  }, [output, captionFileName, toast]);
+
   if (!configured) {
     return (
       <div className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-700/50 dark:bg-amber-950/30 dark:text-amber-200">
@@ -250,13 +277,33 @@ export function AiCopyAssistant({ brandId, brandLabel, onCaptionChange }: Props)
             <span className="text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">
               Caption
             </span>
-            <button
-              type="button"
-              onClick={handleCopy}
-              className="rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-700 transition hover:bg-slate-100 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-200 dark:hover:bg-white/[0.08]"
-            >
-              {copied ? "Copied" : "Copy"}
-            </button>
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={handleCopy}
+                className="rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-700 transition hover:bg-slate-100 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-200 dark:hover:bg-white/[0.08]"
+              >
+                {copied ? "Copied" : "Copy"}
+              </button>
+              <button
+                type="button"
+                onClick={handleDownloadTxt}
+                title="Download the caption as a .txt file"
+                className="rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-700 transition hover:bg-slate-100 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-200 dark:hover:bg-white/[0.08]"
+              >
+                Download .txt
+              </button>
+              {isDirectorySaveSupported() ? (
+                <button
+                  type="button"
+                  onClick={() => void handleSaveTxtToFolder()}
+                  title="Save the caption .txt into a folder on your computer"
+                  className="rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-700 transition hover:bg-slate-100 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-200 dark:hover:bg-white/[0.08]"
+                >
+                  Save to folder
+                </button>
+              ) : null}
+            </div>
           </div>
           <pre className="scrollbar-soft max-h-80 overflow-auto whitespace-pre-wrap rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 font-sans text-sm text-slate-900 dark:border-white/10 dark:bg-white/[0.02] dark:text-slate-100">
             {output}

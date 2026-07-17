@@ -95,6 +95,20 @@ export function ExportBar({
     }
   }
 
+  async function handleSaveToFolder() {
+    try {
+      const dirName = await render.saveToFolder();
+      if (dirName) {
+        toast(`Saved to “${dirName}”.`, "success");
+      }
+    } catch (e) {
+      // The user cancelling the folder picker is not an error worth surfacing.
+      if (e instanceof DOMException && e.name === "AbortError") return;
+      const msg = e instanceof Error ? e.message : "Could not save to that folder.";
+      toast(msg, "error");
+    }
+  }
+
   return (
     <div className="glass-bar sticky bottom-0 z-30 border-t" role="region" aria-label="Export">
       <div className="mx-auto flex w-full max-w-[1600px] items-center gap-3 px-4 py-3 sm:gap-6">
@@ -148,6 +162,46 @@ export function ExportBar({
             <path d="M16 13v3H4V4h3" />
           </svg>
         </a>
+
+        {render.hasVideo && !render.isRendering ? (
+          <>
+            <button
+              type="button"
+              onClick={() => render.download()}
+              className="btn-ghost inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-semibold tracking-wide transition"
+              title="Download the last rendered video again"
+            >
+              <svg width="14" height="14" viewBox="0 0 20 20" fill="none" aria-hidden>
+                <path
+                  d="M10 3v10m0 0l-3.5-3.5M10 13l3.5-3.5M4 15h12"
+                  stroke="currentColor"
+                  strokeWidth="1.75"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+              Download
+            </button>
+            {render.canSaveToFolder ? (
+              <button
+                type="button"
+                onClick={() => void handleSaveToFolder()}
+                className="btn-ghost inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-semibold tracking-wide transition"
+                title="Save the rendered video into a folder on your computer"
+              >
+                <svg width="14" height="14" viewBox="0 0 20 20" fill="none" aria-hidden>
+                  <path
+                    d="M2.5 6.5a2 2 0 012-2h3l1.5 1.75h5a2 2 0 012 2v5a2 2 0 01-2 2h-9.5a2 2 0 01-2-2v-6.5z"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+                Save to folder
+              </button>
+            ) : null}
+          </>
+        ) : null}
 
         <button
           type="button"

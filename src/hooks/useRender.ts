@@ -6,6 +6,7 @@ import type { CarouselTemplateProps } from "@/remotion/carousel-template";
 import type { RemotionCompositionId } from "@/remotion/composition-ids";
 import type { SingleImageTemplateProps } from "@/remotion/single-image-template";
 import { parseRenderErrorResponse } from "@/lib/render-client";
+import { isDirectorySaveSupported, saveVideoToFolder } from "@/lib/save-to-directory";
 
 type GetInputProps = () => Promise<
   BeforeAfterTemplateProps | SingleImageTemplateProps | CarouselTemplateProps
@@ -20,6 +21,16 @@ export type RenderState = {
 
 export type UseRender = RenderState & {
   start: () => Promise<void>;
+  /** Re-download the most recently rendered video without re-rendering. */
+  download: () => void;
+  /**
+   * Write the most recent render into a folder the user picks (remembered for
+   * next time). Resolves with the folder name, or null if no video exists.
+   * Rejects if the browser is unsupported or the user denies access.
+   */
+  saveToFolder: () => Promise<string | null>;
+  /** True when this browser supports writing straight into a chosen folder. */
+  canSaveToFolder: boolean;
   clearError: () => void;
 };
 
@@ -57,9 +68,10 @@ export function useRender({
   const [phaseLabel, setPhaseLabel] = useState("");
   const [lastError, setLastError] = useState<string | null>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  // Read the latest caption at export time without re-creating `start`.
-  const getCaptionRef = useRef(getCaption);
-  getCaptionRef.current = getCaption;
+  // Holds the most recent render so it can be downloaded again or written to a
+  // folder without re-rendering. The object URL is revoked when replaced or on
+  // unmount; the blob is kept for File System Access writes.
+  const lastVideoRef = useRef<{ url: string; fileName: string; blob: Blob } | null>(null);
 
   const stopPolling = useCallback(() => {
     if (pollRef.current) {
@@ -80,6 +92,17 @@ export function useRender({
   useEffect(() => () => stopPolling(), [stopPolling]);
 
   const clearError = useCallback(() => setLastError(null), []);
+
+  const download = useCallback(() => {
+    if (!lastVideoRef.current) return;
+    triggerDownload(lastVideoRef.current.url, lastVideoRef.current.fileName);
+  }, [triggerDownload]);
+
+  const saveToFolder = useCallback(async (): Promise<string | null> => {
+    if (!lastVideoRef.current) return null;
+    const { fileName, blob } = lastVideoRef.current;
+    return saveVideoToFolder(fileName, blob);
+  }, []);
 
   const start = useCallback(async () => {
     setLastError(null);
@@ -137,20 +160,21 @@ export function useRender({
       setProgress(100);
       setPhaseLabel("Done");
 
-      const base = baseFileName(compositionId);
-      const stem = `${base}-${inputProps.brandId}`;
-
-      // 1) Download the rendered video.
-      const videoBlob = await res.blob();
-      downloadBlob(videoBlob, `${stem}.mp4`);
-
-      // 2) Download the matching caption as a .txt (same stem for easy RPA
-      //    pairing), when a caption has been generated.
-      const caption = getCaptionRef.current?.().trim() ?? "";
-      if (caption) {
-        const captionBlob = new Blob([caption], { type: "text/plain;charset=utf-8" });
-        downloadBlob(captionBlob, `${stem}.txt`);
-      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const base =
+        compositionId === "SingleImage"
+          ? "single"
+          : compositionId === "Carousel"
+            ? "carousel"
+            : "before-after";
+      const fileName = `${base}-${inputProps.brandId}.mp4`;
+      // Retain the video so the Download / Save-to-folder buttons can reuse it
+      // without a re-render; the URL is revoked when the next render starts or
+      // on unmount.
+      lastVideoRef.current = { url, fileName, blob };
+      setHasVideo(true);
+      triggerDownload(url, fileName);
     } catch (e) {
       stopPolling();
       const msg =
@@ -171,6 +195,9 @@ export function useRender({
     phaseLabel,
     lastError,
     start,
+    download,
+    saveToFolder,
+    canSaveToFolder: isDirectorySaveSupported(),
     clearError,
   };
 }
