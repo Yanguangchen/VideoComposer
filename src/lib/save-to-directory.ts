@@ -140,9 +140,9 @@ export class DirectoryPermissionError extends Error {}
 /**
  * Write `blob` as `fileName` into the user's saved folder, prompting them to
  * pick one the first time (or if the saved permission was revoked). Returns the
- * folder name that was written to.
+ * folder name that was written to. Works for any file type (video, text, …).
  */
-export async function saveVideoToFolder(fileName: string, blob: Blob): Promise<string> {
+export async function saveBlobToFolder(fileName: string, blob: Blob): Promise<string> {
   if (!isDirectorySaveSupported()) {
     throw new Error("This browser can't save directly to a folder. Try Chrome or Edge.");
   }
@@ -161,3 +161,6 @@ export async function saveVideoToFolder(fileName: string, blob: Blob): Promise<s
   await writeBlob(handle, fileName, blob);
   return handle.name;
 }
+
+/** Back-compat alias — the folder save is not video-specific. */
+export const saveVideoToFolder = saveBlobToFolder;
