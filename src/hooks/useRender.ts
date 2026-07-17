@@ -16,14 +16,10 @@ export type RenderState = {
   progress: number;
   phaseLabel: string;
   lastError: string | null;
-  /** True once a render has completed and a video is available to download. */
-  hasVideo: boolean;
 };
 
 export type UseRender = RenderState & {
   start: () => Promise<void>;
-  /** Re-download the most recently rendered video without re-rendering. */
-  download: () => void;
   clearError: () => void;
 };
 
@@ -31,23 +27,39 @@ type Params = {
   compositionId: RemotionCompositionId;
   getInputProps: GetInputProps;
   onBusyChange?: (busy: boolean) => void;
+  /**
+   * Current AI caption, if any. When present, a single export downloads both
+   * the rendered `video.mp4` and a matching `caption.txt` — one click yields
+   * both files (used for RPA pickup in the browser's download folder).
+   */
+  getCaption?: () => string;
 };
+
+function baseFileName(compositionId: RemotionCompositionId): string {
+  if (compositionId === "SingleImage") return "single";
+  if (compositionId === "Carousel") return "carousel";
+  return "before-after";
+}
 
 /**
  * Extracted from the original RenderAndDownload component — the HTTP/polling
  * behavior is byte-for-byte the same; only UI shells differ between the
  * legacy card and the new ExportBar.
  */
-export function useRender({ compositionId, getInputProps, onBusyChange }: Params): UseRender {
+export function useRender({
+  compositionId,
+  getInputProps,
+  onBusyChange,
+  getCaption,
+}: Params): UseRender {
   const [isRendering, setIsRendering] = useState(false);
   const [progress, setProgress] = useState(0);
   const [phaseLabel, setPhaseLabel] = useState("");
   const [lastError, setLastError] = useState<string | null>(null);
-  const [hasVideo, setHasVideo] = useState(false);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  // Holds the most recent render so it can be downloaded again without
-  // re-rendering. The object URL is revoked when replaced or on unmount.
-  const lastVideoRef = useRef<{ url: string; fileName: string } | null>(null);
+  // Read the latest caption at export time without re-creating `start`.
+  const getCaptionRef = useRef(getCaption);
+  getCaptionRef.current = getCaption;
 
   const stopPolling = useCallback(() => {
     if (pollRef.current) {
@@ -56,42 +68,24 @@ export function useRender({ compositionId, getInputProps, onBusyChange }: Params
     }
   }, []);
 
-  const revokeLastVideo = useCallback(() => {
-    if (lastVideoRef.current) {
-      URL.revokeObjectURL(lastVideoRef.current.url);
-      lastVideoRef.current = null;
-    }
-  }, []);
-
-  const triggerDownload = useCallback((url: string, fileName: string) => {
+  const downloadBlob = useCallback((blob: Blob, fileName: string) => {
+    const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
     a.download = fileName;
     a.click();
+    URL.revokeObjectURL(url);
   }, []);
 
-  useEffect(
-    () => () => {
-      stopPolling();
-      revokeLastVideo();
-    },
-    [stopPolling, revokeLastVideo],
-  );
+  useEffect(() => () => stopPolling(), [stopPolling]);
 
   const clearError = useCallback(() => setLastError(null), []);
-
-  const download = useCallback(() => {
-    if (!lastVideoRef.current) return;
-    triggerDownload(lastVideoRef.current.url, lastVideoRef.current.fileName);
-  }, [triggerDownload]);
 
   const start = useCallback(async () => {
     setLastError(null);
     setProgress(0);
     setPhaseLabel("Connecting…");
     setIsRendering(true);
-    setHasVideo(false);
-    revokeLastVideo();
     onBusyChange?.(true);
 
     const sessionId = crypto.randomUUID();
@@ -143,20 +137,20 @@ export function useRender({ compositionId, getInputProps, onBusyChange }: Params
       setProgress(100);
       setPhaseLabel("Done");
 
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const base =
-        compositionId === "SingleImage"
-          ? "single"
-          : compositionId === "Carousel"
-            ? "carousel"
-            : "before-after";
-      const fileName = `${base}-${inputProps.brandId}.mp4`;
-      // Retain the video so the Download button can re-save it without a
-      // re-render; revoked when the next render starts or on unmount.
-      lastVideoRef.current = { url, fileName };
-      setHasVideo(true);
-      triggerDownload(url, fileName);
+      const base = baseFileName(compositionId);
+      const stem = `${base}-${inputProps.brandId}`;
+
+      // 1) Download the rendered video.
+      const videoBlob = await res.blob();
+      downloadBlob(videoBlob, `${stem}.mp4`);
+
+      // 2) Download the matching caption as a .txt (same stem for easy RPA
+      //    pairing), when a caption has been generated.
+      const caption = getCaptionRef.current?.().trim() ?? "";
+      if (caption) {
+        const captionBlob = new Blob([caption], { type: "text/plain;charset=utf-8" });
+        downloadBlob(captionBlob, `${stem}.txt`);
+      }
     } catch (e) {
       stopPolling();
       const msg =
@@ -169,16 +163,14 @@ export function useRender({ compositionId, getInputProps, onBusyChange }: Params
       setIsRendering(false);
       onBusyChange?.(false);
     }
-  }, [compositionId, getInputProps, onBusyChange, stopPolling, revokeLastVideo, triggerDownload]);
+  }, [compositionId, getInputProps, onBusyChange, stopPolling, downloadBlob]);
 
   return {
     isRendering,
     progress,
     phaseLabel,
     lastError,
-    hasVideo,
     start,
-    download,
     clearError,
   };
 }

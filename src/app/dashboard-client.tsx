@@ -109,6 +109,8 @@ function DashboardInner() {
   const [captionColorHex, setCaptionColorHex] = useState(() => DEFAULT_CAPTION_COLOR_HEX);
   const [textSizeScale, setTextSizeScale] = useState(DEFAULT_VIDEO_TEXT_SIZE_SCALE);
   const videoTextScale = clampVideoTextSizeScale(textSizeScale);
+  // Latest AI caption — exported alongside the video as a matching .txt file.
+  const [aiCaption, setAiCaption] = useState("");
 
   // --- Media paths (background / music) ---
   const [backgroundPath, setBackgroundPath] = useState<string | null>(null);
@@ -1175,6 +1177,7 @@ function DashboardInner() {
                     key={brand.id}
                     brandId={brand.id}
                     brandLabel={brand.displayName}
+                    onCaptionChange={setAiCaption}
                   />
                 </GlassCard>
               </div>
@@ -1230,6 +1233,7 @@ function DashboardInner() {
           compositionId={templateModeToCompositionId(templateMode)}
           getInputProps={getInputProps}
           onBusyChange={setIsRendering}
+          caption={aiCaption}
         />
       </div>
 

@@ -15,7 +15,7 @@ afterEach(() => {
 });
 
 describe("useRender", () => {
-  it("polls, downloads a successful video, and reports busy transitions", async () => {
+  it("polls, downloads video, and reports busy transitions", async () => {
     vi.spyOn(crypto, "randomUUID").mockReturnValue("session-id");
     const createObjectURL = vi.fn(() => "blob:video");
     const revokeObjectURL = vi.fn();
@@ -23,9 +23,12 @@ describe("useRender", () => {
       createObjectURL: { configurable: true, value: createObjectURL },
       revokeObjectURL: { configurable: true, value: revokeObjectURL },
     });
-    const clickSpy = vi
-      .spyOn(HTMLAnchorElement.prototype, "click")
-      .mockImplementation(() => undefined);
+    const downloadNames: string[] = [];
+    vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(function (
+      this: HTMLAnchorElement,
+    ) {
+      downloadNames.push(this.download);
+    });
     globalThis.fetch = vi.fn(async (input) => {
       if (String(input).startsWith("/api/render/progress")) {
         return Response.json({ progress: 120, label: "Rendering frames…", active: true });
@@ -46,11 +49,10 @@ describe("useRender", () => {
     await act(async () => result.current.start());
     assert.deepEqual(onBusyChange.mock.calls.map((call) => call[0]), [true, false]);
     assert.equal(result.current.lastError, null);
+    // No caption provided → only the video is downloaded and its URL revoked.
     assert.equal(createObjectURL.mock.calls.length, 1);
-    // The rendered video is retained (not revoked) so it can be downloaded again.
-    assert.equal(revokeObjectURL.mock.calls.length, 0);
-    assert.equal(result.current.hasVideo, true);
-    assert.equal(clickSpy.mock.calls.length, 1);
+    assert.equal(revokeObjectURL.mock.calls.length, 1);
+    assert.deepEqual(downloadNames, ["single-brand.mp4"]);
     assert.equal(result.current.isRendering, false);
     assert.equal(result.current.progress, 0);
     assert.equal(result.current.phaseLabel, "");
@@ -58,11 +60,35 @@ describe("useRender", () => {
     const body = JSON.parse(String(renderCall?.[1]?.body));
     assert.equal(body.sessionId, "session-id");
     assert.equal(body.compositionId, "SingleImage");
+  });
 
-    // The Download button re-saves the same video without another render.
-    act(() => result.current.download());
-    assert.equal(clickSpy.mock.calls.length, 2);
-    assert.equal(createObjectURL.mock.calls.length, 1);
+  it("downloads a matching caption .txt alongside the video when present", async () => {
+    const createObjectURL = vi.fn(() => "blob:x");
+    const revokeObjectURL = vi.fn();
+    Object.defineProperties(URL, {
+      createObjectURL: { configurable: true, value: createObjectURL },
+      revokeObjectURL: { configurable: true, value: revokeObjectURL },
+    });
+    const downloadNames: string[] = [];
+    vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(function (
+      this: HTMLAnchorElement,
+    ) {
+      downloadNames.push(this.download);
+    });
+    globalThis.fetch = vi.fn(async (input) => {
+      if (String(input).startsWith("/api/render/progress")) return Response.json({});
+      return new Response("video", { status: 200, headers: { "Content-Type": "video/mp4" } });
+    });
+    const { result } = renderHook(() => useRender({
+      compositionId: "Carousel",
+      getInputProps: async () => ({ brandId: "brand" }) as never,
+      getCaption: () => "  Hello caption  ",
+    }));
+
+    await act(async () => result.current.start());
+    // Both the video and the caption .txt download, sharing a stem.
+    assert.deepEqual(downloadNames, ["carousel-brand.mp4", "carousel-brand.txt"]);
+    assert.equal(result.current.lastError, null);
   });
 
   it("surfaces API errors and clears them", async () => {
