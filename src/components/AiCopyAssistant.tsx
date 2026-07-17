@@ -13,9 +13,11 @@ import { useToast } from "@/components/ui/Toast";
 type Props = {
   brandId: string;
   brandLabel: string;
+  /** Notifies the parent whenever the generated caption changes (or clears). */
+  onCaptionChange?: (caption: string) => void;
 };
 
-export function AiCopyAssistant({ brandId, brandLabel }: Props) {
+export function AiCopyAssistant({ brandId, brandLabel, onCaptionChange }: Props) {
   const configured = isFirebaseConfigured();
   const toast = useToast();
 
@@ -87,6 +89,12 @@ export function AiCopyAssistant({ brandId, brandLabel }: Props) {
       if (copyResetRef.current) clearTimeout(copyResetRef.current);
     };
   }, []);
+
+  // Surface the current caption to the parent so the export button can download
+  // it alongside the video as a matching .txt file.
+  useEffect(() => {
+    onCaptionChange?.(output);
+  }, [output, onCaptionChange]);
 
   const dirty = contextText !== originalContext;
 

@@ -23,6 +23,8 @@ type Props = {
     BeforeAfterTemplateProps | SingleImageTemplateProps | CarouselTemplateProps
   >;
   onBusyChange: (busy: boolean) => void;
+  /** Latest AI caption; exported alongside the video as a matching .txt file. */
+  caption: string;
 };
 
 function ProgressDot({ done, label }: Dot) {
@@ -75,9 +77,15 @@ export function ExportBar({
   compositionId,
   getInputProps,
   onBusyChange,
+  caption,
 }: Props) {
   const toast = useToast();
-  const render = useRender({ compositionId, getInputProps, onBusyChange });
+  const render = useRender({
+    compositionId,
+    getInputProps,
+    onBusyChange,
+    getCaption: () => caption,
+  });
 
   async function handleClick() {
     if (!canExport || render.isRendering) return;
@@ -199,6 +207,7 @@ export function ExportBar({
           type="button"
           onClick={handleClick}
           disabled={!canExport || render.isRendering}
+          title="Render and download the video (plus caption .txt if generated)"
           className="btn-accent inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold tracking-wide transition"
         >
           <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
@@ -211,7 +220,7 @@ export function ExportBar({
               strokeLinejoin="round"
             />
           </svg>
-          {render.isRendering ? "Rendering…" : "Export MP4"}
+          {render.isRendering ? "Rendering…" : "Download"}
         </button>
       </div>
     </div>
